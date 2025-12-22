@@ -2,10 +2,14 @@ import './style.css';
 import * as THREE from 'three';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
+// Constants
+const PUZZLE_SIZE = 9;
+const AUTO_SAVE_INTERVAL = 5000; // milliseconds
+
 // Game State
 const gameState = {
     discoveredPuzzles: new Set(),
-    puzzleBoard: Array(9).fill(null),
+    puzzleBoard: Array(PUZZLE_SIZE).fill(null),
     solution: [1, 2, 3, 4, 5, 6, 7, 8, 9], // Simple Sudoku solution for 3x3
     draggingPiece: null,
     audio: {
@@ -177,7 +181,7 @@ function initPuzzleBoard() {
     const board = document.getElementById('puzzle-board');
     board.innerHTML = '';
     
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < PUZZLE_SIZE; i++) {
         const slot = document.createElement('div');
         slot.className = 'puzzle-slot empty';
         slot.dataset.index = i;
@@ -198,7 +202,7 @@ function initTreasureChests() {
     const container = document.getElementById('treasure-chests');
     container.innerHTML = '';
     
-    for (let i = 1; i <= 9; i++) {
+    for (let i = 1; i <= PUZZLE_SIZE; i++) {
         const chest = document.createElement('div');
         chest.className = 'treasure-chest';
         chest.dataset.number = i;
@@ -235,7 +239,8 @@ function openTreasureChest(number) {
     try {
         Haptics.impact({ style: ImpactStyle.Medium });
     } catch (e) {
-        // Haptics not available in web
+        // Haptics not available in web browsers
+        console.debug('Haptics not available:', e.message);
     }
     
     // Create draggable puzzle piece
@@ -305,7 +310,9 @@ function handleDrop(e) {
         
         try {
             Haptics.impact({ style: ImpactStyle.Light });
-        } catch (e) {}
+        } catch (e) {
+            console.debug('Haptics not available:', e.message);
+        }
         
     } else {
         // Wrong placement
@@ -369,7 +376,9 @@ function handleTouchEnd(e) {
             
             try {
                 Haptics.impact({ style: ImpactStyle.Light });
-            } catch (e) {}
+            } catch (e) {
+                console.debug('Haptics not available:', e.message);
+            }
         } else {
             showErrorFeedback(element);
             // Return piece to center
@@ -415,7 +424,9 @@ function showErrorFeedback(slot) {
     // Haptic feedback
     try {
         Haptics.impact({ style: ImpactStyle.Heavy });
-    } catch (e) {}
+    } catch (e) {
+        console.debug('Haptics not available:', e.message);
+    }
 }
 
 // Update stats
@@ -489,7 +500,7 @@ function loadGameState() {
         try {
             const data = JSON.parse(saved);
             gameState.discoveredPuzzles = new Set(data.discoveredPuzzles || []);
-            gameState.puzzleBoard = data.puzzleBoard || Array(9).fill(null);
+            gameState.puzzleBoard = data.puzzleBoard || Array(PUZZLE_SIZE).fill(null);
             
             // Restore UI
             gameState.discoveredPuzzles.forEach(number => {
@@ -527,7 +538,7 @@ function saveGameState() {
 }
 
 // Auto-save on changes
-setInterval(saveGameState, 5000);
+setInterval(saveGameState, AUTO_SAVE_INTERVAL);
 
 // Initialize game
 function initGame() {
