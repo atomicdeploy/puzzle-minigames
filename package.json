@@ -1,0 +1,29 @@
+{
+  "name": "infernal-puzzle-game",
+  "version": "1.0.0",
+  "description": "اینفرنال - 3D Puzzle Mini-Games",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "android:init": "npx cap add android",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:build": "npm run build && npx cap sync android && npx cap copy android"
+  },
+  "keywords": ["puzzle", "game", "3d", "sudoku", "persian"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.160.0",
+    "@capacitor/core": "^5.5.1",
+    "@capacitor/android": "^5.5.1",
+    "@capacitor/haptics": "^5.0.6"
+  },
+  "devDependencies": {
+    "vite": "^5.0.10",
+    "vite-plugin-pwa": "^0.17.4",
+    "@capacitor/cli": "^5.5.1"
+  }
+}
