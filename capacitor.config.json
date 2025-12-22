@@ -1,0 +1,16 @@
+{
+  "appId": "com.infernal.puzzlegame",
+  "appName": "اینفرنال",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0f0e17",
+      "showSpinner": true,
+      "spinnerColor": "#6c5ce7"
+    }
+  }
+}

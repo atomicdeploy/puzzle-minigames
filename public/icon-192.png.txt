@@ -1,0 +1,6 @@
+# Placeholder for icon-192.png
+# This file needs to be replaced with an actual 192x192 PNG icon
+# You can generate one using:
+# - Online tools like favicon.io
+# - Design software like Figma, Canva
+# - Or use the provided SVG as a base
