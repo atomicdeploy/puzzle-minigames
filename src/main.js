@@ -481,6 +481,18 @@ function handlePieceMouseDown(e) {
     const element = e.currentTarget;
     const rect = element.getBoundingClientRect();
     
+    // Play audio immediately on touch down
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
+    }
+    
+    // Haptic feedback on touch down
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) {
+        console.debug('Haptics not available');
+    }
+    
     // Record start position for movement detection
     dragStartPos = { x: e.clientX, y: e.clientY };
     hasMoved = false;
@@ -572,15 +584,7 @@ function handleMouseDrag(e) {
     
     if (!hasMoved && (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD)) {
         hasMoved = true;
-        // Play pickup sound and haptic only when starting actual drag
-        if (gameState.audio.pickup) {
-            gameState.audio.pickup();
-        }
-        try {
-            Haptics.impact({ style: ImpactStyle.Light });
-        } catch (error) {
-            console.debug('Haptics not available:', error.message);
-        }
+        // Movement detected - now in drag mode (audio already played on touch down)
     }
     
     // Update target position for physics
@@ -699,6 +703,18 @@ function handleTouchStart(e) {
     const touch = e.touches[0];
     const element = e.currentTarget;
     
+    // Play audio immediately on touch down
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
+    }
+    
+    // Haptic feedback on touch down
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) {
+        console.debug('Haptics not available');
+    }
+    
     // Record start position for movement detection
     dragStartPos = { x: touch.clientX, y: touch.clientY };
     hasMoved = false;
@@ -804,15 +820,7 @@ function handleTouchMove(e) {
     
     if (!hasMoved && (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD)) {
         hasMoved = true;
-        // Play pickup sound and haptic only when starting actual drag
-        if (gameState.audio.pickup) {
-            gameState.audio.pickup();
-        }
-        try {
-            Haptics.impact({ style: ImpactStyle.Light });
-        } catch (error) {
-            console.debug('Haptics not available:', error.message);
-        }
+        // Movement detected - now in drag mode (audio already played on touch down)
     }
     
     // Update target position for physics
