@@ -470,22 +470,25 @@ function validateMagicSquare() {
     // Clear previous validation classes
     document.querySelectorAll('.puzzle-slot').forEach(slot => {
         slot.classList.remove('valid', 'invalid');
-        if (slot.classList.contains('filled')) {
-            slot.classList.add('filled');
-        }
     });
     
     // Only validate if all slots are filled
     if (board.every(p => p !== null)) {
         const MAGIC_SUM = 15;
+        const validSlots = new Set();
+        const invalidSlots = new Set();
         
         // Check rows
         for (let row = 0; row < 3; row++) {
             const sum = board[row * 3] + board[row * 3 + 1] + board[row * 3 + 2];
             const isValid = sum === MAGIC_SUM;
             for (let col = 0; col < 3; col++) {
-                const slot = document.querySelector(`.puzzle-slot[data-index="${row * 3 + col}"]`);
-                slot.classList.add(isValid ? 'valid' : 'invalid');
+                const index = row * 3 + col;
+                if (isValid) {
+                    validSlots.add(index);
+                } else {
+                    invalidSlots.add(index);
+                }
             }
         }
         
@@ -494,14 +497,12 @@ function validateMagicSquare() {
             const sum = board[col] + board[col + 3] + board[col + 6];
             const isValid = sum === MAGIC_SUM;
             for (let row = 0; row < 3; row++) {
-                const slot = document.querySelector(`.puzzle-slot[data-index="${row * 3 + col}"]`);
-                // Only mark as invalid if not already valid from row check
-                if (!slot.classList.contains('valid')) {
-                    slot.classList.add(isValid ? 'valid' : 'invalid');
-                } else if (!isValid) {
-                    // If row was valid but column is not, mark as invalid
-                    slot.classList.remove('valid');
-                    slot.classList.add('invalid');
+                const index = row * 3 + col;
+                if (!isValid) {
+                    invalidSlots.add(index);
+                    validSlots.delete(index);
+                } else if (!invalidSlots.has(index)) {
+                    validSlots.add(index);
                 }
             }
         }
@@ -510,12 +511,11 @@ function validateMagicSquare() {
         const mainDiagonalSum = board[0] + board[4] + board[8];
         const isMainDiagonalValid = mainDiagonalSum === MAGIC_SUM;
         [0, 4, 8].forEach(index => {
-            const slot = document.querySelector(`.puzzle-slot[data-index="${index}"]`);
-            if (!slot.classList.contains('valid')) {
-                slot.classList.add(isMainDiagonalValid ? 'valid' : 'invalid');
-            } else if (!isMainDiagonalValid) {
-                slot.classList.remove('valid');
-                slot.classList.add('invalid');
+            if (!isMainDiagonalValid) {
+                invalidSlots.add(index);
+                validSlots.delete(index);
+            } else if (!invalidSlots.has(index)) {
+                validSlots.add(index);
             }
         });
         
@@ -523,15 +523,48 @@ function validateMagicSquare() {
         const antiDiagonalSum = board[2] + board[4] + board[6];
         const isAntiDiagonalValid = antiDiagonalSum === MAGIC_SUM;
         [2, 4, 6].forEach(index => {
-            const slot = document.querySelector(`.puzzle-slot[data-index="${index}"]`);
-            if (!slot.classList.contains('valid')) {
-                slot.classList.add(isAntiDiagonalValid ? 'valid' : 'invalid');
-            } else if (!isAntiDiagonalValid) {
-                slot.classList.remove('valid');
-                slot.classList.add('invalid');
+            if (!isAntiDiagonalValid) {
+                invalidSlots.add(index);
+                validSlots.delete(index);
+            } else if (!invalidSlots.has(index)) {
+                validSlots.add(index);
             }
         });
+        
+        // Apply validation classes
+        validSlots.forEach(index => {
+            const slot = document.querySelector(`.puzzle-slot[data-index="${index}"]`);
+            if (slot) slot.classList.add('valid');
+        });
+        
+        invalidSlots.forEach(index => {
+            const slot = document.querySelector(`.puzzle-slot[data-index="${index}"]`);
+            if (slot) slot.classList.add('invalid');
+        });
     }
+}
+
+// Helper function to check if board is a valid magic square
+function isValidMagicSquare(board) {
+    const MAGIC_SUM = 15;
+    
+    // Check rows
+    for (let row = 0; row < 3; row++) {
+        const sum = board[row * 3] + board[row * 3 + 1] + board[row * 3 + 2];
+        if (sum !== MAGIC_SUM) return false;
+    }
+    
+    // Check columns
+    for (let col = 0; col < 3; col++) {
+        const sum = board[col] + board[col + 3] + board[col + 6];
+        if (sum !== MAGIC_SUM) return false;
+    }
+    
+    // Check diagonals (مورب)
+    const mainDiagonalSum = board[0] + board[4] + board[8];
+    const antiDiagonalSum = board[2] + board[4] + board[6];
+    
+    return mainDiagonalSum === MAGIC_SUM && antiDiagonalSum === MAGIC_SUM;
 }
 
 // Show error feedback
@@ -570,30 +603,7 @@ function checkCompletion() {
     
     if (isComplete) {
         // Check if it's a valid magic square
-        const MAGIC_SUM = 15;
-        const board = gameState.puzzleBoard;
-        let isValidMagicSquare = true;
-        
-        // Check rows
-        for (let row = 0; row < 3; row++) {
-            const sum = board[row * 3] + board[row * 3 + 1] + board[row * 3 + 2];
-            if (sum !== MAGIC_SUM) isValidMagicSquare = false;
-        }
-        
-        // Check columns
-        for (let col = 0; col < 3; col++) {
-            const sum = board[col] + board[col + 3] + board[col + 6];
-            if (sum !== MAGIC_SUM) isValidMagicSquare = false;
-        }
-        
-        // Check diagonals (مورب)
-        const mainDiagonalSum = board[0] + board[4] + board[8];
-        const antiDiagonalSum = board[2] + board[4] + board[6];
-        if (mainDiagonalSum !== MAGIC_SUM || antiDiagonalSum !== MAGIC_SUM) {
-            isValidMagicSquare = false;
-        }
-        
-        if (isValidMagicSquare) {
+        if (isValidMagicSquare(gameState.puzzleBoard)) {
             setTimeout(() => {
                 showNotification('🎉 تبریک! مربع جادویی درست است! 🎉', 3000);
                 celebrateCompletion();
