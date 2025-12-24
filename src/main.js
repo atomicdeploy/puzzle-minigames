@@ -10,7 +10,6 @@ const AUTO_SAVE_INTERVAL = 5000; // milliseconds
 const gameState = {
     discoveredPuzzles: new Set(),
     puzzleBoard: Array(PUZZLE_SIZE).fill(null),
-    solution: [1, 2, 3, 4, 5, 6, 7, 8, 9], // Simple Sudoku solution for 3x3
     draggingPiece: null,
     audio: {
         error: null,
@@ -259,9 +258,21 @@ function createPuzzlePiece(number) {
     piece.className = 'puzzle-piece';
     piece.dataset.number = number;
     piece.innerHTML = `🧩<div class="puzzle-number">${number}</div>`;
-    piece.style.left = '50%';
-    piece.style.top = '50%';
-    piece.style.transform = 'translate(-50%, -50%)';
+    
+    // Position pieces above the treasure chest area in a horizontal line
+    const chestsContainer = document.getElementById('treasure-chests');
+    const chestsRect = chestsContainer.getBoundingClientRect();
+    const pieceWidth = 80;
+    const spacing = 10;
+    
+    // Count existing pieces to position new one
+    const existingPieces = document.querySelectorAll('.puzzle-piece').length;
+    
+    // Position in a row above the treasure chests
+    piece.style.position = 'fixed';
+    piece.style.left = `${chestsRect.left + existingPieces * (pieceWidth + spacing)}px`;
+    piece.style.top = `${chestsRect.top - 100}px`;
+    piece.style.transform = 'none';
     
     // Drag events
     piece.draggable = true;
@@ -298,29 +309,33 @@ function handleDrop(e) {
     const slotIndex = parseInt(slot.dataset.index);
     const pieceNumber = gameState.draggingPiece.number;
     
-    // Check if placement is correct
-    if (gameState.solution[slotIndex] === pieceNumber) {
-        // Correct placement
-        placePuzzlePiece(slot, pieceNumber);
-        gameState.draggingPiece.element.remove();
-        
-        if (gameState.audio.success) {
-            gameState.audio.success();
-        }
-        
-        try {
-            Haptics.impact({ style: ImpactStyle.Light });
-        } catch (e) {
-            console.debug('Haptics not available:', e.message);
-        }
-        
-    } else {
-        // Wrong placement
-        showErrorFeedback(slot);
+    // Check if slot is already occupied
+    if (gameState.puzzleBoard[slotIndex] !== null) {
+        // Slot is occupied, don't allow placement
+        gameState.draggingPiece.element.classList.remove('dragging');
+        gameState.draggingPiece = null;
+        return;
+    }
+    
+    // Allow placement at any position
+    placePuzzlePiece(slot, pieceNumber);
+    gameState.draggingPiece.element.remove();
+    
+    if (gameState.audio.success) {
+        gameState.audio.success();
+    }
+    
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) {
+        console.debug('Haptics not available:', e.message);
     }
     
     gameState.draggingPiece.element.classList.remove('dragging');
     gameState.draggingPiece = null;
+    
+    // Validate magic square after placement
+    validateMagicSquare();
 }
 
 // Touch handlers for mobile
@@ -350,9 +365,30 @@ function handleTouchMove(e) {
     e.preventDefault();
     
     const touch = e.touches[0];
-    touchPiece.element.style.left = `${touch.clientX - touchOffset.x}px`;
-    touchPiece.element.style.top = `${touch.clientY - touchOffset.y}px`;
-    touchPiece.element.style.transform = 'none';
+    const pieceElement = touchPiece.element;
+    
+    // Update position to follow touch
+    pieceElement.style.position = 'fixed';
+    pieceElement.style.left = `${touch.clientX - touchOffset.x}px`;
+    pieceElement.style.top = `${touch.clientY - touchOffset.y}px`;
+    pieceElement.style.transform = 'none';
+    pieceElement.style.zIndex = '10000';
+    
+    // Highlight the slot under the touch point
+    const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    // Remove highlight from all slots
+    document.querySelectorAll('.puzzle-slot').forEach(slot => {
+        slot.classList.remove('highlight');
+    });
+    
+    // Add highlight to the slot under the touch if it exists and is empty
+    if (elementUnder && elementUnder.classList.contains('puzzle-slot')) {
+        const slotIndex = parseInt(elementUnder.dataset.index);
+        if (gameState.puzzleBoard[slotIndex] === null) {
+            elementUnder.classList.add('highlight');
+        }
+    }
 }
 
 function handleTouchEnd(e) {
@@ -366,7 +402,12 @@ function handleTouchEnd(e) {
         const slotIndex = parseInt(element.dataset.index);
         const pieceNumber = touchPiece.number;
         
-        if (gameState.solution[slotIndex] === pieceNumber) {
+        // Check if slot is already occupied
+        if (gameState.puzzleBoard[slotIndex] !== null) {
+            // Slot is occupied, return piece to original position
+            returnPieceToOriginalPosition(touchPiece.element, pieceNumber);
+        } else {
+            // Allow placement at any position
             placePuzzlePiece(element, pieceNumber);
             touchPiece.element.remove();
             
@@ -379,18 +420,35 @@ function handleTouchEnd(e) {
             } catch (e) {
                 console.debug('Haptics not available:', e.message);
             }
-        } else {
-            showErrorFeedback(element);
-            // Return piece to center
-            touchPiece.element.style.left = '50%';
-            touchPiece.element.style.top = '50%';
-            touchPiece.element.style.transform = 'translate(-50%, -50%)';
+            
+            // Validate magic square after placement
+            validateMagicSquare();
         }
+    } else {
+        // Return piece to original position if dropped outside
+        returnPieceToOriginalPosition(touchPiece.element, touchPiece.number);
     }
     
     touchPiece.element.classList.remove('dragging');
     touchPiece = null;
     gameState.draggingPiece = null;
+}
+
+// Helper function to return piece to its original position
+function returnPieceToOriginalPosition(pieceElement, pieceNumber) {
+    const chestsContainer = document.getElementById('treasure-chests');
+    const chestsRect = chestsContainer.getBoundingClientRect();
+    const pieceWidth = 80;
+    const spacing = 10;
+    
+    // Find the index of this piece among all pieces
+    const allPieces = Array.from(document.querySelectorAll('.puzzle-piece'));
+    const pieceIndex = allPieces.indexOf(pieceElement);
+    
+    pieceElement.style.position = 'fixed';
+    pieceElement.style.left = `${chestsRect.left + pieceIndex * (pieceWidth + spacing)}px`;
+    pieceElement.style.top = `${chestsRect.top - 100}px`;
+    pieceElement.style.transform = 'none';
 }
 
 // Place puzzle piece in slot
@@ -403,6 +461,77 @@ function placePuzzlePiece(slot, number) {
     
     updateStats();
     checkCompletion();
+}
+
+// Validate Magic Square (rows, columns, and diagonals must sum to 15)
+function validateMagicSquare() {
+    const board = gameState.puzzleBoard;
+    
+    // Clear previous validation classes
+    document.querySelectorAll('.puzzle-slot').forEach(slot => {
+        slot.classList.remove('valid', 'invalid');
+        if (slot.classList.contains('filled')) {
+            slot.classList.add('filled');
+        }
+    });
+    
+    // Only validate if all slots are filled
+    if (board.every(p => p !== null)) {
+        const MAGIC_SUM = 15;
+        
+        // Check rows
+        for (let row = 0; row < 3; row++) {
+            const sum = board[row * 3] + board[row * 3 + 1] + board[row * 3 + 2];
+            const isValid = sum === MAGIC_SUM;
+            for (let col = 0; col < 3; col++) {
+                const slot = document.querySelector(`.puzzle-slot[data-index="${row * 3 + col}"]`);
+                slot.classList.add(isValid ? 'valid' : 'invalid');
+            }
+        }
+        
+        // Check columns
+        for (let col = 0; col < 3; col++) {
+            const sum = board[col] + board[col + 3] + board[col + 6];
+            const isValid = sum === MAGIC_SUM;
+            for (let row = 0; row < 3; row++) {
+                const slot = document.querySelector(`.puzzle-slot[data-index="${row * 3 + col}"]`);
+                // Only mark as invalid if not already valid from row check
+                if (!slot.classList.contains('valid')) {
+                    slot.classList.add(isValid ? 'valid' : 'invalid');
+                } else if (!isValid) {
+                    // If row was valid but column is not, mark as invalid
+                    slot.classList.remove('valid');
+                    slot.classList.add('invalid');
+                }
+            }
+        }
+        
+        // Check main diagonal (top-left to bottom-right: مورب)
+        const mainDiagonalSum = board[0] + board[4] + board[8];
+        const isMainDiagonalValid = mainDiagonalSum === MAGIC_SUM;
+        [0, 4, 8].forEach(index => {
+            const slot = document.querySelector(`.puzzle-slot[data-index="${index}"]`);
+            if (!slot.classList.contains('valid')) {
+                slot.classList.add(isMainDiagonalValid ? 'valid' : 'invalid');
+            } else if (!isMainDiagonalValid) {
+                slot.classList.remove('valid');
+                slot.classList.add('invalid');
+            }
+        });
+        
+        // Check anti-diagonal (top-right to bottom-left: مورب)
+        const antiDiagonalSum = board[2] + board[4] + board[6];
+        const isAntiDiagonalValid = antiDiagonalSum === MAGIC_SUM;
+        [2, 4, 6].forEach(index => {
+            const slot = document.querySelector(`.puzzle-slot[data-index="${index}"]`);
+            if (!slot.classList.contains('valid')) {
+                slot.classList.add(isAntiDiagonalValid ? 'valid' : 'invalid');
+            } else if (!isAntiDiagonalValid) {
+                slot.classList.remove('valid');
+                slot.classList.add('invalid');
+            }
+        });
+    }
 }
 
 // Show error feedback
@@ -440,10 +569,40 @@ function checkCompletion() {
     const isComplete = gameState.puzzleBoard.every(p => p !== null);
     
     if (isComplete) {
-        setTimeout(() => {
-            showNotification('🎉 تبریک! پازل کامل شد! 🎉', 3000);
-            celebrateCompletion();
-        }, 500);
+        // Check if it's a valid magic square
+        const MAGIC_SUM = 15;
+        const board = gameState.puzzleBoard;
+        let isValidMagicSquare = true;
+        
+        // Check rows
+        for (let row = 0; row < 3; row++) {
+            const sum = board[row * 3] + board[row * 3 + 1] + board[row * 3 + 2];
+            if (sum !== MAGIC_SUM) isValidMagicSquare = false;
+        }
+        
+        // Check columns
+        for (let col = 0; col < 3; col++) {
+            const sum = board[col] + board[col + 3] + board[col + 6];
+            if (sum !== MAGIC_SUM) isValidMagicSquare = false;
+        }
+        
+        // Check diagonals (مورب)
+        const mainDiagonalSum = board[0] + board[4] + board[8];
+        const antiDiagonalSum = board[2] + board[4] + board[6];
+        if (mainDiagonalSum !== MAGIC_SUM || antiDiagonalSum !== MAGIC_SUM) {
+            isValidMagicSquare = false;
+        }
+        
+        if (isValidMagicSquare) {
+            setTimeout(() => {
+                showNotification('🎉 تبریک! مربع جادویی درست است! 🎉', 3000);
+                celebrateCompletion();
+            }, 500);
+        } else {
+            setTimeout(() => {
+                showNotification('❌ مجموع ردیف‌ها، ستون‌ها و مورب‌ها باید ۱۵ باشد', 2500);
+            }, 500);
+        }
     }
 }
 
@@ -522,6 +681,7 @@ function loadGameState() {
             });
             
             updateStats();
+            validateMagicSquare();
         } catch (e) {
             console.error('Failed to load game state:', e);
         }

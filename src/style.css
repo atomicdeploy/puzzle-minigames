@@ -6,6 +6,12 @@
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-drag: none;
+    user-drag: none;
 }
 
 :root {
@@ -220,8 +226,20 @@ header h1 {
 
 .puzzle-slot.filled {
     border-style: solid;
+    border-color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.puzzle-slot.valid {
     border-color: var(--success-color);
-    background: rgba(0, 184, 148, 0.1);
+    background: rgba(0, 184, 148, 0.2);
+    box-shadow: 0 0 15px rgba(0, 184, 148, 0.4);
+}
+
+.puzzle-slot.invalid {
+    border-color: var(--error-color);
+    background: rgba(214, 48, 49, 0.2);
+    box-shadow: 0 0 15px rgba(214, 48, 49, 0.4);
 }
 
 .puzzle-slot.highlight {
