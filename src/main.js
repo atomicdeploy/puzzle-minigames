@@ -285,25 +285,6 @@ function createPuzzlePiece(number) {
     piece.style.animation = 'piece-entrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
 }
 
-// Add entrance animation keyframes
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes piece-entrance {
-        0% {
-            transform: translate(-50%, -50%) scale(0) rotate(-180deg);
-            opacity: 0;
-        }
-        60% {
-            transform: translate(-50%, -50%) scale(1.15) rotate(10deg);
-        }
-        100% {
-            transform: translate(-50%, -50%) scale(1) rotate(0deg);
-            opacity: 1;
-        }
-    }
-`;
-document.head.appendChild(style);
-
 // Drag and Drop Handlers
 function handleDragStart(e) {
     const element = e.target;
@@ -445,8 +426,15 @@ function handleTouchStart(e) {
 }
 
 // Physics-based animation loop for smooth dragging
-function animateDrag() {
+let lastFrameTime = 0;
+
+function animateDrag(timestamp) {
     if (!touchPiece) return;
+    
+    // Calculate delta time for frame-independent animation
+    if (!lastFrameTime) lastFrameTime = timestamp;
+    const deltaTime = Math.min((timestamp - lastFrameTime) / 16.67, 2); // Normalize to 60fps
+    lastFrameTime = timestamp;
     
     const element = touchPiece.element;
     
@@ -460,27 +448,27 @@ function animateDrag() {
     const dy = dragPhysics.targetY - dragPhysics.currentY;
     
     // Update velocity with spring force
-    dragPhysics.velocityX += dx * springStrength;
-    dragPhysics.velocityY += dy * springStrength;
+    dragPhysics.velocityX += dx * springStrength * deltaTime;
+    dragPhysics.velocityY += dy * springStrength * deltaTime;
     
     // Apply damping
-    dragPhysics.velocityX *= damping;
-    dragPhysics.velocityY *= damping;
+    dragPhysics.velocityX *= Math.pow(damping, deltaTime);
+    dragPhysics.velocityY *= Math.pow(damping, deltaTime);
     
     // Update position
-    dragPhysics.currentX += dragPhysics.velocityX;
-    dragPhysics.currentY += dragPhysics.velocityY;
+    dragPhysics.currentX += dragPhysics.velocityX * deltaTime;
+    dragPhysics.currentY += dragPhysics.velocityY * deltaTime;
     
     // Wobble rotation based on velocity
     const velocityMagnitude = Math.sqrt(
         dragPhysics.velocityX * dragPhysics.velocityX + 
         dragPhysics.velocityY * dragPhysics.velocityY
     );
-    dragPhysics.targetRotation = Math.sin(Date.now() / 100) * velocityMagnitude * 0.5;
+    dragPhysics.targetRotation = Math.sin(timestamp / 100) * velocityMagnitude * 0.5;
     
     // Smooth rotation interpolation
-    dragPhysics.rotation += (dragPhysics.targetRotation - dragPhysics.rotation) * 0.2;
-    dragPhysics.rotation *= rotationDamping;
+    dragPhysics.rotation += (dragPhysics.targetRotation - dragPhysics.rotation) * 0.2 * deltaTime;
+    dragPhysics.rotation *= Math.pow(rotationDamping, deltaTime);
     
     // Apply transforms
     element.style.position = 'fixed';
@@ -555,8 +543,13 @@ function handleTouchEnd(e) {
     gameState.draggingPiece = null;
 }
 
+// Utility function for promise-based delays
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Animate piece snapping to slot
-function animateSnapToSlot(pieceElement, slotElement, pieceNumber, slotIndex) {
+async function animateSnapToSlot(pieceElement, slotElement, pieceNumber, slotIndex) {
     const slotRect = slotElement.getBoundingClientRect();
     const targetX = slotRect.left + slotRect.width / 2;
     const targetY = slotRect.top + slotRect.height / 2;
@@ -566,31 +559,31 @@ function animateSnapToSlot(pieceElement, slotElement, pieceNumber, slotIndex) {
     pieceElement.style.top = `${targetY}px`;
     pieceElement.style.transform = 'translate(-50%, -50%) scale(1.1) rotate(0deg)';
     
-    setTimeout(() => {
-        pieceElement.style.transform = 'translate(-50%, -50%) scale(1) rotate(0deg)';
-        
-        setTimeout(() => {
-            placePuzzlePiece(slotElement, pieceNumber);
-            pieceElement.remove();
-            
-            if (gameState.audio.success) {
-                gameState.audio.success();
-            }
-            
-            try {
-                Haptics.impact({ style: ImpactStyle.Light });
-            } catch (e) {
-                console.debug('Haptics not available:', e.message);
-            }
-            
-            // Validate magic square after placement
-            validateMagicSquare();
-        }, 150);
-    }, 50);
+    await delay(50);
+    
+    pieceElement.style.transform = 'translate(-50%, -50%) scale(1) rotate(0deg)';
+    
+    await delay(150);
+    
+    placePuzzlePiece(slotElement, pieceNumber);
+    pieceElement.remove();
+    
+    if (gameState.audio.success) {
+        gameState.audio.success();
+    }
+    
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) {
+        console.debug('Haptics not available:', e.message);
+    }
+    
+    // Validate magic square after placement
+    validateMagicSquare();
 }
 
 // Animate piece returning to original position
-function animateReturnToPosition(pieceElement, pieceNumber) {
+async function animateReturnToPosition(pieceElement, pieceNumber) {
     const chestsContainer = document.getElementById('treasure-chests');
     const chestsRect = chestsContainer.getBoundingClientRect();
     const pieceWidth = 80;
@@ -608,9 +601,9 @@ function animateReturnToPosition(pieceElement, pieceNumber) {
     pieceElement.style.top = `${targetY}px`;
     pieceElement.style.transform = 'translate(-50%, -50%) rotate(0deg)';
     
-    setTimeout(() => {
-        pieceElement.style.transition = '';
-    }, 400);
+    await delay(400);
+    
+    pieceElement.style.transition = '';
 }
 
 // Place puzzle piece in slot
