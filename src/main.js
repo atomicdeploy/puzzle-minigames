@@ -135,6 +135,7 @@ function init3DScene() {
 
 // Create floating 3D puzzle pieces
 const floatingPuzzles = [];
+let backgroundReactionTimeout = null;
 
 function createFloatingPuzzles() {
     const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.1);
@@ -161,12 +162,71 @@ function createFloatingPuzzles() {
         mesh.userData = {
             speedX: (Math.random() - 0.5) * 0.01,
             speedY: (Math.random() - 0.5) * 0.01,
-            rotationSpeed: (Math.random() - 0.5) * 0.02
+            rotationSpeed: (Math.random() - 0.5) * 0.02,
+            originalSpeedX: (Math.random() - 0.5) * 0.01,
+            originalSpeedY: (Math.random() - 0.5) * 0.01,
+            originalRotationSpeed: (Math.random() - 0.5) * 0.02
         };
         
         scene.add(mesh);
         floatingPuzzles.push(mesh);
     }
+}
+
+// Trigger background reaction to gameplay events
+function triggerBackgroundReaction(eventType) {
+    if (backgroundReactionTimeout) {
+        clearTimeout(backgroundReactionTimeout);
+    }
+    
+    switch(eventType) {
+        case 'placement':
+            // Speed up rotation and movement
+            floatingPuzzles.forEach(puzzle => {
+                puzzle.userData.speedX *= 3;
+                puzzle.userData.speedY *= 3;
+                puzzle.userData.rotationSpeed *= 3;
+                // Flash colors
+                puzzle.material.emissive.setHSL(Math.random(), 1, 0.5);
+            });
+            break;
+        case 'removal':
+            // Slow down and dim
+            floatingPuzzles.forEach(puzzle => {
+                puzzle.userData.speedX *= 0.5;
+                puzzle.userData.speedY *= 0.5;
+                puzzle.userData.rotationSpeed *= 0.5;
+            });
+            break;
+        case 'completion':
+            // Explosive colorful animation
+            floatingPuzzles.forEach((puzzle, i) => {
+                setTimeout(() => {
+                    puzzle.material.color.setHSL(Math.random(), 1, 0.6);
+                    puzzle.material.emissive.setHSL(Math.random(), 1, 0.5);
+                    puzzle.userData.speedX *= 5;
+                    puzzle.userData.speedY *= 5;
+                    puzzle.userData.rotationSpeed *= 5;
+                }, i * 50);
+            });
+            break;
+        case 'discovery':
+            // Pulse effect
+            floatingPuzzles.forEach(puzzle => {
+                puzzle.material.emissive.setHSL(Math.random(), 0.8, 0.4);
+            });
+            break;
+    }
+    
+    // Reset to normal after 2 seconds
+    backgroundReactionTimeout = setTimeout(() => {
+        floatingPuzzles.forEach(puzzle => {
+            puzzle.userData.speedX = puzzle.userData.originalSpeedX;
+            puzzle.userData.speedY = puzzle.userData.originalSpeedY;
+            puzzle.userData.rotationSpeed = puzzle.userData.originalRotationSpeed;
+            puzzle.material.emissive.setHSL(Math.random(), 0.5, 0.3);
+        });
+    }, 2000);
 }
 
 function animate() {
@@ -219,29 +279,66 @@ function initPuzzleBoard() {
 
 // Handle click on puzzle slot for click-to-place mode
 function handleSlotClick(e) {
-    if (!gameState.selectedPiece) return;
-    
     const slot = e.currentTarget;
     const slotIndex = parseInt(slot.dataset.index);
     
-    // Check if slot is already occupied
-    if (gameState.puzzleBoard[slotIndex] !== null) {
-        // Play error sound
-        if (gameState.audio.error) {
-            gameState.audio.error();
+    // If there's a selected piece, place it
+    if (gameState.selectedPiece) {
+        // Check if slot is occupied
+        if (gameState.puzzleBoard[slotIndex] !== null) {
+            // Play error sound
+            if (gameState.audio.error) {
+                gameState.audio.error();
+            }
+            return;
         }
-        return;
+        
+        // Place the piece
+        const pieceNumber = gameState.selectedPiece.number;
+        const pieceElement = gameState.selectedPiece.element;
+        
+        // Animate snap to slot
+        animateSnapToSlot(pieceElement, slot, pieceNumber, slotIndex);
+        triggerBackgroundReaction('placement');
+        
+        // Clear selection
+        gameState.selectedPiece = null;
+    } else if (gameState.puzzleBoard[slotIndex] !== null) {
+        // If slot has a piece and no piece is selected, allow picking it up
+        const pieceNumber = gameState.puzzleBoard[slotIndex];
+        removePieceFromSlot(slotIndex, pieceNumber);
+    }
+}
+
+// Remove piece from slot and make it available again
+function removePieceFromSlot(slotIndex, pieceNumber) {
+    const slot = document.querySelector(`.puzzle-slot[data-index="${slotIndex}"]`);
+    if (!slot) return;
+    
+    // Clear the slot
+    gameState.puzzleBoard[slotIndex] = null;
+    slot.className = 'puzzle-slot empty';
+    slot.innerHTML = '❓';
+    
+    // Add piece back to available pieces
+    if (!gameState.availablePieces.includes(pieceNumber)) {
+        gameState.availablePieces.push(pieceNumber);
     }
     
-    // Place the piece
-    const pieceNumber = gameState.selectedPiece.number;
-    const pieceElement = gameState.selectedPiece.element;
+    // Recreate the piece
+    recreatePuzzlePiece(pieceNumber);
     
-    // Animate snap to slot
-    animateSnapToSlot(pieceElement, slot, pieceNumber, slotIndex);
+    // Update stats and validation
+    updateStats();
+    validateMagicSquare();
+    saveGameState();
     
-    // Clear selection
-    gameState.selectedPiece = null;
+    // Play pickup sound
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
+    }
+    
+    triggerBackgroundReaction('removal');
 }
 
 // Initialize Treasure Chests
@@ -298,6 +395,9 @@ function openTreasureChest(number) {
     
     // Show mini-game link notification (placeholder for now)
     showNotification(`پازل ${number} کشف شد! 🎉`);
+    
+    // Trigger background reaction
+    triggerBackgroundReaction('discovery');
 }
 
 // Create Puzzle Piece
@@ -357,20 +457,15 @@ function handlePieceMouseDown(e) {
     const element = e.currentTarget;
     const rect = element.getBoundingClientRect();
     
-    // Play pickup sound and haptic
-    if (gameState.audio.pickup) {
-        gameState.audio.pickup();
-    }
-    
-    try {
-        Haptics.impact({ style: ImpactStyle.Light });
-    } catch (error) {
-        console.debug('Haptics not available:', error.message);
-    }
+    // Record start position for movement detection
+    dragStartPos = { x: e.clientX, y: e.clientY };
+    hasMoved = false;
     
     gameState.draggingPiece = {
         element: element,
-        number: parseInt(element.dataset.number)
+        number: parseInt(element.dataset.number),
+        startX: e.clientX,
+        startY: e.clientY
     };
     
     // Initialize physics for mouse drag
@@ -393,6 +488,7 @@ function handlePieceMouseDown(e) {
     
     // Use a temporary container for desktop drag
     touchPiece = gameState.draggingPiece;
+    lastFrameTime = 0;
     dragPhysics.animationFrame = requestAnimationFrame(animateDrag);
     
     // Track mouse movement during drag
@@ -446,10 +542,49 @@ function handleDragStart(e) {
 function handleMouseDrag(e) {
     if (!touchPiece) return;
     
+    // Check if moved beyond threshold
+    const dx = Math.abs(e.clientX - dragStartPos.x);
+    const dy = Math.abs(e.clientY - dragStartPos.y);
+    
+    if (!hasMoved && (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD)) {
+        hasMoved = true;
+        // Play pickup sound and haptic only when starting actual drag
+        if (gameState.audio.pickup) {
+            gameState.audio.pickup();
+        }
+        try {
+            Haptics.impact({ style: ImpactStyle.Light });
+        } catch (error) {
+            console.debug('Haptics not available:', error.message);
+        }
+    }
+    
     // Update target position for physics
     const rect = touchPiece.element.getBoundingClientRect();
     dragPhysics.targetX = e.clientX - rect.width / 2;
     dragPhysics.targetY = e.clientY - rect.height / 2;
+    
+    // Highlight slots during drag
+    if (hasMoved) {
+        const elementUnder = document.elementFromPoint(e.clientX, e.clientY);
+        updateSlotHighlights(elementUnder);
+    }
+}
+
+function updateSlotHighlights(elementUnder) {
+    // Remove all highlights
+    document.querySelectorAll('.puzzle-slot').forEach(slot => {
+        slot.classList.remove('highlight');
+    });
+    
+    // Add highlight to valid slot under cursor
+    if (elementUnder && elementUnder.classList.contains('puzzle-slot')) {
+        const slotIndex = parseInt(elementUnder.dataset.index);
+        // Only highlight if slot is empty
+        if (gameState.puzzleBoard[slotIndex] === null) {
+            elementUnder.classList.add('highlight');
+        }
+    }
 }
 
 function handleMouseDrop(e) {
@@ -464,18 +599,40 @@ function handleMouseDrop(e) {
         dragPhysics.animationFrame = null;
     }
     
+    // Clear all highlights
+    document.querySelectorAll('.puzzle-slot').forEach(slot => {
+        slot.classList.remove('highlight');
+    });
+    
+    // If not moved beyond threshold, treat as click for click-to-place
+    if (!hasMoved) {
+        touchPiece.element.classList.remove('dragging');
+        touchPiece = null;
+        gameState.draggingPiece = null;
+        // Let the click event handle selection
+        return;
+    }
+    
     const element = document.elementFromPoint(e.clientX, e.clientY);
     
     if (element && element.classList.contains('puzzle-slot')) {
         const slotIndex = parseInt(element.dataset.index);
         const pieceNumber = touchPiece.number;
         
+        // Check if slot is occupied
         if (gameState.puzzleBoard[slotIndex] !== null) {
+            // Slot occupied, return piece
             animateReturnToPosition(touchPiece.element, pieceNumber);
+            if (gameState.audio.error) {
+                gameState.audio.error();
+            }
         } else {
+            // Place piece in empty slot
             animateSnapToSlot(touchPiece.element, element, pieceNumber, slotIndex);
+            triggerBackgroundReaction('placement');
         }
     } else {
+        // Dropped outside, return to position
         animateReturnToPosition(touchPiece.element, touchPiece.number);
     }
     
@@ -509,26 +666,24 @@ let dragPhysics = {
     animationFrame: null
 };
 let lastFrameTime = 0;
+let dragStartPos = { x: 0, y: 0 };
+let hasMoved = false;
+const DRAG_THRESHOLD = 5; // pixels to consider as drag vs click
 
 function handleTouchStart(e) {
     e.preventDefault();
     const touch = e.touches[0];
     const element = e.currentTarget;
     
-    // Play pickup sound and haptic
-    if (gameState.audio.pickup) {
-        gameState.audio.pickup();
-    }
-    
-    try {
-        Haptics.impact({ style: ImpactStyle.Light });
-    } catch (error) {
-        console.debug('Haptics not available:', error.message);
-    }
+    // Record start position for movement detection
+    dragStartPos = { x: touch.clientX, y: touch.clientY };
+    hasMoved = false;
     
     touchPiece = {
         element: element,
-        number: parseInt(element.dataset.number)
+        number: parseInt(element.dataset.number),
+        startX: touch.clientX,
+        startY: touch.clientY
     };
     
     const rect = element.getBoundingClientRect();
@@ -619,24 +774,31 @@ function handleTouchMove(e) {
     
     const touch = e.touches[0];
     
+    // Check if moved beyond threshold
+    const dx = Math.abs(touch.clientX - dragStartPos.x);
+    const dy = Math.abs(touch.clientY - dragStartPos.y);
+    
+    if (!hasMoved && (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD)) {
+        hasMoved = true;
+        // Play pickup sound and haptic only when starting actual drag
+        if (gameState.audio.pickup) {
+            gameState.audio.pickup();
+        }
+        try {
+            Haptics.impact({ style: ImpactStyle.Light });
+        } catch (error) {
+            console.debug('Haptics not available:', error.message);
+        }
+    }
+    
     // Update target position for physics
     dragPhysics.targetX = touch.clientX - touchOffset.x;
     dragPhysics.targetY = touch.clientY - touchOffset.y;
     
-    // Highlight the slot under the touch point
-    const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-    
-    // Remove highlight from all slots
-    document.querySelectorAll('.puzzle-slot').forEach(slot => {
-        slot.classList.remove('highlight');
-    });
-    
-    // Add highlight to the slot under the touch if it exists and is empty
-    if (elementUnder && elementUnder.classList.contains('puzzle-slot')) {
-        const slotIndex = parseInt(elementUnder.dataset.index);
-        if (gameState.puzzleBoard[slotIndex] === null) {
-            elementUnder.classList.add('highlight');
-        }
+    // Highlight slots during drag
+    if (hasMoved) {
+        const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+        updateSlotHighlights(elementUnder);
     }
 }
 
@@ -650,6 +812,21 @@ function handleTouchEnd(e) {
         dragPhysics.animationFrame = null;
     }
     
+    // Clear all highlights
+    document.querySelectorAll('.puzzle-slot').forEach(slot => {
+        slot.classList.remove('highlight');
+    });
+    
+    // If not moved beyond threshold, treat as tap for click-to-place
+    if (!hasMoved) {
+        touchPiece.element.classList.remove('dragging');
+        // Trigger click event for click-to-place
+        touchPiece.element.click();
+        touchPiece = null;
+        gameState.draggingPiece = null;
+        return;
+    }
+    
     const touch = e.changedTouches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     
@@ -657,16 +834,20 @@ function handleTouchEnd(e) {
         const slotIndex = parseInt(element.dataset.index);
         const pieceNumber = touchPiece.number;
         
-        // Check if slot is already occupied
+        // Check if slot is occupied
         if (gameState.puzzleBoard[slotIndex] !== null) {
-            // Slot is occupied, animate return to original position
+            // Slot occupied, return piece
             animateReturnToPosition(touchPiece.element, pieceNumber);
+            if (gameState.audio.error) {
+                gameState.audio.error();
+            }
         } else {
-            // Allow placement at any position with snap animation
+            // Place piece in empty slot
             animateSnapToSlot(touchPiece.element, element, pieceNumber, slotIndex);
+            triggerBackgroundReaction('placement');
         }
     } else {
-        // Return piece to original position if dropped outside
+        // Dropped outside, return to position
         animateReturnToPosition(touchPiece.element, touchPiece.number);
     }
     
@@ -903,6 +1084,7 @@ function checkCompletion() {
             setTimeout(() => {
                 showNotification('🎉 تبریک! مربع جادویی درست است! 🎉', 3000);
                 celebrateCompletion();
+                triggerBackgroundReaction('completion');
             }, 500);
         } else {
             setTimeout(() => {
