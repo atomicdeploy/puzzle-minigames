@@ -402,6 +402,12 @@ header h1 {
     z-index: 10000;
 }
 
+.puzzle-piece.selected {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 0 0 3px var(--accent-3), 0 15px 40px rgba(0, 0, 0, 0.6);
+    filter: brightness(1.15);
+}
+
 /* Feedback Overlay */
 #feedback-overlay {
     position: fixed;

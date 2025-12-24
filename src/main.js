@@ -10,11 +10,14 @@ const AUTO_SAVE_INTERVAL = 5000; // milliseconds
 const gameState = {
     discoveredPuzzles: new Set(),
     puzzleBoard: Array(PUZZLE_SIZE).fill(null),
+    availablePieces: [], // Track pieces that haven't been placed yet
     draggingPiece: null,
+    selectedPiece: null, // For click-to-place mode
     audio: {
         error: null,
         success: null,
-        discover: null
+        discover: null,
+        pickup: null
     }
 };
 
@@ -70,6 +73,21 @@ function initAudio() {
             oscillator.start(audioContext.currentTime + delay);
             oscillator.stop(audioContext.currentTime + delay + 0.4);
         });
+    };
+    
+    // Create pickup sound (short beep)
+    gameState.audio.pickup = () => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
     };
 }
 
@@ -186,7 +204,10 @@ function initPuzzleBoard() {
         slot.dataset.index = i;
         slot.innerHTML = '❓';
         
-        // Add drop event listeners
+        // Add event listeners for click-to-place
+        slot.addEventListener('click', handleSlotClick);
+        
+        // Keep drag/drop listeners for compatibility
         slot.addEventListener('dragover', handleDragOver);
         slot.addEventListener('drop', handleDrop);
         slot.addEventListener('touchmove', handleTouchMove);
@@ -194,6 +215,33 @@ function initPuzzleBoard() {
         
         board.appendChild(slot);
     }
+}
+
+// Handle click on puzzle slot for click-to-place mode
+function handleSlotClick(e) {
+    if (!gameState.selectedPiece) return;
+    
+    const slot = e.currentTarget;
+    const slotIndex = parseInt(slot.dataset.index);
+    
+    // Check if slot is already occupied
+    if (gameState.puzzleBoard[slotIndex] !== null) {
+        // Play error sound
+        if (gameState.audio.error) {
+            gameState.audio.error();
+        }
+        return;
+    }
+    
+    // Place the piece
+    const pieceNumber = gameState.selectedPiece.number;
+    const pieceElement = gameState.selectedPiece.element;
+    
+    // Animate snap to slot
+    animateSnapToSlot(pieceElement, slot, pieceNumber, slotIndex);
+    
+    // Clear selection
+    gameState.selectedPiece = null;
 }
 
 // Initialize Treasure Chests
@@ -259,6 +307,9 @@ function createPuzzlePiece(number) {
     piece.dataset.number = number;
     piece.innerHTML = `🧩<div class="puzzle-number">${number}</div>`;
     
+    // Add to available pieces
+    gameState.availablePieces.push(number);
+    
     // Position pieces above the treasure chest area in a horizontal line
     const chestsContainer = document.getElementById('treasure-chests');
     const chestsRect = chestsContainer.getBoundingClientRect();
@@ -276,19 +327,46 @@ function createPuzzlePiece(number) {
     
     // Drag events - disable native HTML5 drag
     piece.draggable = false;
-    piece.addEventListener('mousedown', handleDragStart);
+    piece.addEventListener('mousedown', handlePieceMouseDown);
+    piece.addEventListener('click', handlePieceClick);
     piece.addEventListener('touchstart', handleTouchStart, { passive: false });
+    
+    // Prevent clicks on the number badge from propagating
+    const numberBadge = piece.querySelector('.puzzle-number');
+    if (numberBadge) {
+        numberBadge.addEventListener('click', (e) => e.stopPropagation());
+        numberBadge.addEventListener('mousedown', (e) => e.stopPropagation());
+        numberBadge.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: false });
+    }
     
     document.body.appendChild(piece);
     
     // Animate entrance with bounce
     piece.style.animation = 'piece-entrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    
+    // Save state after adding piece
+    saveGameState();
 }
 
 // Drag and Drop Handlers
-function handleDragStart(e) {
-    const element = e.target;
+function handlePieceMouseDown(e) {
+    // Only start drag on left mouse button
+    if (e.button !== 0) return;
+    
+    e.preventDefault();
+    const element = e.currentTarget;
     const rect = element.getBoundingClientRect();
+    
+    // Play pickup sound and haptic
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
+    }
+    
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (error) {
+        console.debug('Haptics not available:', error.message);
+    }
     
     gameState.draggingPiece = {
         element: element,
@@ -320,6 +398,49 @@ function handleDragStart(e) {
     // Track mouse movement during drag
     document.addEventListener('mousemove', handleMouseDrag);
     document.addEventListener('mouseup', handleMouseDrop);
+}
+
+// Click handler for click-to-place mode
+function handlePieceClick(e) {
+    e.stopPropagation();
+    
+    const element = e.currentTarget;
+    const number = parseInt(element.dataset.number);
+    
+    // Deselect if clicking the same piece
+    if (gameState.selectedPiece && gameState.selectedPiece.number === number) {
+        element.classList.remove('selected');
+        gameState.selectedPiece = null;
+        return;
+    }
+    
+    // Deselect previous piece
+    if (gameState.selectedPiece) {
+        gameState.selectedPiece.element.classList.remove('selected');
+    }
+    
+    // Select this piece
+    element.classList.add('selected');
+    gameState.selectedPiece = {
+        element: element,
+        number: number
+    };
+    
+    // Play pickup sound
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
+    }
+    
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (error) {
+        console.debug('Haptics not available:', error.message);
+    }
+}
+
+function handleDragStart(e) {
+    // This is kept for compatibility but main handler is handlePieceMouseDown
+    handlePieceMouseDown(e);
 }
 
 function handleMouseDrag(e) {
@@ -393,6 +514,17 @@ function handleTouchStart(e) {
     const touch = e.touches[0];
     const element = e.currentTarget;
     
+    // Play pickup sound and haptic
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
+    }
+    
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (error) {
+        console.debug('Haptics not available:', error.message);
+    }
+    
     touchPiece = {
         element: element,
         number: parseInt(element.dataset.number)
@@ -422,6 +554,7 @@ function handleTouchStart(e) {
     if (dragPhysics.animationFrame) {
         cancelAnimationFrame(dragPhysics.animationFrame);
     }
+    lastFrameTime = 0;
     dragPhysics.animationFrame = requestAnimationFrame(animateDrag);
 }
 
@@ -565,6 +698,12 @@ async function animateSnapToSlot(pieceElement, slotElement, pieceNumber, slotInd
     
     await delay(150);
     
+    // Remove from available pieces
+    const index = gameState.availablePieces.indexOf(pieceNumber);
+    if (index > -1) {
+        gameState.availablePieces.splice(index, 1);
+    }
+    
     placePuzzlePiece(slotElement, pieceNumber);
     pieceElement.remove();
     
@@ -580,6 +719,9 @@ async function animateSnapToSlot(pieceElement, slotElement, pieceNumber, slotInd
     
     // Validate magic square after placement
     validateMagicSquare();
+    
+    // Save state
+    saveGameState();
 }
 
 // Animate piece returning to original position
@@ -825,8 +967,9 @@ function loadGameState() {
             const data = JSON.parse(saved);
             gameState.discoveredPuzzles = new Set(data.discoveredPuzzles || []);
             gameState.puzzleBoard = data.puzzleBoard || Array(PUZZLE_SIZE).fill(null);
+            gameState.availablePieces = data.availablePieces || [];
             
-            // Restore UI
+            // Restore UI - treasure chests
             gameState.discoveredPuzzles.forEach(number => {
                 const chest = document.querySelector(`.treasure-chest[data-number="${number}"]`);
                 if (chest) {
@@ -835,6 +978,7 @@ function loadGameState() {
                 }
             });
             
+            // Restore UI - puzzle board
             gameState.puzzleBoard.forEach((number, index) => {
                 if (number) {
                     const slot = document.querySelector(`.puzzle-slot[data-index="${index}"]`);
@@ -845,6 +989,11 @@ function loadGameState() {
                 }
             });
             
+            // Restore available pieces (recreate them without saving)
+            gameState.availablePieces.forEach(number => {
+                recreatePuzzlePiece(number);
+            });
+            
             updateStats();
             validateMagicSquare();
         } catch (e) {
@@ -853,11 +1002,51 @@ function loadGameState() {
     }
 }
 
+// Recreate puzzle piece from saved state (without adding to availablePieces again)
+function recreatePuzzlePiece(number) {
+    const piece = document.createElement('div');
+    piece.className = 'puzzle-piece';
+    piece.dataset.number = number;
+    piece.innerHTML = `🧩<div class="puzzle-number">${number}</div>`;
+    
+    // Position pieces above the treasure chest area in a horizontal line
+    const chestsContainer = document.getElementById('treasure-chests');
+    const chestsRect = chestsContainer.getBoundingClientRect();
+    const pieceWidth = 80;
+    const spacing = 10;
+    
+    // Count existing pieces to position new one
+    const existingPieces = document.querySelectorAll('.puzzle-piece').length;
+    
+    // Position in a row above the treasure chests (centered for transform)
+    piece.style.position = 'fixed';
+    piece.style.left = `${chestsRect.left + existingPieces * (pieceWidth + spacing) + pieceWidth / 2}px`;
+    piece.style.top = `${chestsRect.top - 100 + 40}px`;
+    piece.style.transform = 'translate(-50%, -50%)';
+    
+    // Drag events - disable native HTML5 drag
+    piece.draggable = false;
+    piece.addEventListener('mousedown', handlePieceMouseDown);
+    piece.addEventListener('click', handlePieceClick);
+    piece.addEventListener('touchstart', handleTouchStart, { passive: false });
+    
+    // Prevent clicks on the number badge from propagating
+    const numberBadge = piece.querySelector('.puzzle-number');
+    if (numberBadge) {
+        numberBadge.addEventListener('click', (e) => e.stopPropagation());
+        numberBadge.addEventListener('mousedown', (e) => e.stopPropagation());
+        numberBadge.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: false });
+    }
+    
+    document.body.appendChild(piece);
+}
+
 // Save game state to localStorage
 function saveGameState() {
     const data = {
         discoveredPuzzles: Array.from(gameState.discoveredPuzzles),
-        puzzleBoard: gameState.puzzleBoard
+        puzzleBoard: gameState.puzzleBoard,
+        availablePieces: gameState.availablePieces
     };
     localStorage.setItem('infernal-puzzle-game', JSON.stringify(data));
 }
