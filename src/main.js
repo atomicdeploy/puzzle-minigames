@@ -508,6 +508,7 @@ let dragPhysics = {
     targetRotation: 0,
     animationFrame: null
 };
+let lastFrameTime = 0;
 
 function handleTouchStart(e) {
     e.preventDefault();
@@ -559,8 +560,6 @@ function handleTouchStart(e) {
 }
 
 // Physics-based animation loop for smooth dragging
-let lastFrameTime = 0;
-
 function animateDrag(timestamp) {
     if (!touchPiece) return;
     
@@ -1015,12 +1014,12 @@ function recreatePuzzlePiece(number) {
     const pieceWidth = 80;
     const spacing = 10;
     
-    // Count existing pieces to position new one
-    const existingPieces = document.querySelectorAll('.puzzle-piece').length;
+    // Use the index in availablePieces array for correct positioning
+    const pieceIndex = gameState.availablePieces.indexOf(number);
     
     // Position in a row above the treasure chests (centered for transform)
     piece.style.position = 'fixed';
-    piece.style.left = `${chestsRect.left + existingPieces * (pieceWidth + spacing) + pieceWidth / 2}px`;
+    piece.style.left = `${chestsRect.left + pieceIndex * (pieceWidth + spacing) + pieceWidth / 2}px`;
     piece.style.top = `${chestsRect.top - 100 + 40}px`;
     piece.style.transform = 'translate(-50%, -50%)';
     
