@@ -840,6 +840,9 @@ function handleTouchMove(e) {
 }
 
 function handleTouchEnd(e) {
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchend', handleTouchEnd);
+    
     if (!touchPiece) return;
     e.preventDefault();
     
