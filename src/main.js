@@ -632,13 +632,18 @@ function handleMouseDrop(e) {
         slot.classList.remove('highlight');
     });
     
-    // If not moved beyond threshold, treat as click for click-to-place
+    // If not moved beyond threshold, enter tap/pick mode (NO audio)
     if (!hasMoved) {
         touchPiece.element.classList.remove('dragging');
         touchPiece = null;
         gameState.draggingPiece = null;
-        // Let the click event handle selection
+        // Let the click event handle selection for tap mode
         return;
+    }
+    
+    // Piece WAS moved, so play audio on drop
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
     }
     
     const element = document.elementFromPoint(e.clientX, e.clientY);
@@ -849,14 +854,19 @@ function handleTouchEnd(e) {
         slot.classList.remove('highlight');
     });
     
-    // If not moved beyond threshold, treat as tap for click-to-place
+    // If not moved beyond threshold, enter tap/pick mode (NO audio)
     if (!hasMoved) {
         touchPiece.element.classList.remove('dragging');
-        // Trigger click event for click-to-place
+        // Trigger click event for tap-to-place mode
         touchPiece.element.click();
         touchPiece = null;
         gameState.draggingPiece = null;
         return;
+    }
+    
+    // Piece WAS moved, so play audio on drop
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
     }
     
     const touch = e.changedTouches[0];
@@ -919,15 +929,8 @@ async function animateSnapToSlot(pieceElement, slotElement, pieceNumber, slotInd
     placePuzzlePiece(slotElement, pieceNumber);
     pieceElement.remove();
     
-    if (gameState.audio.success) {
-        gameState.audio.success();
-    }
-    
-    try {
-        Haptics.impact({ style: ImpactStyle.Light });
-    } catch (e) {
-        console.debug('Haptics not available:', e.message);
-    }
+    // Don't play success audio/haptic here because pickup audio was already played on touch down
+    // This prevents double audio feedback
     
     // Validate magic square after placement
     validateMagicSquare();
@@ -966,10 +969,204 @@ function placePuzzlePiece(slot, number) {
     gameState.puzzleBoard[slotIndex] = number;
     
     slot.className = 'puzzle-slot filled success-animation';
-    slot.innerHTML = `🧩<div class="puzzle-number">${number}</div>`;
+    
+    // Create a draggable piece element inside the slot
+    const pieceElement = document.createElement('div');
+    pieceElement.className = 'puzzle-piece-in-slot';
+    pieceElement.dataset.number = number;
+    pieceElement.style.position = 'relative';
+    pieceElement.style.width = '100%';
+    pieceElement.style.height = '100%';
+    pieceElement.style.cursor = 'grab';
+    pieceElement.innerHTML = `🧩<div class="puzzle-number">${number}</div>`;
+    
+    slot.innerHTML = '';
+    slot.appendChild(pieceElement);
+    
+    // Make the placed piece draggable - SAME as regular pieces
+    pieceElement.addEventListener('mousedown', handlePlacedPieceMouseDown);
+    pieceElement.addEventListener('touchstart', handlePlacedPieceTouchStart, { passive: false });
     
     updateStats();
     checkCompletion();
+}
+
+// Handle dragging a piece that's already in a slot
+function handlePlacedPieceMouseDown(e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const slotPiece = e.currentTarget;
+    const pieceNumber = parseInt(slotPiece.dataset.number);
+    const slot = slotPiece.parentElement;
+    const slotIndex = parseInt(slot.dataset.index);
+    const slotRect = slot.getBoundingClientRect();
+    
+    // Play audio immediately on touch down
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
+    }
+    
+    // Haptic feedback on touch down
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (err) {
+        console.debug('Haptics not available');
+    }
+    
+    // Remove from slot
+    gameState.puzzleBoard[slotIndex] = null;
+    slot.className = 'puzzle-slot';
+    slot.innerHTML = '❓';
+    
+    // Create a floating draggable piece
+    const floatingPiece = document.createElement('div');
+    floatingPiece.className = 'puzzle-piece';
+    floatingPiece.dataset.number = pieceNumber;
+    floatingPiece.innerHTML = `🧩<div class="puzzle-number">${pieceNumber}</div>`;
+    floatingPiece.style.position = 'fixed';
+    floatingPiece.style.left = `${slotRect.left + slotRect.width / 2}px`;
+    floatingPiece.style.top = `${slotRect.top + slotRect.height / 2}px`;
+    floatingPiece.style.transform = 'translate(-50%, -50%)';
+    floatingPiece.style.zIndex = '1000';
+    document.body.appendChild(floatingPiece);
+    
+    // Add to available pieces array
+    if (!gameState.availablePieces.includes(pieceNumber)) {
+        gameState.availablePieces.push(pieceNumber);
+    }
+    
+    // Record start position for movement detection
+    dragStartPos = { x: e.clientX, y: e.clientY };
+    hasMoved = false;
+    
+    gameState.draggingPiece = {
+        element: floatingPiece,
+        number: pieceNumber,
+        startX: e.clientX,
+        startY: e.clientY
+    };
+    
+    // Initialize physics
+    dragPhysics.currentX = slotRect.left + slotRect.width / 2 - 40;
+    dragPhysics.currentY = slotRect.top + slotRect.height / 2 - 40;
+    dragPhysics.targetX = dragPhysics.currentX;
+    dragPhysics.targetY = dragPhysics.currentY;
+    dragPhysics.velocityX = 0;
+    dragPhysics.velocityY = 0;
+    dragPhysics.rotation = 0;
+    dragPhysics.targetRotation = 0;
+    
+    floatingPiece.classList.add('dragging');
+    floatingPiece.style.transition = 'none';
+    
+    // Start physics animation
+    if (dragPhysics.animationFrame) {
+        cancelAnimationFrame(dragPhysics.animationFrame);
+    }
+    
+    touchPiece = gameState.draggingPiece;
+    lastFrameTime = 0;
+    dragPhysics.animationFrame = requestAnimationFrame(animateDrag);
+    
+    // Attach mouse movement handlers
+    document.addEventListener('mousemove', handleMouseDrag);
+    document.addEventListener('mouseup', handleMouseDrop);
+    
+    validateMagicSquare();
+    saveGameState();
+}
+
+// Handle touch dragging a piece that's already in a slot
+function handlePlacedPieceTouchStart(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const slotPiece = e.currentTarget;
+    const pieceNumber = parseInt(slotPiece.dataset.number);
+    const slot = slotPiece.parentElement;
+    const slotIndex = parseInt(slot.dataset.index);
+    const slotRect = slot.getBoundingClientRect();
+    const touch = e.touches[0];
+    
+    // Play audio immediately on touch down
+    if (gameState.audio.pickup) {
+        gameState.audio.pickup();
+    }
+    
+    // Haptic feedback on touch down
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (err) {
+        console.debug('Haptics not available');
+    }
+    
+    // Remove from slot
+    gameState.puzzleBoard[slotIndex] = null;
+    slot.className = 'puzzle-slot';
+    slot.innerHTML = '❓';
+    
+    // Create a floating draggable piece
+    const floatingPiece = document.createElement('div');
+    floatingPiece.className = 'puzzle-piece';
+    floatingPiece.dataset.number = pieceNumber;
+    floatingPiece.innerHTML = `🧩<div class="puzzle-number">${pieceNumber}</div>`;
+    floatingPiece.style.position = 'fixed';
+    floatingPiece.style.left = `${slotRect.left + slotRect.width / 2}px`;
+    floatingPiece.style.top = `${slotRect.top + slotRect.height / 2}px`;
+    floatingPiece.style.transform = 'translate(-50%, -50%)';
+    floatingPiece.style.zIndex = '1000';
+    document.body.appendChild(floatingPiece);
+    
+    // Add to available pieces array
+    if (!gameState.availablePieces.includes(pieceNumber)) {
+        gameState.availablePieces.push(pieceNumber);
+    }
+    
+    // Record start position for movement detection
+    dragStartPos = { x: touch.clientX, y: touch.clientY };
+    hasMoved = false;
+    
+    gameState.draggingPiece = {
+        element: floatingPiece,
+        number: pieceNumber,
+        startX: touch.clientX,
+        startY: touch.clientY
+    };
+    
+    // Initialize physics
+    dragPhysics.currentX = slotRect.left + slotRect.width / 2 - 40;
+    dragPhysics.currentY = slotRect.top + slotRect.height / 2 - 40;
+    dragPhysics.targetX = dragPhysics.currentX;
+    dragPhysics.targetY = dragPhysics.currentY;
+    dragPhysics.velocityX = 0;
+    dragPhysics.velocityY = 0;
+    dragPhysics.rotation = 0;
+    dragPhysics.targetRotation = 0;
+    
+    floatingPiece.classList.add('dragging');
+    floatingPiece.style.transition = 'none';
+    
+    // Calculate touch offset
+    touchOffset.x = touch.clientX - (slotRect.left + slotRect.width / 2);
+    touchOffset.y = touch.clientY - (slotRect.top + slotRect.height / 2);
+    
+    // Start physics animation
+    if (dragPhysics.animationFrame) {
+        cancelAnimationFrame(dragPhysics.animationFrame);
+    }
+    
+    touchPiece = gameState.draggingPiece;
+    lastFrameTime = 0;
+    dragPhysics.animationFrame = requestAnimationFrame(animateDrag);
+    
+    // Attach touch movement handlers
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+    
+    validateMagicSquare();
+    saveGameState();
 }
 
 // Validate Magic Square (rows, columns, and diagonals must sum to 15)
