@@ -64,6 +64,8 @@ puzzle-minigames/
 
 - Node.js (v18 or higher)
 - npm or yarn
+- (Optional) Android SDK Platform Tools for mobile development with ADB
+- (Optional) scrcpy for screen mirroring
 
 ### Install Dependencies
 
@@ -80,6 +82,37 @@ npm run dev
 ```
 
 Open http://localhost:3000 in your browser (or mobile browser for testing).
+
+**Mobile Development:**
+
+To automatically open the dev server in your connected Android device:
+
+```bash
+npm run dev:mobile
+```
+
+To manually open in mobile device (dev server must be running):
+
+```bash
+npm run mobile:open
+```
+
+**Requirements for mobile commands:**
+- Android device connected via USB with USB debugging enabled
+- ADB (Android Debug Bridge) installed and in PATH
+- Device and computer on the same network
+
+See `scripts/README.md` for detailed mobile development setup.
+
+### Screen Mirroring
+
+Launch scrcpy to mirror your Android device screen:
+
+```bash
+npm run mobile:scrcpy
+```
+
+This allows you to see and control your device from your computer while developing.
 
 ### Build for Production
 
@@ -243,6 +276,29 @@ const gameState = {
 - [ ] Accessibility improvements
 
 ## Development Notes 📝
+
+### NPM Scripts
+
+**Development:**
+- `npm run dev` - Start Vite dev server
+- `npm run dev:mobile` - Start dev server and auto-open in mobile device
+- `npm run dev:vite` - Start Vite directly (original behavior)
+
+**Mobile Development:**
+- `npm run mobile:open` - Open current dev server in connected Android device
+- `npm run mobile:scrcpy` - Launch scrcpy for screen mirroring
+
+**Build & Preview:**
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+
+**Android/Capacitor:**
+- `npm run android:init` - Initialize Capacitor for Android (first time only)
+- `npm run android:sync` - Sync web app to Android
+- `npm run android:open` - Open project in Android Studio
+- `npm run android:build` - Build web app and sync to Android
+
+For detailed mobile development setup and troubleshooting, see `scripts/README.md`.
 
 ### Local Storage
 
