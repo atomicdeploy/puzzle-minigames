@@ -26,11 +26,11 @@ function getVitePort() {
     }
     
     // Default Vite port
-    return '5173';
+    return '3000';
   } catch (error) {
     console.error('Error reading vite.config.js:', error.message);
-    // Return default Vite port
-    return '5173';
+    // Return default port configured in vite.config.js
+    return '3000';
   }
 }
 

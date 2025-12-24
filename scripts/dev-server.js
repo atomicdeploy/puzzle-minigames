@@ -26,6 +26,7 @@ function getVitePort() {
     const result = execSync('node ' + join(__dirname, 'get-vite-port.js'), { encoding: 'utf8' });
     return result.trim();
   } catch (error) {
+    // Fallback handled by get-vite-port.js
     return '3000';
   }
 }

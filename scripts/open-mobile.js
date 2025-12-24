@@ -15,9 +15,13 @@ const __dirname = dirname(__filename);
 function getLocalIP() {
   try {
     const result = execSync('node ' + join(__dirname, 'get-local-ip.js'), { encoding: 'utf8' });
-    return result.trim();
+    const ip = result.trim();
+    if (ip === '127.0.0.1') {
+      console.warn('⚠️  Warning: Could not detect network IP, using localhost. Mobile device may not be able to connect.');
+    }
+    return ip;
   } catch (error) {
-    console.error('Failed to get local IP:', error.message);
+    console.warn('⚠️  Warning: Could not detect network IP, using localhost. Mobile device may not be able to connect.');
     return '127.0.0.1';
   }
 }
@@ -27,7 +31,7 @@ function getVitePort() {
     const result = execSync('node ' + join(__dirname, 'get-vite-port.js'), { encoding: 'utf8' });
     return result.trim();
   } catch (error) {
-    console.error('Failed to get Vite port:', error.message);
+    // Fallback handled by get-vite-port.js
     return '3000';
   }
 }
