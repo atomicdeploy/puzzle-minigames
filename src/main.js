@@ -141,9 +141,10 @@ function createFloatingPuzzles() {
     const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.1);
     
     for (let i = 0; i < 15; i++) {
+        const hue = Math.random();
         const material = new THREE.MeshPhongMaterial({
-            color: new THREE.Color().setHSL(Math.random(), 0.7, 0.6),
-            emissive: new THREE.Color().setHSL(Math.random(), 0.5, 0.3),
+            color: new THREE.Color().setHSL(hue, 0.7, 0.6),
+            emissive: new THREE.Color().setHSL(hue, 0.5, 0.3),
             shininess: 100
         });
         
@@ -159,13 +160,18 @@ function createFloatingPuzzles() {
             Math.random() * Math.PI
         );
         
+        const speedX = (Math.random() - 0.5) * 0.01;
+        const speedY = (Math.random() - 0.5) * 0.01;
+        const rotationSpeed = (Math.random() - 0.5) * 0.02;
+        
         mesh.userData = {
-            speedX: (Math.random() - 0.5) * 0.01,
-            speedY: (Math.random() - 0.5) * 0.01,
-            rotationSpeed: (Math.random() - 0.5) * 0.02,
-            originalSpeedX: (Math.random() - 0.5) * 0.01,
-            originalSpeedY: (Math.random() - 0.5) * 0.01,
-            originalRotationSpeed: (Math.random() - 0.5) * 0.02
+            speedX: speedX,
+            speedY: speedY,
+            rotationSpeed: rotationSpeed,
+            originalSpeedX: speedX,
+            originalSpeedY: speedY,
+            originalRotationSpeed: rotationSpeed,
+            originalEmissive: { h: hue, s: 0.5, l: 0.3 }
         };
         
         scene.add(mesh);
@@ -181,11 +187,11 @@ function triggerBackgroundReaction(eventType) {
     
     switch(eventType) {
         case 'placement':
-            // Speed up rotation and movement
+            // Speed up rotation and movement (bounded)
             floatingPuzzles.forEach(puzzle => {
-                puzzle.userData.speedX *= 3;
-                puzzle.userData.speedY *= 3;
-                puzzle.userData.rotationSpeed *= 3;
+                puzzle.userData.speedX = Math.min(puzzle.userData.originalSpeedX * 3, 0.1);
+                puzzle.userData.speedY = Math.min(puzzle.userData.originalSpeedY * 3, 0.1);
+                puzzle.userData.rotationSpeed = Math.min(puzzle.userData.originalRotationSpeed * 3, 0.1);
                 // Flash colors
                 puzzle.material.emissive.setHSL(Math.random(), 1, 0.5);
             });
@@ -193,22 +199,26 @@ function triggerBackgroundReaction(eventType) {
         case 'removal':
             // Slow down and dim
             floatingPuzzles.forEach(puzzle => {
-                puzzle.userData.speedX *= 0.5;
-                puzzle.userData.speedY *= 0.5;
-                puzzle.userData.rotationSpeed *= 0.5;
+                puzzle.userData.speedX = puzzle.userData.originalSpeedX * 0.5;
+                puzzle.userData.speedY = puzzle.userData.originalSpeedY * 0.5;
+                puzzle.userData.rotationSpeed = puzzle.userData.originalRotationSpeed * 0.5;
             });
             break;
         case 'completion':
-            // Explosive colorful animation
+            // Explosive colorful animation with proper cleanup
+            const completionTimeouts = [];
             floatingPuzzles.forEach((puzzle, i) => {
-                setTimeout(() => {
+                const timeout = setTimeout(() => {
                     puzzle.material.color.setHSL(Math.random(), 1, 0.6);
                     puzzle.material.emissive.setHSL(Math.random(), 1, 0.5);
-                    puzzle.userData.speedX *= 5;
-                    puzzle.userData.speedY *= 5;
-                    puzzle.userData.rotationSpeed *= 5;
+                    puzzle.userData.speedX = Math.min(puzzle.userData.originalSpeedX * 5, 0.15);
+                    puzzle.userData.speedY = Math.min(puzzle.userData.originalSpeedY * 5, 0.15);
+                    puzzle.userData.rotationSpeed = Math.min(puzzle.userData.originalRotationSpeed * 5, 0.15);
                 }, i * 50);
+                completionTimeouts.push(timeout);
             });
+            // Store for cleanup
+            window.completionTimeouts = completionTimeouts;
             break;
         case 'discovery':
             // Pulse effect
@@ -220,11 +230,25 @@ function triggerBackgroundReaction(eventType) {
     
     // Reset to normal after 2 seconds
     backgroundReactionTimeout = setTimeout(() => {
+        // Clear completion timeouts if any
+        if (window.completionTimeouts) {
+            window.completionTimeouts.forEach(t => clearTimeout(t));
+            window.completionTimeouts = null;
+        }
+        
         floatingPuzzles.forEach(puzzle => {
             puzzle.userData.speedX = puzzle.userData.originalSpeedX;
             puzzle.userData.speedY = puzzle.userData.originalSpeedY;
             puzzle.userData.rotationSpeed = puzzle.userData.originalRotationSpeed;
-            puzzle.material.emissive.setHSL(Math.random(), 0.5, 0.3);
+            // Restore original emissive
+            if (!puzzle.userData.originalEmissive) {
+                puzzle.userData.originalEmissive = puzzle.material.emissive.getHSL({});
+            }
+            puzzle.material.emissive.setHSL(
+                puzzle.userData.originalEmissive.h,
+                0.5,
+                0.3
+            );
         });
     }, 2000);
 }
