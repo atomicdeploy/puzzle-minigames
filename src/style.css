@@ -301,6 +301,7 @@ header h1 {
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: none; /* Badge should not be interactive */
 }
 
 /* Treasure Chests */

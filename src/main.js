@@ -10,9 +10,9 @@ const AUTO_SAVE_INTERVAL = 5000; // milliseconds
 const gameState = {
     discoveredPuzzles: new Set(),
     puzzleBoard: Array(PUZZLE_SIZE).fill(null),
-    availablePieces: [], // Track pieces that haven't been placed yet
+    pieces: {}, // Track all pieces by number {1: {element, position: {x, y}}, ...}
     draggingPiece: null,
-    selectedPiece: null, // For click-to-place mode
+    selectedPiece: null, // For tap-to-select mode
     audio: {
         error: null,
         success: null,
