@@ -981,6 +981,9 @@ function placePuzzlePiece(slot, number) {
     pieceElement.style.width = '100%';
     pieceElement.style.height = '100%';
     pieceElement.style.cursor = 'grab';
+    pieceElement.style.display = 'flex';
+    pieceElement.style.alignItems = 'center';
+    pieceElement.style.justifyContent = 'center';
     pieceElement.innerHTML = `🧩<div class="puzzle-number">${number}</div>`;
     
     slot.innerHTML = '';
