@@ -11,6 +11,7 @@ const gameState = {
     discoveredPuzzles: new Set(),
     puzzleBoard: Array(PUZZLE_SIZE).fill(null),
     pieces: {}, // Track all pieces by number {1: {element, position: {x, y}}, ...}
+    availablePieces: [], // Track pieces that are discovered but not placed in slots
     draggingPiece: null,
     selectedPiece: null, // For tap-to-select mode
     audio: {
