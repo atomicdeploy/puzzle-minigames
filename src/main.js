@@ -1490,7 +1490,7 @@ function setupResetButton() {
     // Confirm button - reset game
     resetConfirm.addEventListener('click', () => {
         // Clear localStorage
-        localStorage.removeItem('puzzleGameState');
+        localStorage.removeItem('infernal-puzzle-game');
         
         // Play audio feedback
         if (gameState.audio.error) {
