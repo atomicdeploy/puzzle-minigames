@@ -349,6 +349,9 @@ function removePieceFromSlot(slotIndex, pieceNumber) {
         gameState.availablePieces.push(pieceNumber);
     }
     
+    // Save state after removing piece
+    saveGameState();
+    
     // Recreate the piece
     recreatePuzzlePiece(pieceNumber);
     
@@ -392,6 +395,9 @@ function openTreasureChest(number) {
     
     // Mark as discovered
     gameState.discoveredPuzzles.add(number);
+    
+    // Save state after discovering piece
+    saveGameState();
     
     // Update chest appearance
     const chest = document.querySelector(`.treasure-chest[data-number="${number}"]`);
@@ -993,6 +999,9 @@ function placePuzzlePiece(slot, number) {
     pieceElement.addEventListener('mousedown', handlePlacedPieceMouseDown);
     pieceElement.addEventListener('touchstart', handlePlacedPieceTouchStart, { passive: false });
     
+    // Save state after placing piece
+    saveGameState();
+    
     updateStats();
     checkCompletion();
 }
@@ -1467,9 +1476,6 @@ function saveGameState() {
     localStorage.setItem('infernal-puzzle-game', JSON.stringify(data));
 }
 
-// Auto-save on changes
-const autoSaveTimer = setInterval(saveGameState, AUTO_SAVE_INTERVAL);
-
 // Reset functionality
 function setupResetButton() {
     const resetBtn = document.getElementById('reset-button');
@@ -1489,9 +1495,6 @@ function setupResetButton() {
     
     // Confirm button - reset game
     resetConfirm.addEventListener('click', () => {
-        // Clear auto-save timer
-        clearInterval(autoSaveTimer);
-        
         // Clear localStorage
         localStorage.removeItem('infernal-puzzle-game');
         
