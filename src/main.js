@@ -1468,7 +1468,7 @@ function saveGameState() {
 }
 
 // Auto-save on changes
-setInterval(saveGameState, AUTO_SAVE_INTERVAL);
+const autoSaveTimer = setInterval(saveGameState, AUTO_SAVE_INTERVAL);
 
 // Reset functionality
 function setupResetButton() {
@@ -1489,6 +1489,9 @@ function setupResetButton() {
     
     // Confirm button - reset game
     resetConfirm.addEventListener('click', () => {
+        // Clear auto-save timer
+        clearInterval(autoSaveTimer);
+        
         // Clear localStorage
         localStorage.removeItem('infernal-puzzle-game');
         
