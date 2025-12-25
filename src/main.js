@@ -1470,6 +1470,45 @@ function saveGameState() {
 // Auto-save on changes
 setInterval(saveGameState, AUTO_SAVE_INTERVAL);
 
+// Reset functionality
+function setupResetButton() {
+    const resetBtn = document.getElementById('reset-button');
+    const resetDialog = document.getElementById('reset-dialog');
+    const resetConfirm = document.getElementById('reset-confirm');
+    const resetCancel = document.getElementById('reset-cancel');
+    
+    // Show dialog on button click
+    resetBtn.addEventListener('click', () => {
+        resetDialog.style.display = 'flex';
+    });
+    
+    // Cancel button - close dialog
+    resetCancel.addEventListener('click', () => {
+        resetDialog.style.display = 'none';
+    });
+    
+    // Confirm button - reset game
+    resetConfirm.addEventListener('click', () => {
+        // Clear localStorage
+        localStorage.removeItem('puzzleGameState');
+        
+        // Play audio feedback
+        if (gameState.audio.error) {
+            gameState.audio.error();
+        }
+        
+        // Reload page to reset everything
+        window.location.reload();
+    });
+    
+    // Close dialog on clicking overlay
+    resetDialog.addEventListener('click', (e) => {
+        if (e.target === resetDialog) {
+            resetDialog.style.display = 'none';
+        }
+    });
+}
+
 // Initialize game
 function initGame() {
     initAudio();
@@ -1477,6 +1516,7 @@ function initGame() {
     initPuzzleBoard();
     initTreasureChests();
     loadGameState();
+    setupResetButton();
     
     // Hide loading screen
     setTimeout(() => {
