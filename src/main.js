@@ -2,6 +2,61 @@ import './style.css';
 import * as THREE from 'three';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
+// Global Error Handler
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('Global Error Caught:', {
+        message,
+        source,
+        lineno,
+        colno,
+        error,
+        stack: error?.stack
+    });
+    showErrorNotification(message, lineno);
+    return false; // Don't suppress default error handling
+};
+
+window.onunhandledrejection = function(event) {
+    console.error('Unhandled Promise Rejection:', event.reason);
+    showErrorNotification('خطای Promise: ' + (event.reason?.message || event.reason));
+    event.preventDefault();
+};
+
+function showErrorNotification(message, line) {
+    // Remove any existing error overlays
+    document.querySelectorAll('.error-overlay').forEach(el => el.remove());
+    
+    const errorOverlay = document.createElement('div');
+    errorOverlay.className = 'error-overlay';
+    errorOverlay.innerHTML = `
+        <div class="error-modal">
+            <h3>⚠️ خطای برنامه</h3>
+            <p class="error-message">${message}</p>
+            ${line ? `<p class="error-line">خط: ${line}</p>` : ''}
+            <button class="error-dismiss">بستن</button>
+        </div>
+    `;
+    
+    document.body.appendChild(errorOverlay);
+    
+    // Auto-dismiss after 5 seconds
+    const dismissTimeout = setTimeout(() => {
+        errorOverlay.remove();
+    }, 5000);
+    
+    // Manual dismiss
+    const dismissBtn = errorOverlay.querySelector('.error-dismiss');
+    const closeError = () => {
+        clearTimeout(dismissTimeout);
+        errorOverlay.remove();
+    };
+    
+    dismissBtn.addEventListener('click', closeError);
+    errorOverlay.addEventListener('click', (e) => {
+        if (e.target === errorOverlay) closeError();
+    });
+}
+
 // Constants
 const PUZZLE_SIZE = 9;
 const AUTO_SAVE_INTERVAL = 5000; // milliseconds
