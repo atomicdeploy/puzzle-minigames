@@ -392,6 +392,53 @@ function initSubmitButton() {
     });
 }
 
+// Reset all combination fields
+function resetCombination() {
+    if (gameState.isUnlocked) return; // Don't reset if already solved
+    
+    // Clear all fields
+    gameState.combination = [null, null, null, null, null];
+    
+    // Update all field displays
+    document.querySelectorAll('.digit-field').forEach((field, index) => {
+        const display = field.querySelector('.digit-display');
+        display.textContent = '-';
+        field.classList.remove('filled');
+    });
+    
+    // Clear hint statuses
+    updateHintStatuses();
+    
+    // Play click sound
+    if (gameState.audio.click) {
+        gameState.audio.click();
+    }
+    
+    // Haptic feedback
+    try {
+        Haptics.impact({ style: ImpactStyle.Medium });
+    } catch (e) {
+        console.debug('Haptics not available:', e.message);
+    }
+    
+    // Save state
+    saveGameState();
+    
+    // Show notification
+    showNotification('تمام ارقام پاک شد', 'info');
+}
+
+// Initialize reset button
+function initResetButton() {
+    const resetBtn = document.getElementById('reset-btn');
+    
+    resetBtn.addEventListener('click', resetCombination);
+    resetBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        resetCombination();
+    });
+}
+
 // Check if solution is correct
 function checkSolution() {
     if (gameState.isUnlocked) return;
@@ -424,10 +471,13 @@ function handleSuccess() {
     lockIcon.classList.remove('locked');
     lockIcon.classList.add('unlocked');
     
-    // Update submit button
+    // Disable buttons
     const submitBtn = document.getElementById('submit-btn');
     submitBtn.classList.add('success');
     submitBtn.disabled = true;
+    
+    const resetBtn = document.getElementById('reset-btn');
+    resetBtn.disabled = true;
     
     // Show success feedback
     const overlay = document.getElementById('feedback-overlay');
@@ -608,6 +658,9 @@ function loadGameState() {
                 const submitBtn = document.getElementById('submit-btn');
                 submitBtn.disabled = true;
                 submitBtn.classList.add('success');
+                
+                const resetBtn = document.getElementById('reset-btn');
+                resetBtn.disabled = true;
             }
         } catch (e) {
             console.error('Failed to load game state:', e);
@@ -655,6 +708,7 @@ function initGame() {
     initDigitFields();
     initNumpad();
     initSubmitButton();
+    initResetButton();
     initBackButton();
     loadGameState();
     
