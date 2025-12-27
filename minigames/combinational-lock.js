@@ -4,6 +4,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 const gameState = {
     combination: [null, null, null, null, null],
     solution: [3, 0, 5, 4, 9], // The correct answer based on the hints
+    rewardAnswer: '305-49', // The numeric answer reward
     currentFieldIndex: null,
     disabledDigits: new Set(),
     audio: {
@@ -16,7 +17,13 @@ const gameState = {
 
 // Initialize Audio
 function initAudio() {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let audioContext;
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+        console.debug('AudioContext not available:', e.message);
+        return;
+    }
     
     // Create error sound (descending beep)
     gameState.audio.error = () => {
@@ -355,7 +362,7 @@ function showRewardMessage() {
     notification.innerHTML = `
         <div style="margin-bottom: 1rem;">پاداش شما:</div>
         <div style="font-size: 3rem; margin: 1rem 0;">🎁</div>
-        <div style="font-size: 2.5rem; font-family: 'Courier New', monospace; letter-spacing: 5px;">305-49</div>
+        <div style="font-size: 2.5rem; font-family: 'Courier New', monospace; letter-spacing: 5px;">${gameState.rewardAnswer}</div>
     `;
     document.body.appendChild(notification);
     
