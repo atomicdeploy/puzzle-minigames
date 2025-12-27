@@ -447,10 +447,40 @@ function initHintListeners() {
     const hintItems = document.querySelectorAll('.hint-item');
     
     hintItems.forEach((item, index) => {
+        // For mouse clicks
         item.addEventListener('click', () => showHintExplanation(index));
+        
+        // For touch devices - detect tap vs scroll
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let hasMoved = false;
+        
         item.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            showHintExplanation(index);
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+            hasMoved = false;
+        }, { passive: true });
+        
+        item.addEventListener('touchmove', (e) => {
+            const touchMoveY = e.touches[0].clientY;
+            const deltaY = Math.abs(touchMoveY - touchStartY);
+            
+            // If moved more than 10px, consider it a scroll
+            if (deltaY > 10) {
+                hasMoved = true;
+            }
+        }, { passive: true });
+        
+        item.addEventListener('touchend', (e) => {
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // Only trigger if:
+            // 1. No significant movement (not a scroll)
+            // 2. Quick tap (less than 300ms)
+            if (!hasMoved && touchDuration < 300) {
+                e.preventDefault();
+                showHintExplanation(index);
+            }
         });
     });
     
