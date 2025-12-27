@@ -264,8 +264,8 @@ main {
 }
 
 .digit-field.filled {
-    border-color: var(--success-color);
-    background: rgba(0, 184, 148, 0.1);
+    border-color: var(--warning-color);
+    background: rgba(253, 203, 110, 0.1);
 }
 
 .digit-field.error-shake {
