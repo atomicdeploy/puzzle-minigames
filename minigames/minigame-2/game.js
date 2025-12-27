@@ -63,9 +63,8 @@ function init() {
     // Create scene
     createScene();
     
-    // Run the engine
+    // Create runner but don't start it yet - physics should be paused until user enters a guess
     runner = Runner.create();
-    Runner.run(runner, engine);
     Render.run(render);
     
     // Setup UI event listeners
@@ -123,9 +122,8 @@ function createScene() {
     });
     Composite.add(engine.world, mainPin);
     
-    // Nested scale fulcrum (on right side of main scale)
+    // Nested scale fulcrum (attached to right side of main scale beam, not static)
     const nestedFulcrum = Bodies.rectangle(width / 2 + 150, height * 0.4 - 30, 12, 50, {
-        isStatic: true,
         render: {
             fillStyle: '#4ecdc4',
             strokeStyle: '#ffffff',
@@ -133,6 +131,17 @@ function createScene() {
         }
     });
     Composite.add(engine.world, nestedFulcrum);
+    
+    // Attach nested fulcrum to main beam so it moves with the main scale
+    const nestedToMainConstraint = Constraint.create({
+        bodyA: mainBeam,
+        bodyB: nestedFulcrum,
+        pointA: { x: 150, y: 20 },  // Right side of main beam
+        pointB: { x: 0, y: -25 },    // Top of nested fulcrum
+        length: 0,
+        stiffness: 1
+    });
+    Composite.add(engine.world, nestedToMainConstraint);
     
     // Nested scale beam (smaller)
     const nestedBeam = Bodies.rectangle(width / 2 + 150, height * 0.4 - 60, 200, 10, {
@@ -303,6 +312,11 @@ function handleSubmit() {
     }
     
     userAnswer = answer;
+    
+    // Start the physics engine when user submits their first answer
+    if (!runner.enabled) {
+        Runner.run(runner, engine);
+    }
     
     if (answer === CORRECT_ANSWER) {
         handleCorrectAnswer();
