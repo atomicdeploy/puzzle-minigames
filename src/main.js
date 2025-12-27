@@ -232,7 +232,7 @@ function openTreasureChest(number) {
         }
         
         // Navigate to combinational lock minigame
-        window.location.href = './minigames/minigame-1.html';
+        window.location.href = './minigames/minigame-1/index.html';
         return;
     }
     
