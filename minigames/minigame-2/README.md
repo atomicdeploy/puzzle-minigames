@@ -64,7 +64,7 @@ window.parent.postMessage({
     type: 'minigame-complete',
     success: true,
     puzzleNumber: 2,
-    answer: 5
+    answer: 10
 }, '*');
 ```
 

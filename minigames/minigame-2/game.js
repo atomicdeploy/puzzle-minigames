@@ -10,6 +10,7 @@ const Composite = Matter.Composite;
 const Constraint = Matter.Constraint;
 const Body = Matter.Body;
 const Events = Matter.Events;
+const Query = Matter.Query;
 
 // Constants
 const CORRECT_ANSWER = 10;
@@ -229,10 +230,12 @@ function setupDragging() {
         e.preventDefault();
         const pos = getMousePos(e);
         
-        // Check if clicked on a ball
-        const allBodies = Composite.allBodies(engine.world);
-        for (let body of allBodies) {
-            if (body.emoji && Matter.Bounds.contains(body.bounds, pos)) {
+        // Use Query.point for efficient collision detection
+        const bodies = Query.point(Composite.allBodies(engine.world), pos);
+        
+        // Find the first ball (body with emoji property)
+        for (let body of bodies) {
+            if (body.emoji) {
                 selectedBody = body;
                 
                 // Create constraint

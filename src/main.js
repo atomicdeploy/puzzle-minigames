@@ -302,6 +302,11 @@ function openMinigame(puzzleNumber, minigameUrl) {
     
     // Listen for minigame completion
     window.addEventListener('message', function handleMinigameMessage(event) {
+        // Validate message origin for security
+        if (event.origin !== window.location.origin) {
+            return;
+        }
+        
         if (event.data.type === 'minigame-complete') {
             if (event.data.success && event.data.puzzleNumber === puzzleNumber) {
                 // Close modal
