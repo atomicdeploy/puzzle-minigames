@@ -504,8 +504,6 @@ function showRewardMessage() {
         setTimeout(() => notification.remove(), 500);
     }, 5000);
 }
-    }, 5000);
-}
 
 // Handle error
 function handleError() {
