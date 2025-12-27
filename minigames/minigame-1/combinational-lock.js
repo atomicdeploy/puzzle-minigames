@@ -890,6 +890,51 @@ function initBackButton() {
     });
 }
 
+// Initialize sticky behavior for combination input
+function initStickyBehavior() {
+    const header = document.querySelector('header');
+    const combinationInput = document.getElementById('combination-input');
+    
+    // Function to update header height CSS variable
+    function updateHeaderHeight() {
+        const headerHeight = header.offsetHeight;
+        document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+    }
+    
+    // Update on load and resize
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    
+    // Track initial position of combination input
+    let combinationInputTop = null;
+    
+    // Intersection observer to detect when combination input becomes sticky
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                // When not intersecting with its original position, it's sticky
+                if (!entry.isIntersecting) {
+                    combinationInput.classList.add('sticky');
+                } else {
+                    combinationInput.classList.remove('sticky');
+                }
+            });
+        },
+        {
+            threshold: [1],
+            rootMargin: `-${header.offsetHeight + 10}px 0px 0px 0px`
+        }
+    );
+    
+    // Create a sentinel element to track original position
+    const sentinel = document.createElement('div');
+    sentinel.style.height = '1px';
+    sentinel.style.pointerEvents = 'none';
+    combinationInput.parentNode.insertBefore(sentinel, combinationInput);
+    
+    observer.observe(sentinel);
+}
+
 // Initialize game
 function initGame() {
     // First, solve the puzzle to find all valid solutions
@@ -910,6 +955,7 @@ function initGame() {
     initHintListeners();
     initBackButton();
     loadGameState();
+    initStickyBehavior();
     
     // Hide loading screen
     setTimeout(() => {
