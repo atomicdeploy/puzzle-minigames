@@ -222,6 +222,20 @@ function openTreasureChest(number) {
         return; // Already discovered
     }
     
+    // For minigame 1 (Combinational Lock), navigate to the minigame
+    if (number === 1) {
+        // Haptic feedback
+        try {
+            Haptics.impact({ style: ImpactStyle.Medium });
+        } catch (e) {
+            console.debug('Haptics not available:', e.message);
+        }
+        
+        // Navigate to combinational lock minigame
+        window.location.href = './minigames/combinational-lock.html';
+        return;
+    }
+    
     // Mark as discovered
     gameState.discoveredPuzzles.add(number);
     
