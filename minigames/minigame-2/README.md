@@ -24,16 +24,16 @@ For the nested scale:
 - Left side: 3 red balls = 3R
 - Right side: 1 green ball = 30
 
-Since the nested scale is balanced: 3R = 30, therefore R = 10
+For the nested scale to be balanced: 3R = 30, therefore R = 10
 
 For the main scale to be balanced:
 - Left side = Right side
-- 2W + R = 3R (because nested scale weighs 3R on each side)
+- 2W + R = 3R (the weight of red balls on nested scale's left side)
 - 2W + 10 = 30
 - 2W = 20
-- **W = 5**
+- **W = 10**
 
-### Answer: The white ball weighs **5** units.
+### Answer: The white ball weighs **10** units.
 
 ## Features
 

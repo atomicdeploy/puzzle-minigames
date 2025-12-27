@@ -12,7 +12,7 @@ const Body = Matter.Body;
 const Events = Matter.Events;
 
 // Constants
-const CORRECT_ANSWER = 5;
+const CORRECT_ANSWER = 10;
 const BALL_RADIUS = 20;
 const PUZZLE_NUMBER = 2;
 
@@ -33,7 +33,7 @@ let userAnswer = null;
 
 // Ball weights (based on the puzzle logic)
 const ballWeights = {
-    white: 5,    // This is what the player needs to figure out
+    white: 10,   // This is what the player needs to figure out
     red: 10,     // Red ball weight
     green: 30    // Green ball weight (given as hint)
 };
