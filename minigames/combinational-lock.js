@@ -333,6 +333,144 @@ function updateHintStatuses() {
     });
 }
 
+// Generate detailed explanation for hint validation in Persian
+function generateHintExplanation(userInput, hint, hintIndex) {
+    const hintNumber = hint.guess.join('');
+    const userNumber = userInput.map(d => d === null ? '-' : d).join('');
+    
+    let explanation = `<strong>سرنخ شماره ${hintIndex + 1}:</strong>\n\n`;
+    explanation += `<div class="digit-comparison"><strong>حدس داده شده:</strong> ${hintNumber}</div>\n`;
+    explanation += `<div class="digit-comparison"><strong>ترکیب شما:</strong> ${userNumber}</div>\n\n`;
+    
+    // Check if all digits are filled
+    if (userInput.some(d => d === null)) {
+        explanation += `<div class="result-box">هنوز تمام ارقام را وارد نکرده‌اید. لطفاً ابتدا تمام خانه‌ها را پر کنید تا بتوانیم این سرنخ را بررسی کنیم.</div>`;
+        return explanation;
+    }
+    
+    // Count digits in correct positions
+    let correctInPosition = 0;
+    let positionDetails = '<strong>بررسی موقعیت‌ها:</strong>\n';
+    
+    for (let i = 0; i < 5; i++) {
+        if (userInput[i] === hint.guess[i]) {
+            correctInPosition++;
+            positionDetails += `<span class="match">• موقعیت ${i + 1}: رقم ${userInput[i]} ✓ (درست)</span>\n`;
+        } else {
+            positionDetails += `<span class="no-match">• موقعیت ${i + 1}: ${hint.guess[i]} در حدس، ${userInput[i]} در ترکیب شما ✗ (متفاوت)</span>\n`;
+        }
+    }
+    
+    // Count total correct digits
+    const userCounts = {};
+    const guessCounts = {};
+    
+    for (let i = 0; i < 5; i++) {
+        userCounts[userInput[i]] = (userCounts[userInput[i]] || 0) + 1;
+        guessCounts[hint.guess[i]] = (guessCounts[hint.guess[i]] || 0) + 1;
+    }
+    
+    let correctDigits = 0;
+    let digitDetails = '\n<strong>بررسی ارقام مشترک:</strong>\n';
+    
+    for (const digit in guessCounts) {
+        const common = Math.min(guessCounts[digit], userCounts[digit] || 0);
+        correctDigits += common;
+        if (common > 0) {
+            digitDetails += `<span class="match">• رقم ${digit}: ${common} بار مشترک</span>\n`;
+        }
+    }
+    
+    if (correctDigits === 0) {
+        digitDetails += `<span class="no-match">• هیچ رقم مشترکی وجود ندارد</span>\n`;
+    }
+    
+    explanation += positionDetails + digitDetails;
+    
+    // Add rule comparison
+    explanation += `\n<strong>قانون سرنخ:</strong> ${hint.description}\n\n`;
+    explanation += `<strong>نتیجه محاسبات:</strong>\n`;
+    explanation += `• تعداد ارقام درست: ${correctDigits} (باید ${hint.correctDigits} باشد)\n`;
+    explanation += `• تعداد ارقام در جای درست: ${correctInPosition} (باید ${hint.correctPositions} باشد)\n\n`;
+    
+    // Final verdict
+    const isValid = (correctDigits === hint.correctDigits && correctInPosition === hint.correctPositions);
+    
+    if (isValid) {
+        explanation += `<div class="result-box valid">✅ این سرنخ با ترکیب شما مطابقت دارد!</div>`;
+    } else {
+        explanation += `<div class="result-box invalid">❌ این سرنخ با ترکیب شما مطابقت ندارد!\n\n`;
+        if (correctDigits !== hint.correctDigits) {
+            explanation += `تعداد ارقام درست باید ${hint.correctDigits} باشد ولی ${correctDigits} است.\n`;
+        }
+        if (correctInPosition !== hint.correctPositions) {
+            explanation += `تعداد ارقام در جای درست باید ${hint.correctPositions} باشد ولی ${correctInPosition} است.`;
+        }
+        explanation += `</div>`;
+    }
+    
+    return explanation;
+}
+
+// Show hint explanation dialog
+function showHintExplanation(hintIndex) {
+    const hint = PUZZLE_HINTS[hintIndex];
+    const explanation = generateHintExplanation(gameState.combination, hint, hintIndex);
+    
+    const dialog = document.getElementById('hint-explanation-dialog');
+    const dialogText = document.getElementById('hint-dialog-text');
+    
+    dialogText.innerHTML = explanation;
+    dialog.style.display = 'flex';
+    
+    // Play click sound
+    if (gameState.audio.click) {
+        gameState.audio.click();
+    }
+    
+    // Haptic feedback
+    try {
+        Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) {
+        console.debug('Haptics not available:', e.message);
+    }
+}
+
+// Close hint explanation dialog
+function closeHintExplanation() {
+    const dialog = document.getElementById('hint-explanation-dialog');
+    dialog.style.display = 'none';
+}
+
+// Initialize hint click listeners
+function initHintListeners() {
+    const hintItems = document.querySelectorAll('.hint-item');
+    
+    hintItems.forEach((item, index) => {
+        item.addEventListener('click', () => showHintExplanation(index));
+        item.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            showHintExplanation(index);
+        });
+    });
+    
+    // Close button
+    const closeBtn = document.getElementById('close-hint-dialog');
+    closeBtn.addEventListener('click', closeHintExplanation);
+    closeBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        closeHintExplanation();
+    });
+    
+    // Close on background click
+    const dialog = document.getElementById('hint-explanation-dialog');
+    dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+            closeHintExplanation();
+        }
+    });
+}
+
 // Set digit in combination
 function setDigit(index, digit) {
     gameState.combination[index] = digit;
@@ -709,6 +847,7 @@ function initGame() {
     initNumpad();
     initSubmitButton();
     initResetButton();
+    initHintListeners();
     initBackButton();
     loadGameState();
     
