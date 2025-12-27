@@ -1,10 +1,109 @@
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
+// Puzzle Hints - Each hint has a guess and rules about it
+const PUZZLE_HINTS = [
+    {
+        guess: [8, 2, 6, 1, 9],
+        correctDigits: 2,
+        correctPositions: 0,
+        description: 'دو رقم درست و در جای اشتباه'
+    },
+    {
+        guess: [7, 0, 6, 2, 9],
+        correctDigits: 1,
+        correctPositions: 1,
+        description: 'یک رقم درست و در جای درست'
+    },
+    {
+        guess: [4, 7, 5, 3, 0],
+        correctDigits: 3,
+        correctPositions: 0,
+        description: 'سه رقم درست و در جای اشتباه'
+    },
+    {
+        guess: [8, 6, 3, 0, 2],
+        correctDigits: 2,
+        correctPositions: 1,
+        description: 'دو رقم درست، یکی در جای درست و یکی در جای اشتباه'
+    },
+    {
+        guess: [9, 1, 7, 0, 4],
+        correctDigits: 2,
+        correctPositions: 2,
+        description: 'دو رقم درست و در جای درست'
+    }
+];
+
+// Solver: Find all valid solutions based on hints
+function solvePuzzle(hints) {
+    const solutions = [];
+    
+    // Try all possible 5-digit combinations (00000 to 99999)
+    for (let i = 0; i <= 99999; i++) {
+        const candidate = String(i).padStart(5, '0').split('').map(Number);
+        
+        if (isValidSolution(candidate, hints)) {
+            solutions.push(candidate);
+        }
+    }
+    
+    return solutions;
+}
+
+// Check if a candidate satisfies all hints
+function isValidSolution(candidate, hints) {
+    for (const hint of hints) {
+        if (!satisfiesHint(candidate, hint)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Check if candidate satisfies a single hint
+function satisfiesHint(candidate, hint) {
+    let correctInPosition = 0;
+    let correctDigits = 0;
+    
+    // Count digits in correct position
+    for (let i = 0; i < 5; i++) {
+        if (candidate[i] === hint.guess[i]) {
+            correctInPosition++;
+        }
+    }
+    
+    // Count total correct digits (including wrong positions)
+    const candidateCounts = {};
+    const guessCounts = {};
+    
+    for (let i = 0; i < 5; i++) {
+        candidateCounts[candidate[i]] = (candidateCounts[candidate[i]] || 0) + 1;
+        guessCounts[hint.guess[i]] = (guessCounts[hint.guess[i]] || 0) + 1;
+    }
+    
+    for (const digit in guessCounts) {
+        correctDigits += Math.min(guessCounts[digit], candidateCounts[digit] || 0);
+    }
+    
+    return correctDigits === hint.correctDigits && 
+           correctInPosition === hint.correctPositions;
+}
+
+// Validate current user input against a hint
+// Returns: 'valid' if satisfies, 'invalid' if violates, 'unknown' if inconclusive
+function validateAgainstHint(userInput, hint) {
+    // If not all digits filled, we can't fully validate
+    if (userInput.some(d => d === null)) {
+        return 'unknown';
+    }
+    
+    return satisfiesHint(userInput, hint) ? 'valid' : 'invalid';
+}
+
 // Game State
 const gameState = {
     combination: [null, null, null, null, null],
-    solution: [3, 0, 5, 4, 9], // The correct answer based on the hints
-    rewardAnswer: '305-49', // The numeric answer reward
+    solutions: [], // Will be computed by solver
     currentFieldIndex: null,
     disabledDigits: new Set(),
     audio: {
@@ -212,6 +311,28 @@ function handleDigitClick(button) {
     }
 }
 
+// Update hint status indicators based on current combination
+function updateHintStatuses() {
+    PUZZLE_HINTS.forEach((hint, index) => {
+        const hintItem = document.querySelector(`.hint-item[data-hint-index="${index}"]`);
+        const statusSpan = hintItem.querySelector('.hint-status');
+        
+        const status = validateAgainstHint(gameState.combination, hint);
+        
+        statusSpan.textContent = '';
+        statusSpan.className = 'hint-status';
+        
+        if (status === 'valid') {
+            statusSpan.textContent = '✅';
+            statusSpan.classList.add('valid');
+        } else if (status === 'invalid') {
+            statusSpan.textContent = '❌';
+            statusSpan.classList.add('invalid');
+        }
+        // If 'unknown', leave empty (no icon)
+    });
+}
+
 // Set digit in combination
 function setDigit(index, digit) {
     gameState.combination[index] = digit;
@@ -221,6 +342,9 @@ function setDigit(index, digit) {
     const display = field.querySelector('.digit-display');
     display.textContent = digit;
     field.classList.add('filled');
+    
+    // Update hint statuses
+    updateHintStatuses();
     
     // Save state
     saveGameState();
@@ -236,6 +360,9 @@ function clearCurrentDigit() {
         const display = field.querySelector('.digit-display');
         display.textContent = '-';
         field.classList.remove('filled');
+        
+        // Update hint statuses
+        updateHintStatuses();
         
         // Save state
         saveGameState();
@@ -275,8 +402,10 @@ function checkSolution() {
         return;
     }
     
-    // Check if combination matches solution
-    const isCorrect = gameState.combination.every((digit, index) => digit === gameState.solution[index]);
+    // Check if combination is one of the valid solutions
+    const isCorrect = gameState.solutions.some(solution => 
+        solution.every((digit, index) => digit === gameState.combination[index])
+    );
     
     if (isCorrect) {
         handleSuccess();
@@ -341,6 +470,10 @@ function handleSuccess() {
 
 // Show reward message
 function showRewardMessage() {
+    // Generate reward answer from the solution (use first valid solution)
+    const solution = gameState.solutions[0];
+    const rewardAnswer = solution.join('').replace(/(\d{3})(\d{2})/, '$1-$2'); // Format as XXX-XX
+    
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
@@ -362,13 +495,15 @@ function showRewardMessage() {
     notification.innerHTML = `
         <div style="margin-bottom: 1rem;">پاداش شما:</div>
         <div style="font-size: 3rem; margin: 1rem 0;">🎁</div>
-        <div style="font-size: 2.5rem; font-family: 'Courier New', monospace; letter-spacing: 5px;">${gameState.rewardAnswer}</div>
+        <div style="font-size: 2.5rem; font-family: 'Courier New', monospace; letter-spacing: 5px; direction: ltr;">${rewardAnswer}</div>
     `;
     document.body.appendChild(notification);
     
     setTimeout(() => {
         notification.style.animation = 'fadeOut 0.5s ease';
         setTimeout(() => notification.remove(), 500);
+    }, 5000);
+}
     }, 5000);
 }
 
@@ -462,6 +597,9 @@ function loadGameState() {
                 }
             });
             
+            // Update hint statuses based on loaded state
+            updateHintStatuses();
+            
             // Restore unlocked state
             if (gameState.isUnlocked) {
                 const lockIcon = document.getElementById('lock-icon');
@@ -505,6 +643,16 @@ function initBackButton() {
 
 // Initialize game
 function initGame() {
+    // First, solve the puzzle to find all valid solutions
+    console.log('Solving puzzle...');
+    gameState.solutions = solvePuzzle(PUZZLE_HINTS);
+    console.log(`Found ${gameState.solutions.length} valid solution(s):`, gameState.solutions);
+    
+    if (gameState.solutions.length === 0) {
+        console.error('No valid solutions found for the given hints!');
+        showNotification('خطا: هیچ راه‌حلی یافت نشد', 'error');
+    }
+    
     initAudio();
     initDigitFields();
     initNumpad();

@@ -275,6 +275,8 @@ main {
     font-size: 2.5rem;
     font-weight: 700;
     color: var(--text-primary);
+    direction: ltr;
+    font-family: 'Courier New', monospace;
 }
 
 @keyframes shake {
@@ -316,11 +318,26 @@ main {
     border-radius: 0.75rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
+    gap: 0.5rem;
 }
 
 .hint-item:hover {
     background: rgba(255, 255, 255, 0.05);
     transform: translateX(-3px);
+}
+
+.hint-status {
+    font-size: 1.2rem;
+    min-width: 24px;
+    text-align: center;
+}
+
+.hint-status.valid {
+    color: var(--success-color);
+}
+
+.hint-status.invalid {
+    color: var(--error-color);
 }
 
 .hint-number {
@@ -329,6 +346,7 @@ main {
     color: var(--primary-color);
     font-family: 'Courier New', monospace;
     letter-spacing: 3px;
+    direction: ltr;
 }
 
 .hint-text {
