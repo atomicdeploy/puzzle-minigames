@@ -233,17 +233,23 @@ function closeNumpad() {
     gameState.currentFieldIndex = null;
 }
 
+// Helper function to get digits already used in combination (excluding specific index)
+function getUsedDigits(excludeIndex = null) {
+    const usedDigits = new Set();
+    gameState.combination.forEach((digit, index) => {
+        if (digit !== null && index !== excludeIndex) {
+            usedDigits.add(digit);
+        }
+    });
+    return usedDigits;
+}
+
 // Update numpad buttons based on disabled digits and already-used digits
 function updateNumpadButtons() {
     const buttons = document.querySelectorAll('.numpad-digit');
     
     // Get digits already used in the combination (excluding current field)
-    const usedDigits = new Set();
-    gameState.combination.forEach((digit, index) => {
-        if (digit !== null && index !== gameState.currentFieldIndex) {
-            usedDigits.add(digit);
-        }
-    });
+    const usedDigits = getUsedDigits(gameState.currentFieldIndex);
     
     buttons.forEach(button => {
         const digit = parseInt(button.dataset.digit);
@@ -299,12 +305,7 @@ function handleDigitClick(button) {
     const digit = parseInt(button.dataset.digit);
     
     // Check if digit is already used in another position
-    const usedDigits = new Set();
-    gameState.combination.forEach((d, index) => {
-        if (d !== null && index !== gameState.currentFieldIndex) {
-            usedDigits.add(d);
-        }
-    });
+    const usedDigits = getUsedDigits(gameState.currentFieldIndex);
     
     // Check if digit is disabled by user
     if (gameState.disabledDigits.has(digit)) {

@@ -560,7 +560,8 @@ main {
 }
 
 .numpad-digit.used {
-    opacity: 0.7;
+    opacity: 0.6;
+    background: rgba(253, 203, 110, 0.1);
 }
 
 .numpad-digit.disabled:hover {
