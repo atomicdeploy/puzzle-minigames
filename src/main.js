@@ -303,6 +303,7 @@ function openMinigame(puzzleNumber, minigameUrl) {
     // Listen for minigame completion
     window.addEventListener('message', function handleMinigameMessage(event) {
         // Validate message origin for security
+        // Minigames are served from same origin, so this prevents external malicious messages
         if (event.origin !== window.location.origin) {
             return;
         }
