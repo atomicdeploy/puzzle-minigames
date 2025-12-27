@@ -233,13 +233,27 @@ function closeNumpad() {
     gameState.currentFieldIndex = null;
 }
 
-// Update numpad buttons based on disabled digits
+// Update numpad buttons based on disabled digits and already-used digits
 function updateNumpadButtons() {
     const buttons = document.querySelectorAll('.numpad-digit');
     
+    // Get digits already used in the combination (excluding current field)
+    const usedDigits = new Set();
+    gameState.combination.forEach((digit, index) => {
+        if (digit !== null && index !== gameState.currentFieldIndex) {
+            usedDigits.add(digit);
+        }
+    });
+    
     buttons.forEach(button => {
         const digit = parseInt(button.dataset.digit);
-        button.classList.toggle('disabled', gameState.disabledDigits.has(digit));
+        const isDisabled = gameState.disabledDigits.has(digit);
+        const isUsed = usedDigits.has(digit);
+        
+        button.classList.toggle('disabled', isDisabled || isUsed);
+        
+        // Add special class for already-used digits
+        button.classList.toggle('used', isUsed && !isDisabled);
     });
 }
 
@@ -284,10 +298,25 @@ function initNumpad() {
 function handleDigitClick(button) {
     const digit = parseInt(button.dataset.digit);
     
-    // Check if digit is disabled
+    // Check if digit is already used in another position
+    const usedDigits = new Set();
+    gameState.combination.forEach((d, index) => {
+        if (d !== null && index !== gameState.currentFieldIndex) {
+            usedDigits.add(d);
+        }
+    });
+    
+    // Check if digit is disabled by user
     if (gameState.disabledDigits.has(digit)) {
         // Toggle disable state
         gameState.disabledDigits.delete(digit);
+    } else if (usedDigits.has(digit)) {
+        // Digit is already used - do nothing, show feedback
+        // Play error sound
+        if (gameState.audio.error) {
+            gameState.audio.error();
+        }
+        return;
     } else {
         // Set digit if field is selected
         if (gameState.currentFieldIndex !== null) {
