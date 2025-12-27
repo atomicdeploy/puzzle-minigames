@@ -232,6 +232,7 @@ main {
     gap: 1rem;
     justify-content: center;
     flex-wrap: wrap;
+    direction: ltr;
 }
 
 .digit-field {
