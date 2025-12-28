@@ -13,7 +13,8 @@ const state = {
         scale: 10,
         qrColor: '#000000',
         bgColor: '#ffffff',
-        logo: null
+        logo: null,
+        style: 'gradient' // New: QR code style
     }
 };
 
@@ -25,6 +26,25 @@ function init() {
 
 // Setup event listeners
 function setupEventListeners() {
+    // QR Style selector
+    document.getElementById('qrStyle').addEventListener('change', (e) => {
+        state.settings.style = e.target.value;
+        
+        // Show/hide custom color inputs
+        const customColorsGroup = document.getElementById('customColorsGroup');
+        const customBgGroup = document.getElementById('customBgGroup');
+        
+        if (e.target.value === 'custom') {
+            customColorsGroup.style.display = 'block';
+            customBgGroup.style.display = 'block';
+        } else {
+            customColorsGroup.style.display = 'none';
+            customBgGroup.style.display = 'none';
+        }
+        
+        updatePreview();
+    });
+    
     // Input field listeners
     document.getElementById('baseUrl').addEventListener('input', (e) => {
         state.settings.baseUrl = e.target.value;
@@ -142,21 +162,44 @@ function buildUrl(gameNumber, token) {
     return url.toString();
 }
 
+// Get style colors based on selected theme
+function getStyleColors(style) {
+    const styles = {
+        classic: { dark: '#000000', light: '#ffffff' },
+        gradient: { dark: '#6c5ce7', light: '#ffffff', gradient: true },
+        dots: { dark: '#fd79a8', light: '#ffffff', dots: true },
+        rounded: { dark: '#00b894', light: '#ffffff', rounded: true },
+        infernal: { dark: '#6c5ce7', light: '#0f0e17', gradient: ['#6c5ce7', '#fd79a8'] },
+        custom: { dark: state.settings.qrColor, light: state.settings.bgColor }
+    };
+    return styles[style] || styles.classic;
+}
+
 // Generate QR code canvas
 async function generateQRCanvas(data) {
     const canvas = document.createElement('canvas');
+    const styleConfig = getStyleColors(state.settings.style);
     
     const options = {
         errorCorrectionLevel: state.settings.errorCorrection,
         margin: state.settings.margin,
         scale: state.settings.scale,
         color: {
-            dark: state.settings.qrColor,
-            light: state.settings.bgColor
+            dark: styleConfig.dark,
+            light: styleConfig.light
         }
     };
 
     await QRCode.toCanvas(canvas, data, options);
+
+    // Apply themed styling
+    if (styleConfig.gradient) {
+        applyGradientStyle(canvas, styleConfig);
+    } else if (styleConfig.dots) {
+        applyDotsStyle(canvas);
+    } else if (styleConfig.rounded) {
+        applyRoundedStyle(canvas);
+    }
 
     // Add logo if present
     if (state.settings.logo) {
@@ -164,6 +207,118 @@ async function generateQRCanvas(data) {
     }
 
     return canvas;
+}
+
+// Apply gradient style to QR code
+function applyGradientStyle(canvas, styleConfig) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Create gradient
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    
+    if (Array.isArray(styleConfig.gradient)) {
+        // Custom gradient colors
+        gradient.addColorStop(0, styleConfig.gradient[0]);
+        gradient.addColorStop(1, styleConfig.gradient[1]);
+    } else {
+        // Default gradient
+        gradient.addColorStop(0, '#6c5ce7');
+        gradient.addColorStop(0.5, '#a29bfe');
+        gradient.addColorStop(1, '#fd79a8');
+    }
+    
+    // Apply gradient to dark pixels
+    ctx.fillStyle = gradient;
+    
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        
+        // Check if pixel is dark (part of QR code)
+        if (r < 128 && g < 128 && b < 128) {
+            const x = (i / 4) % canvas.width;
+            const y = Math.floor((i / 4) / canvas.width);
+            ctx.fillRect(x, y, 1, 1);
+        }
+    }
+}
+
+// Apply dots style to QR code
+function applyDotsStyle(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Clear canvas
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Redraw with circular dots
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#fd79a8');
+    gradient.addColorStop(1, '#a29bfe');
+    ctx.fillStyle = gradient;
+    
+    const dotRadius = 2;
+    
+    for (let y = 0; y < canvas.height; y += 4) {
+        for (let x = 0; x < canvas.width; x += 4) {
+            const i = (y * canvas.width + x) * 4;
+            const r = data[i];
+            
+            if (r < 128) {
+                ctx.beginPath();
+                ctx.arc(x + 2, y + 2, dotRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+}
+
+// Apply rounded style to QR code
+function applyRoundedStyle(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Clear canvas
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Redraw with rounded rectangles
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#00b894');
+    gradient.addColorStop(1, '#00cec9');
+    ctx.fillStyle = gradient;
+    
+    const cellSize = 4;
+    const radius = 2;
+    
+    for (let y = 0; y < canvas.height; y += cellSize) {
+        for (let x = 0; x < canvas.width; x += cellSize) {
+            const i = (y * canvas.width + x) * 4;
+            const r = data[i];
+            
+            if (r < 128) {
+                // Draw rounded rectangle
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + cellSize - radius, y);
+                ctx.quadraticCurveTo(x + cellSize, y, x + cellSize, y + radius);
+                ctx.lineTo(x + cellSize, y + cellSize - radius);
+                ctx.quadraticCurveTo(x + cellSize, y + cellSize, x + cellSize - radius, y + cellSize);
+                ctx.lineTo(x + radius, y + cellSize);
+                ctx.quadraticCurveTo(x, y + cellSize, x, y + cellSize - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+    }
 }
 
 // Add logo to canvas center
