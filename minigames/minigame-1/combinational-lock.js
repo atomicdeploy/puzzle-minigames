@@ -883,6 +883,15 @@ function loadGameState() {
             }
         } catch (e) {
             console.error('Failed to load game state:', e);
+            // Clear potentially corrupted saved data and reset to a safe default
+            localStorage.removeItem('combinational-lock-game');
+            gameState.combination = [null, null, null, null, null];
+            gameState.disabledDigits = new Set();
+            gameState.isUnlocked = false;
+            // Ensure hints and UI are in a consistent initial state
+            updateHintStatuses();
+            // Inform the user that their saved progress could not be loaded
+            showNotification('پیشرفت ذخیره‌شده قابل بارگذاری نبود و بازنشانی شد.', 'error');
         }
     }
 }
