@@ -1552,6 +1552,16 @@ function setupResetButton() {
             gameState.audio.error();
         }
         
+        // Clean up any pending animations/timeouts before reload
+        if (window.dragPhysics && typeof dragPhysics.animationFrame === 'number') {
+            cancelAnimationFrame(dragPhysics.animationFrame);
+            dragPhysics.animationFrame = null;
+        }
+        if (typeof window.backgroundReactionTimeout === 'number') {
+            clearTimeout(window.backgroundReactionTimeout);
+            window.backgroundReactionTimeout = null;
+        }
+        
         // Reload page to reset everything
         window.location.reload();
     });
