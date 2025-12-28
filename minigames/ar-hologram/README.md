@@ -264,4 +264,4 @@ MIT License - Part of the Infernal Puzzle Game project
 
 **Note**: This AR experience is designed for mobile devices with cameras. Desktop testing is supported but the full experience is best on phones/tablets.
 
-للطفاً روی دستگاه موبایل خود برای تجربه کامل AR استفاده کنید! 📱✨
+لطفاً روی دستگاه موبایل خود برای تجربه کامل AR استفاده کنید! 📱✨
