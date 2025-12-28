@@ -59,6 +59,10 @@ function showErrorNotification(message, line) {
 
 // Constants
 const PUZZLE_SIZE = 9;
+const PIECE_WIDTH = 80; // Width of puzzle pieces in pixels
+const PIECE_SPACING = 10; // Spacing between puzzle pieces in pixels
+const PIECE_VERTICAL_OFFSET = -100; // Vertical offset from treasure chests
+const PIECE_VERTICAL_ADJUSTMENT = 40; // Fine-tune vertical position
 
 // Game State
 const gameState = {
@@ -497,16 +501,14 @@ function createPuzzlePiece(number) {
     // Position pieces above the treasure chest area in a horizontal line
     const chestsContainer = document.getElementById('treasure-chests');
     const chestsRect = chestsContainer.getBoundingClientRect();
-    const pieceWidth = 80;
-    const spacing = 10;
     
     // Count existing pieces to position new one
     const existingPieces = document.querySelectorAll('.puzzle-piece').length;
     
     // Position in a row above the treasure chests (centered for transform)
     piece.style.position = 'fixed';
-    piece.style.left = `${chestsRect.left + existingPieces * (pieceWidth + spacing) + pieceWidth / 2}px`;
-    piece.style.top = `${chestsRect.top - 100 + 40}px`;
+    piece.style.left = `${chestsRect.left + existingPieces * (PIECE_WIDTH + PIECE_SPACING) + PIECE_WIDTH / 2}px`;
+    piece.style.top = `${chestsRect.top + PIECE_VERTICAL_OFFSET + PIECE_VERTICAL_ADJUSTMENT}px`;
     piece.style.transform = 'translate(-50%, -50%)';
     
     // Drag events - disable native HTML5 drag
@@ -1001,15 +1003,13 @@ async function animateSnapToSlot(pieceElement, slotElement, pieceNumber, slotInd
 async function animateReturnToPosition(pieceElement, pieceNumber) {
     const chestsContainer = document.getElementById('treasure-chests');
     const chestsRect = chestsContainer.getBoundingClientRect();
-    const pieceWidth = 80;
-    const spacing = 10;
     
     // Find the index of this piece among all pieces
     const allPieces = Array.from(document.querySelectorAll('.puzzle-piece'));
     const pieceIndex = allPieces.indexOf(pieceElement);
     
-    const targetX = chestsRect.left + pieceIndex * (pieceWidth + spacing) + pieceWidth / 2;
-    const targetY = chestsRect.top - 100 + 40;
+    const targetX = chestsRect.left + pieceIndex * (PIECE_WIDTH + PIECE_SPACING) + PIECE_WIDTH / 2;
+    const targetY = chestsRect.top + PIECE_VERTICAL_OFFSET + PIECE_VERTICAL_ADJUSTMENT;
     
     pieceElement.style.transition = 'all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
     pieceElement.style.left = `${targetX}px`;
@@ -1486,16 +1486,14 @@ function recreatePuzzlePiece(number) {
     // Position pieces above the treasure chest area in a horizontal line
     const chestsContainer = document.getElementById('treasure-chests');
     const chestsRect = chestsContainer.getBoundingClientRect();
-    const pieceWidth = 80;
-    const spacing = 10;
     
     // Use the index in availablePieces array for correct positioning
     const pieceIndex = gameState.availablePieces.indexOf(number);
     
     // Position in a row above the treasure chests (centered for transform)
     piece.style.position = 'fixed';
-    piece.style.left = `${chestsRect.left + pieceIndex * (pieceWidth + spacing) + pieceWidth / 2}px`;
-    piece.style.top = `${chestsRect.top - 100 + 40}px`;
+    piece.style.left = `${chestsRect.left + pieceIndex * (PIECE_WIDTH + PIECE_SPACING) + PIECE_WIDTH / 2}px`;
+    piece.style.top = `${chestsRect.top + PIECE_VERTICAL_OFFSET + PIECE_VERTICAL_ADJUSTMENT}px`;
     piece.style.transform = 'translate(-50%, -50%)';
     
     // Drag events - disable native HTML5 drag
