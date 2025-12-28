@@ -178,14 +178,14 @@ function createScene() {
     // Create green ball on right side of nested scale with label
     balls.green = createBall(width / 2 + 230, height * 0.4 - 100, BALL_RADIUS, '#00b894', '🟢', ballWeights.green);
     
-    // Add label to green ball (set font properties once)
+    // Add label to green ball: ensure font properties are set every frame before drawing
     const ctx = render.context;
-    ctx.font = 'bold 16px Vazirmatn';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
     
     Events.on(render, 'afterRender', () => {
+        ctx.font = 'bold 16px Vazirmatn';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText('30', balls.green.position.x, balls.green.position.y);
     });
 }
