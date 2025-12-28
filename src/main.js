@@ -404,15 +404,14 @@ function removePieceFromSlot(slotIndex, pieceNumber) {
         gameState.availablePieces.push(pieceNumber);
     }
     
-    // Save state after removing piece
-    saveGameState();
-    
     // Recreate the piece
     recreatePuzzlePiece(pieceNumber);
     
     // Update stats and validation
     updateStats();
     validateMagicSquare();
+    
+    // Save state after all operations complete
     saveGameState();
     
     // Play pickup sound
