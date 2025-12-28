@@ -6,7 +6,8 @@ import JSZip from 'jszip';
 const state = {
     qrCodes: [],
     settings: {
-        baseUrl: 'https://example.com/minigame-access',
+        // TODO: Configure this to your production URL before deployment
+        baseUrl: 'https://yourdomain.com/minigame-access',
         errorCorrection: 'M',
         margin: 4,
         scale: 10,

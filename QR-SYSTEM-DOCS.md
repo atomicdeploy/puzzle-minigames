@@ -4,6 +4,22 @@
 
 This system provides a comprehensive QR code generation and validation solution for the puzzle minigame platform. It enables Game Masters to generate secure access codes for players and validates access when QR codes are scanned.
 
+## Quick Start
+
+### Before First Use
+
+**Important:** Configure your production URL before generating QR codes:
+
+1. Open `/src/qr-generator.js`
+2. Update the `baseUrl` in the state object:
+   ```javascript
+   baseUrl: 'https://yourdomain.com/minigame-access',
+   ```
+3. Replace `yourdomain.com` with your actual domain
+4. Rebuild the application: `npm run build`
+
+Alternatively, you can enter the URL directly in the QR generator interface each time.
+
 ## Components
 
 ### 1. QR Code Generator (`/qr-generator.html`)
