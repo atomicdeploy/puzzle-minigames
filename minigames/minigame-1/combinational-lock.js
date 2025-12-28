@@ -740,7 +740,7 @@ function handleSuccess() {
 function showRewardMessage() {
     // Generate reward answer from the solution (use first valid solution)
     const solution = gameState.solutions[0];
-    const rewardAnswer = solution.join('').replace(/(\d{3})(\d{2})/, '$1-$2'); // Format as XXX-XX
+    const rewardAnswer = solution.join(''); // Show combination as-is
     
     const notification = document.createElement('div');
     notification.style.cssText = `
