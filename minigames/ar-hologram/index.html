@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>تجربه هولوگرافیک AR/VR</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="ar-container">
+        <!-- Loading Screen -->
+        <div id="loading" class="overlay">
+            <div class="loading-content">
+                <div class="hologram-loader"></div>
+                <h2>در حال بارگذاری تجربه AR...</h2>
+                <p>لطفاً دسترسی به دوربین را تایید کنید</p>
+            </div>
+        </div>
+
+        <!-- AR Instructions -->
+        <div id="instructions" class="overlay" style="display: none;">
+            <div class="instructions-content">
+                <h2>🎯 راهنمای استفاده</h2>
+                <ul>
+                    <li>📱 دوربین خود را به سمت محیط اطراف نشانه بگیرید</li>
+                    <li>👆 برای چرخاندن هولوگرام، آن را لمس کنید</li>
+                    <li>🔄 برای بزرگنمایی، دو انگشت را باز کنید</li>
+                    <li>✨ شیء را از زوایای مختلف مشاهده کنید</li>
+                </ul>
+                <button id="start-ar-btn" class="hologram-btn">شروع تجربه AR</button>
+            </div>
+        </div>
+
+        <!-- AR Scene Container -->
+        <div id="scene-container"></div>
+
+        <!-- AR UI Overlay -->
+        <div id="ui-overlay">
+            <div class="top-bar">
+                <button id="back-btn" class="control-btn">↩️ بازگشت</button>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span id="status-text">فعال</span>
+                </div>
+            </div>
+
+            <div class="bottom-controls">
+                <button id="switch-camera-btn" class="control-btn">🔄 تعویض دوربین</button>
+                <button id="take-photo-btn" class="control-btn">📸 عکس</button>
+                <button id="toggle-effects-btn" class="control-btn">✨ جلوه‌ها</button>
+            </div>
+
+            <div class="info-panel">
+                <div class="hologram-info">
+                    <h3 id="object-name">مکعب هولوگرافیک</h3>
+                    <p id="object-description">یک شیء سه‌بعدی با افکت‌های نوری</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="success-modal" class="overlay" style="display: none;">
+            <div class="modal-content">
+                <h2>🎉 عالی!</h2>
+                <p>شما با موفقیت تجربه AR را کامل کردید</p>
+                <button id="claim-puzzle-btn" class="hologram-btn">دریافت پازل</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="ar-experience.js"></script>
+</body>
+</html>
