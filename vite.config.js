@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { resolve } from 'path';
 
 // Constants
 const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
@@ -39,6 +40,10 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        'ar-hologram': resolve(__dirname, 'minigames/ar-hologram/index.html')
+      },
       output: {
         manualChunks: {
           three: ['three']

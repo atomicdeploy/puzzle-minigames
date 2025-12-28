@@ -11,11 +11,13 @@
 ## Features ✨
 
 - **3D Interactive Environment**: Built with Three.js for rich 3D graphics
+- **AR/VR Experience**: NEW! Holographic AR minigame with camera tracking and stunning visual effects
 - **Sudoku-style Puzzle Board**: 3x3 grid with unique puzzle pieces
 - **Discovery Mechanism**: Unlock puzzle pieces from treasure chests
+- **Mini-Games Integration**: Complete AR/VR challenges to earn puzzle pieces
 - **Drag & Drop**: Intuitive touch-based controls for mobile
 - **Multi-sensory Feedback**:
-  - Visual feedback (flashes, animations)
+  - Visual feedback (flashes, animations, holographic effects)
   - Audio feedback (success/error sounds)
   - Haptic feedback (vibrations on mobile)
 - **RTL Support**: Full Persian (Farsi) language support
@@ -171,18 +173,48 @@ Currently, the game generates sounds programmatically using Web Audio API.
 
 ## Mini-Games Integration 🎯
 
+### AR/VR Holographic Experience 🌟
+
+**NEW!** Treasure chest #1 unlocks an impressive AR/VR experience featuring:
+
+- **Real-time Camera Feed**: Uses device camera for augmented reality
+- **Holographic 3D Objects**: Custom GLSL shaders create stunning holographic effects
+- **Interactive Manipulation**: Touch to rotate, pinch to zoom
+- **Visual Effects**: 
+  - Fresnel rim lighting
+  - Animated scan lines
+  - Particle system with 100+ particles
+  - Dynamic color cycling
+  - Glow effects
+- **Camera Controls**: Switch between front/rear cameras, take screenshots
+- **Puzzle Reward**: Complete the AR experience to earn puzzle piece #1
+
+**Location**: `minigames/ar-hologram/`
+
+**Requirements**: 
+- Device with camera
+- Modern browser with WebGL support
+- HTTPS (for camera access)
+
+See [AR/VR Documentation](minigames/ar-hologram/README.md) for detailed information.
+
+### Mini-Game Structure
+
 The treasure chests are designed to link to external mini-games. The structure for mini-games is:
 
 ```
 minigames/
+├── ar-hologram/           # AR/VR holographic experience
+│   ├── index.html         # AR interface
+│   ├── ar-experience.js   # Three.js AR logic
+│   ├── style.css          # Holographic styles
+│   └── README.md          # AR documentation
 ├── placeholder/
-│   └── README.md              # Mini-game template
+│   └── README.md          # Mini-game template
 ├── minigame-1/
 │   ├── index.html
 │   ├── game.js
 │   └── style.css
-├── minigame-2/
-│   └── ...
 └── ...
 ```
 
