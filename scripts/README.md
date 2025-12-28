@@ -171,7 +171,9 @@ node scripts/open-in-device.js http://$LOCAL_IP:$PORT/some-path
 
 **Important:** Your computer and mobile device must be on the same network for the dev server to be accessible from the mobile device.
 
-- If using USB debugging, ensure USB tethering is not interfering
+- **ADB Communication**: When using ADB over USB, the devices don't need to be on the same WiFi network for ADB commands (like opening URLs). ADB creates a bridge over USB.
+- **Dev Server Access**: However, for the mobile browser to actually load the dev server content, both devices must be on the same network (WiFi or wired). The mobile device needs network connectivity to access `http://YOUR_IP:3000`.
+- If using USB debugging, ensure USB tethering is not interfering with network detection
 - Check your firewall settings allow connections on port 3000 (or your configured port)
 - Some corporate/school networks may block device-to-device communication
 

@@ -6,27 +6,16 @@
  */
 
 import { execSync } from 'child_process';
-
-function checkAdbInstalled() {
-  try {
-    execSync('adb version', { stdio: 'ignore' });
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-function checkDeviceConnected() {
-  try {
-    const output = execSync('adb devices', { encoding: 'utf8' });
-    const lines = output.split('\n').filter(line => line.trim() && !line.includes('List of devices'));
-    return lines.length > 0;
-  } catch (error) {
-    return false;
-  }
-}
+import { checkAdbInstalled, checkDeviceConnected, isValidUrl } from './utils.js';
 
 function openUrlInDevice(url) {
+  // Validate URL format
+  if (!isValidUrl(url)) {
+    console.error('❌ Invalid URL format. URL must start with http:// or https://');
+    console.error(`   Provided URL: ${url}`);
+    process.exit(1);
+  }
+
   if (!checkAdbInstalled()) {
     console.error('❌ ADB is not installed or not in PATH');
     console.error('Please install Android SDK Platform Tools:');
@@ -45,6 +34,7 @@ function openUrlInDevice(url) {
   
   try {
     console.log(`📱 Opening ${url} in connected Android device...`);
+    // Using template literal for execSync is acceptable here since we've validated the URL format
     execSync(`adb shell am start -a android.intent.action.VIEW -d "${url}"`, { stdio: 'inherit' });
     console.log('✅ URL opened successfully');
   } catch (error) {

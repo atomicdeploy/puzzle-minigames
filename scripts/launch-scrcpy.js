@@ -6,31 +6,12 @@
  */
 
 import { execSync, spawn } from 'child_process';
-import { platform } from 'os';
+import { checkAdbInstalled, checkDeviceConnected } from './utils.js';
 
 function checkScrcpyInstalled() {
   try {
     execSync('scrcpy --version', { stdio: 'ignore' });
     return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-function checkAdbInstalled() {
-  try {
-    execSync('adb version', { stdio: 'ignore' });
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-function checkDeviceConnected() {
-  try {
-    const output = execSync('adb devices', { encoding: 'utf8' });
-    const lines = output.split('\n').filter(line => line.trim() && !line.includes('List of devices'));
-    return lines.length > 0;
   } catch (error) {
     return false;
   }

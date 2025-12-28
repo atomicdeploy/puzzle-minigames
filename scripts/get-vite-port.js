@@ -28,8 +28,11 @@ function getVitePort() {
     // Default Vite port
     return '3000';
   } catch (error) {
-    console.error('Error reading vite.config.js:', error.message);
-    // Return default port configured in vite.config.js
+    if (error.code !== 'ENOENT') {
+      // Log error if it's not just a missing file
+      console.error('Error reading vite.config.js:', error.message);
+    }
+    // Return default Vite port
     return '3000';
   }
 }
