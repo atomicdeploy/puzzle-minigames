@@ -5,7 +5,7 @@
  * Works on Windows, macOS, and Linux
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { checkAdbInstalled, checkDeviceConnected, isValidUrl } from './utils.js';
 
 function openUrlInDevice(url) {
@@ -34,8 +34,8 @@ function openUrlInDevice(url) {
   
   try {
     console.log(`📱 Opening ${url} in connected Android device...`);
-    // Using template literal for execSync is acceptable here since we've validated the URL format
-    execSync(`adb shell am start -a android.intent.action.VIEW -d "${url}"`, { stdio: 'inherit' });
+    // Use execFileSync with separate arguments to prevent command injection
+    execFileSync('adb', ['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url], { stdio: 'inherit' });
     console.log('✅ URL opened successfully');
   } catch (error) {
     console.error('❌ Failed to open URL in device:', error.message);

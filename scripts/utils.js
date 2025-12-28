@@ -123,13 +123,15 @@ export async function waitForServer(url, maxAttempts = 10, delayMs = 1000) {
       } else {
         // Fallback for older Node versions - try to connect
         const { default: http } = await import('http');
-        const urlObj = new URL(url);
         await new Promise((resolve, reject) => {
           const req = http.get(url, (res) => {
             resolve();
           });
           req.on('error', reject);
-          req.setTimeout(1000);
+          req.setTimeout(1000, () => {
+            req.destroy();
+            reject(new Error('Request timeout'));
+          });
         });
         return true;
       }

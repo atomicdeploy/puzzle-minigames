@@ -13,6 +13,10 @@ import { getLocalIP, getVitePort, checkDeviceConnected, waitForServer } from './
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Constants for server polling
+const MAX_WAIT_ATTEMPTS = 30;
+const WAIT_DELAY_MS = 1000;
+
 function openInMobile(url) {
   try {
     console.log(`\n📱 Opening ${url} in mobile device...`);
@@ -53,7 +57,7 @@ async function startDevServer() {
   if (shouldOpenInMobile) {
     (async () => {
       console.log('⏳ Waiting for Vite server to be ready...');
-      const isReady = await waitForServer(url, 30, 1000); // 30 attempts, 1 second each
+      const isReady = await waitForServer(url, MAX_WAIT_ATTEMPTS, WAIT_DELAY_MS);
       
       if (!isReady) {
         console.warn('⚠️  Server did not respond in time. Attempting to open anyway...');
