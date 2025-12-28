@@ -549,7 +549,11 @@ function setupUIHandlers() {
             timestamp: Date.now(),
             puzzleNumber: 1 // AR minigame always awards puzzle #1
         };
-        localStorage.setItem('ar-minigame-completed', JSON.stringify(completedMinigame));
+        try {
+            localStorage.setItem('ar-minigame-completed', JSON.stringify(completedMinigame));
+        } catch (error) {
+            console.warn('Failed to persist AR minigame completion to localStorage:', error);
+        }
         
         // Return to main game
         window.location.href = '../../index.html';
