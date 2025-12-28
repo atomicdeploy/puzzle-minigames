@@ -262,16 +262,18 @@ function applyDotsStyle(canvas) {
     gradient.addColorStop(1, '#a29bfe');
     ctx.fillStyle = gradient;
     
-    const dotRadius = 2;
+    // Use QR module size (scale) as the sampling step so we align with modules
+    const moduleSize = state.settings && state.settings.scale ? state.settings.scale : 4;
+    const dotRadius = Math.max(1, moduleSize / 2 - 1);
     
-    for (let y = 0; y < canvas.height; y += 4) {
-        for (let x = 0; x < canvas.width; x += 4) {
+    for (let y = 0; y < canvas.height; y += moduleSize) {
+        for (let x = 0; x < canvas.width; x += moduleSize) {
             const i = (y * canvas.width + x) * 4;
             const r = data[i];
             
             if (r < 128) {
                 ctx.beginPath();
-                ctx.arc(x + 2, y + 2, dotRadius, 0, Math.PI * 2);
+                ctx.arc(x + moduleSize / 2, y + moduleSize / 2, dotRadius, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
