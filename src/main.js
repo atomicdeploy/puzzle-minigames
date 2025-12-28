@@ -236,6 +236,120 @@ function openTreasureChest(number) {
         return;
     }
     
+    // Haptic feedback
+    try {
+        Haptics.impact({ style: ImpactStyle.Medium });
+    } catch (e) {
+        // Haptics not available in web browsers
+        console.debug('Haptics not available:', e.message);
+    }
+    
+    // Check if this puzzle has a minigame
+    const minigames = {
+        2: '/minigames/minigame-2/index.html'
+        // Add more minigames here
+    };
+    
+    if (minigames[number]) {
+        // Open minigame
+        openMinigame(number, minigames[number]);
+    } else {
+        // Directly unlock puzzle piece (for puzzles without minigames)
+        unlockPuzzlePiece(number);
+    }
+}
+
+// Open a minigame
+function openMinigame(puzzleNumber, minigameUrl) {
+    // Create minigame modal
+    const modal = document.createElement('div');
+    modal.id = 'minigame-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+    `;
+    
+    // Create close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕';
+    closeBtn.setAttribute('aria-label', 'Close minigame');
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        width: 50px;
+        height: 50px;
+        background: rgba(214, 48, 49, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 2rem;
+        cursor: pointer;
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    `;
+    // Listen for minigame completion
+    function handleMinigameMessage(event) {
+        // Validate message origin for security
+        // Minigames are served from same origin, so this prevents external malicious messages
+        if (event.origin !== window.location.origin) {
+            return;
+        }
+        
+        if (event.data.type === 'minigame-complete') {
+            if (event.data.success && event.data.puzzleNumber === puzzleNumber) {
+                // Close modal
+                modal.remove();
+                
+                // Unlock puzzle piece
+                unlockPuzzlePiece(puzzleNumber);
+                
+                // Remove this listener
+                window.removeEventListener('message', handleMinigameMessage);
+            }
+        } else if (event.data.type === 'minigame-exit') {
+            modal.remove();
+            window.removeEventListener('message', handleMinigameMessage);
+        }
+    }
+    
+    closeBtn.addEventListener('click', () => {
+        modal.remove();
+        // Clean up message event listener when modal is manually closed
+        window.removeEventListener('message', handleMinigameMessage);
+    });
+    
+    // Create iframe for minigame
+    const iframe = document.createElement('iframe');
+    iframe.src = minigameUrl;
+    iframe.setAttribute('title', 'بازی کوچک وزن توپ سفید');
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+    iframe.style.cssText = `
+        width: 100%;
+        height: 100%;
+        border: none;
+    `;
+    
+    modal.appendChild(closeBtn);
+    modal.appendChild(iframe);
+    document.body.appendChild(modal);
+    
+    // Add message event listener
+    window.addEventListener('message', handleMinigameMessage);
+}
+
+// Unlock a puzzle piece (separated from treasure chest opening)
+function unlockPuzzlePiece(number) {
     // Mark as discovered
     gameState.discoveredPuzzles.add(number);
     
@@ -249,21 +363,13 @@ function openTreasureChest(number) {
         gameState.audio.discover();
     }
     
-    // Haptic feedback
-    try {
-        Haptics.impact({ style: ImpactStyle.Medium });
-    } catch (e) {
-        // Haptics not available in web browsers
-        console.debug('Haptics not available:', e.message);
-    }
-    
     // Create draggable puzzle piece
     createPuzzlePiece(number);
     
     // Update stats
     updateStats();
     
-    // Show mini-game link notification (placeholder for now)
+    // Show notification
     showNotification(`پازل ${number} کشف شد! 🎉`);
 }
 
