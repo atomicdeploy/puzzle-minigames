@@ -77,9 +77,13 @@ async function startDevServer() {
   });
   
   // If mobile flag is set, wait a bit for server to start then open in device
-  if (shouldOpenInMobile && checkDeviceConnected()) {
+  if (shouldOpenInMobile) {
     setTimeout(() => {
-      openInMobile(url);
+      if (checkDeviceConnected()) {
+        openInMobile(url);
+      } else {
+        console.warn('📱 Skipping opening in mobile device: no device connected.');
+      }
     }, 3000); // Wait 3 seconds for server to start
   }
   
