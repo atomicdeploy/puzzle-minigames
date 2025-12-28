@@ -911,12 +911,12 @@ function initBackButton() {
     const backBtn = document.getElementById('back-btn');
     
     backBtn.addEventListener('click', () => {
-        window.location.href = '../index.html';
+        window.location.href = '/index.html';
     });
     
     backBtn.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        window.location.href = '../index.html';
+        window.location.href = '/index.html';
     });
 }
 
