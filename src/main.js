@@ -59,7 +59,6 @@ function showErrorNotification(message, line) {
 
 // Constants
 const PUZZLE_SIZE = 9;
-const AUTO_SAVE_INTERVAL = 5000; // milliseconds
 
 // Game State
 const gameState = {
