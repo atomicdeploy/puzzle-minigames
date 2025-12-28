@@ -226,7 +226,7 @@ Make sure you've installed Android Platform Tools and added it to your system PA
 All scripts are written in Node.js with ES modules for maximum cross-platform compatibility:
 
 - No shell-specific syntax (bash/cmd/PowerShell)
-- Uses Node's built-in `os`, `fs`, `path`, and `child_process` modules
+- Uses Node's built-in `os`, `fs`, `path`, `url`, and `child_process` modules
 - Handles platform differences internally
 - Provides clear error messages and installation instructions
 
