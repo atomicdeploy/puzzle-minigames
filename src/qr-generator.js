@@ -2,6 +2,19 @@ import QRCode from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 
+// Logo overlay constants
+const LOGO_CONFIG = {
+    SIZE_PERCENTAGE: 0.2,  // Logo takes 20% of QR code size
+    PADDING: 5,            // Padding around logo
+    ADDITIONAL_PADDING: 10 // Total additional padding (5 on each side)
+};
+
+// Notification display duration
+const NOTIFICATION_DURATION = {
+    SUCCESS: 3000,  // Success messages shown for 3 seconds
+    ERROR: 3000     // Error messages shown for 3 seconds
+};
+
 // State management
 const state = {
     qrCodes: [],
@@ -296,8 +309,11 @@ function applyRoundedStyle(canvas) {
     gradient.addColorStop(1, '#00cec9');
     ctx.fillStyle = gradient;
     
-    const cellSize = 4;
-    const radius = 2;
+    // Use scale parameter to ensure alignment with QR modules
+    const cellSize = (state.settings && typeof state.settings.scale === 'number')
+        ? state.settings.scale
+        : 4;
+    const radius = cellSize / 2;
     
     for (let y = 0; y < canvas.height; y += cellSize) {
         for (let x = 0; x < canvas.width; x += cellSize) {
@@ -326,13 +342,18 @@ function applyRoundedStyle(canvas) {
 // Add logo to canvas center
 function addLogoToCanvas(canvas, logo) {
     const ctx = canvas.getContext('2d');
-    const logoSize = Math.floor(canvas.width * 0.2); // 20% of QR code size
+    const logoSize = Math.floor(canvas.width * LOGO_CONFIG.SIZE_PERCENTAGE);
     const x = (canvas.width - logoSize) / 2;
     const y = (canvas.height - logoSize) / 2;
 
     // Draw white background for logo
     ctx.fillStyle = 'white';
-    ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
+    ctx.fillRect(
+        x - LOGO_CONFIG.PADDING, 
+        y - LOGO_CONFIG.PADDING, 
+        logoSize + LOGO_CONFIG.ADDITIONAL_PADDING, 
+        logoSize + LOGO_CONFIG.ADDITIONAL_PADDING
+    );
 
     // Draw logo
     ctx.drawImage(logo, x, y, logoSize, logoSize);
@@ -534,10 +555,11 @@ function showNotification(message, type = 'info') {
     notification.textContent = message;
     document.body.appendChild(notification);
 
+    const duration = type === 'success' ? NOTIFICATION_DURATION.SUCCESS : NOTIFICATION_DURATION.ERROR;
     setTimeout(() => {
         notification.style.animation = 'slideUp 0.3s ease';
         setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    }, duration);
 }
 
 // Add CSS animations

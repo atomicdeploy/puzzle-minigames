@@ -1,3 +1,11 @@
+// Timing constants for validation flow
+const VALIDATION_DELAYS = {
+    INVALID_URL: 1000,
+    VALIDATION_CHECK: 1000,
+    ACCESS_GRANT: 1500,
+    AUTO_UNLOCK: 2000
+};
+
 // Parse URL parameters
 function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
@@ -49,7 +57,7 @@ async function validateAccess() {
 
     // Check if URL has required parameters
     if (!params.game || !params.token) {
-        setTimeout(() => showState('invalid-url'), 1000);
+        setTimeout(() => showState('invalid-url'), VALIDATION_DELAYS.INVALID_URL);
         return;
     }
 
@@ -59,7 +67,7 @@ async function validateAccess() {
             showState('access-denied');
             document.getElementById('errorMessage').textContent = 
                 'شماره مینی‌گیم نامعتبر است. شماره باید بین 1 تا 9 باشد.';
-        }, 1000);
+        }, VALIDATION_DELAYS.VALIDATION_CHECK);
         return;
     }
 
@@ -69,7 +77,7 @@ async function validateAccess() {
             showState('access-denied');
             document.getElementById('errorMessage').textContent = 
                 'فرمت توکن دسترسی نامعتبر است. لطفاً از کد QR معتبر استفاده کنید.';
-        }, 1000);
+        }, VALIDATION_DELAYS.VALIDATION_CHECK);
         return;
     }
 
@@ -93,7 +101,7 @@ async function validateAccess() {
             // Access denied
             showState('access-denied');
         }
-    }, 1500);
+    }, VALIDATION_DELAYS.ACCESS_GRANT);
 }
 
 // Verify token (this would typically be a server-side check)
