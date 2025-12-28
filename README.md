@@ -81,6 +81,17 @@ npm run dev
 
 Open http://localhost:3000 in your browser (or mobile browser for testing).
 
+#### Advanced Development Options
+
+The Vite configuration supports:
+- **HTTPS**: Enable with `https: true` in `vite.config.js`
+- **HMR over Reverse Proxy**: Configure for nginx, Apache, Cloudflare Tunnel
+- **CORS**: Cross-origin resource sharing for API development
+- **API Proxy**: Forward API requests to backend servers
+- **Custom Headers**: Security headers and more
+
+See [VITE_CONFIG_GUIDE.md](./VITE_CONFIG_GUIDE.md) for detailed configuration options.
+
 ### Build for Production
 
 Build the project for web deployment:
