@@ -927,8 +927,16 @@ function initStickyBehavior() {
         document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
     }
     
-    // Update on load and resize with a small delay to ensure layout is complete
-    setTimeout(updateHeaderHeight, 100);
+    // Update on load and keep in sync with header size changes
+    updateHeaderHeight();
+    
+    if (typeof ResizeObserver !== 'undefined') {
+        const resizeObserver = new ResizeObserver(() => {
+            updateHeaderHeight();
+        });
+        resizeObserver.observe(header);
+    }
+    
     window.addEventListener('resize', updateHeaderHeight);
     
     // Track initial position of combination input
