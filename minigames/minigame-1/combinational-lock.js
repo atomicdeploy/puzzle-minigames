@@ -116,63 +116,83 @@ const gameState = {
 
 // Initialize Audio
 function initAudio() {
-    let audioContext;
-    try {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (e) {
-        console.debug('AudioContext not available:', e.message);
-        return;
+    let audioContext = null;
+
+    // Lazily create the AudioContext on first use, ideally after a user interaction.
+    function getAudioContext() {
+        if (audioContext) {
+            return audioContext;
+        }
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.debug('AudioContext not available:', e.message);
+            return null;
+        }
+        return audioContext;
     }
     
     // Create error sound (descending beep)
     gameState.audio.error = () => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
         oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(ctx.destination);
         
-        oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.3);
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.frequency.setValueAtTime(600, ctx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.3);
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
         
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.3);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.3);
     };
     
     // Create success sound (ascending chime)
     gameState.audio.success = () => {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
         [0, 100, 200].forEach((delay, i) => {
             setTimeout(() => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
+                const innerCtx = getAudioContext();
+                if (!innerCtx) return;
+
+                const oscillator = innerCtx.createOscillator();
+                const gainNode = innerCtx.createGain();
                 oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
+                gainNode.connect(innerCtx.destination);
                 
                 const freq = 400 * Math.pow(1.5, i);
-                oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
-                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                oscillator.frequency.setValueAtTime(freq, innerCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.2, innerCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, innerCtx.currentTime + 0.4);
                 
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.4);
+                oscillator.start(innerCtx.currentTime);
+                oscillator.stop(innerCtx.currentTime + 0.4);
             }, delay);
         });
     };
     
     // Create click sound
     gameState.audio.click = () => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
         oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(ctx.destination);
         
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
         
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.1);
     };
 }
 
