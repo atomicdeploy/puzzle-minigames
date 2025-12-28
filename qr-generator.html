@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="ابزار تولید QR Code برای استاد بازی">
+    <title>تولید QR Code - اینفرنال</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/src/qr-generator.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>🎯 تولید کد QR برای مینی‌گیم‌ها</h1>
+            <p class="subtitle">ابزار استاد بازی برای ساخت کدهای دسترسی</p>
+        </header>
+
+        <div class="container">
+            <div class="controls-panel">
+                <h2>تنظیمات QR Code</h2>
+                
+                <div class="form-group">
+                    <label for="baseUrl">آدرس پایه (Base URL):</label>
+                    <input 
+                        type="url" 
+                        id="baseUrl" 
+                        value="https://example.com/minigame-access" 
+                        placeholder="https://example.com/minigame-access"
+                    >
+                    <small>آدرس پایه‌ای که بازیکنان به آن هدایت می‌شوند</small>
+                </div>
+
+                <div class="form-group">
+                    <label>تعداد QR Code: 9 (یک برای هر مینی‌گیم)</label>
+                    <div class="info-box">
+                        <p>برای هر مینی‌گیم یک کد یکتا UUID تولید می‌شود</p>
+                    </div>
+                </div>
+
+                <h3>سفارشی‌سازی ظاهر</h3>
+
+                <div class="form-group">
+                    <label for="qrColor">رنگ QR Code:</label>
+                    <div class="color-input-group">
+                        <input type="color" id="qrColor" value="#000000">
+                        <input type="text" id="qrColorText" value="#000000">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bgColor">رنگ پس‌زمینه:</label>
+                    <div class="color-input-group">
+                        <input type="color" id="bgColor" value="#ffffff">
+                        <input type="text" id="bgColorText" value="#ffffff">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="errorCorrection">سطح تصحیح خطا:</label>
+                    <select id="errorCorrection">
+                        <option value="L">پایین (L) - 7%</option>
+                        <option value="M" selected>متوسط (M) - 15%</option>
+                        <option value="Q">بالا (Q) - 25%</option>
+                        <option value="H">خیلی بالا (H) - 30%</option>
+                    </select>
+                    <small>سطح بالاتر امکان اضافه کردن لوگو را فراهم می‌کند</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="margin">حاشیه (Margin): <span id="marginValue">4</span></label>
+                    <input 
+                        type="range" 
+                        id="margin" 
+                        min="0" 
+                        max="10" 
+                        value="4" 
+                        step="1"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="scale">مقیاس (Scale): <span id="scaleValue">10</span></label>
+                    <input 
+                        type="range" 
+                        id="scale" 
+                        min="5" 
+                        max="30" 
+                        value="10" 
+                        step="1"
+                    >
+                    <small>مقیاس بالاتر = کیفیت بهتر برای چاپ</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="logoUpload">لوگو (اختیاری):</label>
+                    <input 
+                        type="file" 
+                        id="logoUpload" 
+                        accept="image/*"
+                    >
+                    <button id="clearLogo" class="btn-secondary" style="display: none;">حذف لوگو</button>
+                    <small>لوگو در مرکز QR Code قرار می‌گیرد</small>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="generateBtn" class="btn-primary">
+                        🔄 تولید QR Codeها
+                    </button>
+                    <button id="downloadBtn" class="btn-success" disabled>
+                        📥 دانلود فایل ZIP
+                    </button>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <h2>پیش‌نمایش</h2>
+                <div class="preview-container">
+                    <div id="qrPreview" class="qr-preview">
+                        <p class="placeholder-text">پیش‌نمایش QR Code اینجا نمایش داده می‌شود</p>
+                    </div>
+                    <div id="previewInfo" class="preview-info" style="display: none;">
+                        <p><strong>شماره مینی‌گیم:</strong> <span id="previewGameNumber">1</span></p>
+                        <p><strong>توکن:</strong> <code id="previewToken"></code></p>
+                        <p><strong>URL:</strong> <code id="previewUrl"></code></p>
+                    </div>
+                </div>
+
+                <div id="allQRCodes" class="all-qr-codes" style="display: none;">
+                    <h3>همه QR Codeها</h3>
+                    <div id="qrGrid" class="qr-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading-overlay" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p>در حال تولید و آماده‌سازی فایل‌ها...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/qr-generator.js"></script>
+</body>
+</html>

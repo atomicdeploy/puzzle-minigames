@@ -540,6 +540,27 @@ function saveGameState() {
 // Auto-save on changes
 setInterval(saveGameState, AUTO_SAVE_INTERVAL);
 
+// Check for QR code unlock from URL
+function checkQRUnlock() {
+    const params = new URLSearchParams(window.location.search);
+    const unlock = params.get('unlock');
+    const token = params.get('token');
+    
+    if (unlock && token) {
+        const puzzleNumber = parseInt(unlock);
+        if (puzzleNumber >= 1 && puzzleNumber <= 9) {
+            // Auto-unlock the puzzle from QR code
+            setTimeout(() => {
+                openTreasureChest(puzzleNumber);
+                showNotification(`🎉 مینی‌گیم ${puzzleNumber} از طریق QR Code باز شد!`, 3000);
+            }, 2000);
+            
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+}
+
 // Initialize game
 function initGame() {
     initAudio();
@@ -547,6 +568,7 @@ function initGame() {
     initPuzzleBoard();
     initTreasureChests();
     loadGameState();
+    checkQRUnlock();
     
     // Hide loading screen
     setTimeout(() => {
