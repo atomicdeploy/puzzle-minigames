@@ -369,8 +369,8 @@ function generateHintExplanation(userInput, hint, hintIndex) {
     const userNumber = userInput.map(d => d === null ? '-' : d).join('');
     
     let explanation = `<strong>سرنخ شماره ${hintIndex + 1}:</strong>\n\n`;
-    explanation += `<div class="digit-comparison"><strong>حدس داده شده:</strong> ${hintNumber}</div>\n`;
-    explanation += `<div class="digit-comparison"><strong>ترکیب شما:</strong> ${userNumber}</div>\n\n`;
+    explanation += `<div class="digit-comparison"><strong>حدس داده شده:</strong><span>${hintNumber}</span></div>\n`;
+    explanation += `<div class="digit-comparison"><strong>ترکیب شما:</strong><span>${userNumber}</span></div>\n\n`;
     
     // Check if all digits are filled
     if (userInput.some(d => d === null)) {
