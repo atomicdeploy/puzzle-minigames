@@ -284,25 +284,8 @@ function openMinigame(puzzleNumber, minigameUrl) {
         justify-content: center;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     `;
-    closeBtn.addEventListener('click', () => {
-        modal.remove();
-    });
-    
-    // Create iframe for minigame
-    const iframe = document.createElement('iframe');
-    iframe.src = minigameUrl;
-    iframe.style.cssText = `
-        width: 100%;
-        height: 100%;
-        border: none;
-    `;
-    
-    modal.appendChild(closeBtn);
-    modal.appendChild(iframe);
-    document.body.appendChild(modal);
-    
     // Listen for minigame completion
-    window.addEventListener('message', function handleMinigameMessage(event) {
+    function handleMinigameMessage(event) {
         // Validate message origin for security
         // Minigames are served from same origin, so this prevents external malicious messages
         if (event.origin !== window.location.origin) {
@@ -324,7 +307,31 @@ function openMinigame(puzzleNumber, minigameUrl) {
             modal.remove();
             window.removeEventListener('message', handleMinigameMessage);
         }
+    }
+    
+    closeBtn.addEventListener('click', () => {
+        modal.remove();
+        // Clean up message event listener when modal is manually closed
+        window.removeEventListener('message', handleMinigameMessage);
     });
+    
+    // Create iframe for minigame
+    const iframe = document.createElement('iframe');
+    iframe.src = minigameUrl;
+    iframe.setAttribute('title', 'بازی کوچک وزن توپ سفید');
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+    iframe.style.cssText = `
+        width: 100%;
+        height: 100%;
+        border: none;
+    `;
+    
+    modal.appendChild(closeBtn);
+    modal.appendChild(iframe);
+    document.body.appendChild(modal);
+    
+    // Add message event listener
+    window.addEventListener('message', handleMinigameMessage);
 }
 
 // Unlock a puzzle piece (separated from treasure chest opening)
