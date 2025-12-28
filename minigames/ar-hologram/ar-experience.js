@@ -509,7 +509,13 @@ function setupUIHandlers() {
     // Switch camera
     document.getElementById('switch-camera-btn').addEventListener('click', async () => {
         // Toggle between front and rear camera
-        const currentFacingMode = arState.video.srcObject.getVideoTracks()[0].getSettings().facingMode;
+        if (!arState.video.srcObject) return;
+        
+        const videoTracks = arState.video.srcObject.getVideoTracks();
+        if (videoTracks.length === 0) return;
+        
+        const settings = videoTracks[0].getSettings();
+        const currentFacingMode = settings?.facingMode || 'environment';
         const newFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
         
         try {
@@ -541,7 +547,7 @@ function setupUIHandlers() {
         const completedMinigame = {
             name: 'ar-hologram',
             timestamp: Date.now(),
-            puzzleNumber: Math.floor(Math.random() * 9) + 1 // Random puzzle piece
+            puzzleNumber: 1 // AR minigame always awards puzzle #1
         };
         localStorage.setItem('ar-minigame-completed', JSON.stringify(completedMinigame));
         

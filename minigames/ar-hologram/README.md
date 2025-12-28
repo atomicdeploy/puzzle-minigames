@@ -197,7 +197,7 @@ The AR experience integrates with the main puzzle game by:
 {
     name: 'ar-hologram',
     timestamp: Date.now(),
-    puzzleNumber: 1-9
+    puzzleNumber: 1  // AR minigame always awards puzzle #1
 }
 ```
 
