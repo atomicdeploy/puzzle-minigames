@@ -192,6 +192,27 @@ Each mini-game should:
 3. Award a puzzle piece upon completion
 4. Follow the same RTL/Persian design language
 
+### QR Code Access System 🎯
+
+The game includes a comprehensive QR code system for Game Masters:
+
+**For Game Masters:**
+- Navigate to `/qr-generator.html` to generate QR codes
+- Create 9 unique QR codes (one per mini-game) with security tokens
+- Customize appearance: colors, error correction, margins, logos
+- Download high-resolution images (300 DPI) in a ZIP file
+- Print and place QR codes around the game environment
+
+**For Players:**
+- Scan QR codes to unlock mini-games
+- Access is validated with unique UUID tokens
+- Automatic puzzle piece unlocking upon valid access
+- Seamless integration with main game
+
+**Documentation:**
+- See [QR-SYSTEM-DOCS.md](./QR-SYSTEM-DOCS.md) for complete documentation
+- Includes security considerations and customization guide
+
 ## Customization 🎨
 
 ### Colors

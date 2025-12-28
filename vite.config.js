@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { resolve } from 'path';
 
 // Constants
 const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
@@ -39,9 +40,15 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        qrGenerator: resolve(__dirname, 'qr-generator.html'),
+        minigameAccess: resolve(__dirname, 'minigame-access.html')
+      },
       output: {
         manualChunks: {
-          three: ['three']
+          three: ['three'],
+          qrcode: ['qrcode', 'jszip', 'uuid']
         }
       }
     }
