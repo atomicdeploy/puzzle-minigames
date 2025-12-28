@@ -631,11 +631,6 @@ function handlePieceClick(e) {
     }
 }
 
-function handleDragStart(e) {
-    // This is kept for compatibility but main handler is handlePieceMouseDown
-    handlePieceMouseDown(e);
-}
-
 function handleMouseDrag(e) {
     if (!touchPiece) return;
     
