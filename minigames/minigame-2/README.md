@@ -65,7 +65,7 @@ window.parent.postMessage({
     success: true,
     puzzleNumber: 2,
     answer: 10
-}, '*');
+}, window.location.origin);
 ```
 
 ## Technologies
