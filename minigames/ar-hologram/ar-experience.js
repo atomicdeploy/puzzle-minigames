@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+// Constants
+const MIN_INTERACTION_TIME = 50; // Minimum touch interactions required to complete AR experience
+
+// Shared Audio Context (created once and reused)
+let sharedAudioContext = null;
+
 // AR Experience State
 const arState = {
     scene: null,
@@ -87,10 +93,49 @@ async function setupCamera() {
         arState.video.play();
         container.appendChild(arState.video);
         
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+            let settled = false;
+            
+            const cleanupListeners = () => {
+                arState.video.onloadedmetadata = null;
+                arState.video.onerror = null;
+            };
+            
+            const stopStream = () => {
+                const currentStream = arState.video.srcObject;
+                if (currentStream && typeof currentStream.getTracks === 'function') {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+                arState.video.srcObject = null;
+                if (arState.video.parentNode) {
+                    arState.video.parentNode.removeChild(arState.video);
+                }
+            };
+            
             arState.video.onloadedmetadata = () => {
+                if (settled) return;
+                settled = true;
+                cleanupListeners();
                 resolve();
             };
+            
+            arState.video.onerror = () => {
+                if (settled) return;
+                settled = true;
+                cleanupListeners();
+                stopStream();
+                reject(new Error('Failed to load video metadata'));
+            };
+            
+            // Fallback timeout in case neither onloadedmetadata nor onerror fires
+            const METADATA_TIMEOUT_MS = 5000;
+            setTimeout(() => {
+                if (settled) return;
+                settled = true;
+                cleanupListeners();
+                stopStream();
+                reject(new Error('Timed out while waiting for video metadata'));
+            }, METADATA_TIMEOUT_MS);
         });
     } catch (error) {
         console.error('Camera access error:', error);
@@ -207,7 +252,6 @@ function createHologram() {
     const wireframeGeometry = new THREE.EdgesGeometry(geometry);
     const wireframeMaterial = new THREE.LineBasicMaterial({ 
         color: 0x00ffff,
-        linewidth: 2,
         transparent: true,
         opacity: 0.6
     });
@@ -371,7 +415,7 @@ function setupInteractions() {
         arState.interactionTime += 1;
         
         // Check for completion after significant interaction
-        if (arState.interactionTime > 50) {
+        if (arState.interactionTime > MIN_INTERACTION_TIME) {
             setTimeout(() => showSuccess(), 1000);
         }
     });
@@ -424,8 +468,7 @@ function animate() {
     if (arState.hologram) {
         // Apply user rotation
         arState.hologram.rotation.x = arState.touch.rotation.x;
-        arState.hologram.rotation.y += arState.rotationSpeed;
-        arState.hologram.rotation.y += arState.touch.rotation.y * 0.1;
+        arState.hologram.rotation.y = arState.touch.rotation.y + arState.rotationSpeed * time;
         
         // Apply scale
         arState.hologram.scale.setScalar(arState.scale);
@@ -461,9 +504,9 @@ function animate() {
                 
                 // Orbit around hologram
                 const distance = Math.sqrt(
-                    positions[i * 3] ** 2 + 
-                    positions[i * 3 + 1] ** 2 + 
-                    positions[i * 3 + 2] ** 2
+                    Math.pow(positions[i * 3], 2) + 
+                    Math.pow(positions[i * 3 + 1], 2) + 
+                    Math.pow(positions[i * 3 + 2], 2)
                 );
                 
                 // Keep particles in sphere
@@ -519,9 +562,13 @@ function setupUIHandlers() {
         const newFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
         
         try {
+            const oldStream = arState.video.srcObject;
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: newFacingMode }
             });
+            if (oldStream && typeof oldStream.getTracks === 'function') {
+                oldStream.getTracks().forEach(track => track.stop());
+            }
             arState.video.srcObject = stream;
         } catch (error) {
             console.error('Camera switch failed:', error);
@@ -575,6 +622,12 @@ function takeScreenshot() {
     
     // Create download link
     canvas.toBlob((blob) => {
+        if (!blob) {
+            console.error('Failed to create image blob');
+            showNotification('خطا در ذخیره عکس');
+            return;
+        }
+        
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -622,7 +675,12 @@ function showNotification(message) {
 
 // Play Success Sound
 function playSuccessSound() {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    // Create or reuse audio context
+    if (!sharedAudioContext) {
+        sharedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    const audioContext = sharedAudioContext;
     [0, 0.1, 0.2].forEach((delay, i) => {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();

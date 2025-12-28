@@ -680,7 +680,7 @@ function checkARMinigameCompletion() {
     const completed = localStorage.getItem('ar-minigame-completed');
     if (completed) {
         try {
-            const data = JSON.parse(completed);
+            JSON.parse(completed); // Validate JSON format
             const puzzleNumber = 1; // AR minigame awards puzzle #1
             
             if (!gameState.discoveredPuzzles.has(puzzleNumber)) {
@@ -711,6 +711,8 @@ function checkARMinigameCompletion() {
             localStorage.removeItem('ar-minigame-completed');
         } catch (e) {
             console.error('Failed to process AR completion:', e);
+            // Clear corrupted data to allow future attempts
+            localStorage.removeItem('ar-minigame-completed');
         }
     }
 }
