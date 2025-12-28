@@ -265,6 +265,7 @@ function openMinigame(puzzleNumber, minigameUrl) {
     // Create close button
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '✕';
+    closeBtn.setAttribute('aria-label', 'Close minigame');
     closeBtn.style.cssText = `
         position: absolute;
         top: 1rem;
