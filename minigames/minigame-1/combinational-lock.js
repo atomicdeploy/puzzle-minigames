@@ -895,14 +895,20 @@ function initStickyBehavior() {
     const header = document.querySelector('header');
     const combinationInput = document.getElementById('combination-input');
     
+    if (!header || !combinationInput) {
+        console.error('Header or combination input not found');
+        return;
+    }
+    
     // Function to update header height CSS variable
     function updateHeaderHeight() {
         const headerHeight = header.offsetHeight;
+        console.log('Header height:', headerHeight); // Debug log
         document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
     }
     
-    // Update on load and resize
-    updateHeaderHeight();
+    // Update on load and resize with a small delay to ensure layout is complete
+    setTimeout(updateHeaderHeight, 100);
     window.addEventListener('resize', updateHeaderHeight);
     
     // Track initial position of combination input
