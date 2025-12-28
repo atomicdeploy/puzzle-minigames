@@ -406,15 +406,18 @@ export default defineConfig({
 headers: {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'SAMEORIGIN',
-  'X-XSS-Protection': '1; mode=block',
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'Content-Security-Policy': "default-src 'self'",
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+  // For production builds, consider adding:
+  // 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains', // Only in production with HTTPS
+  // 'Content-Security-Policy': "default-src 'self'", // May interfere with Vite dev features
 }
 ```
 
-**Note:** Some headers like CSP may interfere with Vite's development features. Use cautiously.
+**Note:** 
+- HSTS (Strict-Transport-Security) should only be used in production with HTTPS, not in development
+- CSP (Content-Security-Policy) may interfere with Vite's development features and should be configured carefully
+- X-XSS-Protection header is deprecated and no longer needed in modern browsers
 
 ---
 

@@ -78,7 +78,6 @@ export default defineConfig({
       // Security headers for development
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'SAMEORIGIN',
-      'X-XSS-Protection': '1; mode=block',
     },
     
     // File watching configuration
