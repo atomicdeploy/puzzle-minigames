@@ -706,6 +706,7 @@ function handleSuccess() {
     // Success animation for all fields
     document.querySelectorAll('.digit-field').forEach((field, i) => {
         setTimeout(() => {
+            field.classList.add('success');
             field.style.animation = 'success-pulse 0.6s ease';
         }, i * 100);
     });
