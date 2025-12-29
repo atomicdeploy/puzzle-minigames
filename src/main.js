@@ -678,60 +678,157 @@ function initUI() {
     const sideMenu = document.getElementById('side-menu');
     const welcomeModal = document.getElementById('welcome-modal');
     const startGameBtn = document.getElementById('start-game-btn');
-    const modalClose = welcomeModal.querySelector('.modal-close');
     const contactLink = document.getElementById('contact-link');
     const homeLink = document.getElementById('home-link');
     const aboutLink = document.getElementById('about-link');
     const contactPage = document.getElementById('contact-page');
+    
+    // Null checks for required elements
+    if (!menuBtn || !menuCloseBtn || !sideMenu || !welcomeModal || !startGameBtn || 
+        !contactLink || !homeLink || !aboutLink || !contactPage) {
+        console.error('Required UI elements not found');
+        return;
+    }
+    
+    const modalClose = welcomeModal.querySelector('.modal-close');
     const pageClose = contactPage.querySelector('.page-close');
     
-    // Create menu overlay
-    const menuOverlay = document.createElement('div');
-    menuOverlay.className = 'menu-overlay';
-    document.body.appendChild(menuOverlay);
+    if (!modalClose || !pageClose) {
+        console.error('Required close buttons not found');
+        return;
+    }
+    
+    // Create or get menu overlay (prevent duplicate creation)
+    let menuOverlay = document.querySelector('.menu-overlay');
+    if (!menuOverlay) {
+        menuOverlay = document.createElement('div');
+        menuOverlay.className = 'menu-overlay';
+        document.body.appendChild(menuOverlay);
+    }
+    
+    // Store the last focused element for focus management
+    let lastFocusedElement = null;
+    
+    // Keyboard accessibility - Escape key handler
+    const handleEscapeKey = (event) => {
+        if (event.key === 'Escape' || event.key === 'Esc') {
+            // Close modal if open
+            if (welcomeModal.style.display === 'flex') {
+                welcomeModal.style.display = 'none';
+                try {
+                    localStorage.setItem('infernal-welcome-shown', 'true');
+                } catch (e) {
+                    console.warn('localStorage not available:', e);
+                }
+                if (lastFocusedElement) {
+                    lastFocusedElement.focus();
+                    lastFocusedElement = null;
+                }
+            }
+            // Close side menu if open
+            else if (sideMenu.classList.contains('open')) {
+                sideMenu.classList.remove('open');
+                menuOverlay.classList.remove('active');
+                if (lastFocusedElement) {
+                    lastFocusedElement.focus();
+                    lastFocusedElement = null;
+                }
+            }
+            // Close contact page if open
+            else if (contactPage.style.display === 'block') {
+                contactPage.style.display = 'none';
+                updateMenuActive('home-link');
+                if (lastFocusedElement) {
+                    lastFocusedElement.focus();
+                    lastFocusedElement = null;
+                }
+            }
+        }
+    };
+    
+    // Add global escape key listener
+    document.addEventListener('keydown', handleEscapeKey);
     
     // Menu toggle
     menuBtn.addEventListener('click', () => {
+        lastFocusedElement = document.activeElement;
         sideMenu.classList.add('open');
         menuOverlay.classList.add('active');
+        // Focus first menu item for keyboard navigation
+        setTimeout(() => homeLink.focus(), 100);
     });
     
     menuCloseBtn.addEventListener('click', () => {
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
     
     menuOverlay.addEventListener('click', () => {
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
     
     // Welcome modal
     startGameBtn.addEventListener('click', () => {
         welcomeModal.style.display = 'none';
-        localStorage.setItem('infernal-welcome-shown', 'true');
+        try {
+            localStorage.setItem('infernal-welcome-shown', 'true');
+        } catch (e) {
+            console.warn('localStorage not available:', e);
+        }
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
     
     modalClose.addEventListener('click', () => {
         welcomeModal.style.display = 'none';
-        localStorage.setItem('infernal-welcome-shown', 'true');
+        try {
+            localStorage.setItem('infernal-welcome-shown', 'true');
+        } catch (e) {
+            console.warn('localStorage not available:', e);
+        }
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
     
     // Close welcome modal when clicking on the backdrop (outside modal content)
     welcomeModal.addEventListener('click', (event) => {
         if (event.target === welcomeModal) {
             welcomeModal.style.display = 'none';
-            localStorage.setItem('infernal-welcome-shown', 'true');
+            try {
+                localStorage.setItem('infernal-welcome-shown', 'true');
+            } catch (e) {
+                console.warn('localStorage not available:', e);
+            }
+            if (lastFocusedElement) {
+                lastFocusedElement.focus();
+                lastFocusedElement = null;
+            }
         }
     });
     
     // Contact page
     contactLink.addEventListener('click', (e) => {
         e.preventDefault();
+        lastFocusedElement = document.activeElement;
         contactPage.style.display = 'block';
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
         updateMenuActive('contact-link');
+        // Focus close button for keyboard navigation
+        setTimeout(() => pageClose.focus(), 100);
     });
     
     homeLink.addEventListener('click', (e) => {
@@ -740,18 +837,29 @@ function initUI() {
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
         updateMenuActive('home-link');
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
     
     aboutLink.addEventListener('click', (e) => {
         e.preventDefault();
+        lastFocusedElement = document.activeElement;
         showAboutModal();
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
+        // Focus close button for keyboard navigation
+        setTimeout(() => modalClose.focus(), 100);
     });
     
     pageClose.addEventListener('click', () => {
         contactPage.style.display = 'none';
         updateMenuActive('home-link');
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
 }
 
@@ -766,8 +874,14 @@ function setWelcomeModalVisibility(visible) {
 
 // Show welcome modal on first visit
 function showWelcomeModal() {
-    const hasShown = localStorage.getItem('infernal-welcome-shown');
-    if (hasShown !== 'true') {
+    try {
+        const hasShown = localStorage.getItem('infernal-welcome-shown');
+        if (hasShown !== 'true') {
+            setWelcomeModalVisibility(true);
+        }
+    } catch (e) {
+        console.warn('localStorage not available:', e);
+        // Show modal by default if localStorage is not available
         setWelcomeModalVisibility(true);
     }
 }
