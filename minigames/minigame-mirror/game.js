@@ -213,25 +213,31 @@ function handleTouchMove(e) {
 function handleTouchEnd(e) {
     if (!touchElement || !touchClone) return;
     e.preventDefault();
-    
-    const touch = e.changedTouches[0];
-    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-    
-    // Find the drop zone
-    let dropZone = elementBelow;
-    while (dropZone && !dropZone.classList.contains('drop-zone')) {
-        dropZone = dropZone.parentElement;
+
+    try {
+        const touch = e.changedTouches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        // Find the drop zone
+        let dropZone = elementBelow;
+        while (dropZone && !dropZone.classList.contains('drop-zone')) {
+            dropZone = dropZone.parentElement;
+        }
+
+        if (dropZone && dropZone.classList.contains('drop-zone')) {
+            placeWordInZone(touchElement, dropZone);
+        }
+    } finally {
+        // Clean up
+        if (touchElement) {
+            touchElement.classList.remove('dragging');
+        }
+        if (touchClone && touchClone.parentNode) {
+            touchClone.remove();
+        }
+        touchElement = null;
+        touchClone = null;
     }
-    
-    if (dropZone && dropZone.classList.contains('drop-zone')) {
-        placeWordInZone(touchElement, dropZone);
-    }
-    
-    // Clean up
-    touchElement.classList.remove('dragging');
-    touchClone.remove();
-    touchElement = null;
-    touchClone = null;
 }
 
 function updateTouchClonePosition(touch) {
