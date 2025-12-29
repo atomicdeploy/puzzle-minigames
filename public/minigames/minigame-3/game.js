@@ -16,20 +16,37 @@ const ARROW_MIN_DISTANCE = 60; // Minimum distance to show arrow to target
 const urlParams = new URLSearchParams(window.location.search);
 const DEMO_MODE = urlParams.has('demo');
 
-// Pitch ranges (in Hz) mapped to directions
-const PITCH_RANGES = {
-    LEFT: { min: 0, max: 150, name: 'چپ ⬅️' },      // Very low pitch
-    DOWN: { min: 150, max: 250, name: 'پایین ⬇️' },  // Low pitch
-    UP: { min: 250, max: 400, name: 'بالا ⬆️' },     // Medium pitch
-    RIGHT: { min: 400, max: 1000, name: 'راست ➡️' }  // High pitch
+// Musical notes frequencies (A4 = 440Hz as reference)
+// Using equal temperament tuning
+const MUSICAL_NOTES = {
+    'C': [16.35, 32.70, 65.41, 130.81, 261.63, 523.25, 1046.50, 2093.00],  // C0-C7
+    'C#': [17.32, 34.65, 69.30, 138.59, 277.18, 554.37, 1108.73, 2217.46],
+    'D': [18.35, 36.71, 73.42, 146.83, 293.66, 587.33, 1174.66, 2349.32],
+    'D#': [19.45, 38.89, 77.78, 155.56, 311.13, 622.25, 1244.51, 2489.02],
+    'E': [20.60, 41.20, 82.41, 164.81, 329.63, 659.25, 1318.51, 2637.02],
+    'F': [21.83, 43.65, 87.31, 174.61, 349.23, 698.46, 1396.91, 2793.83],
+    'F#': [23.12, 46.25, 92.50, 185.00, 369.99, 739.99, 1479.98, 2959.96],
+    'G': [24.50, 49.00, 98.00, 196.00, 392.00, 783.99, 1567.98, 3135.96],
+    'G#': [25.96, 51.91, 103.83, 207.65, 415.30, 830.61, 1661.22, 3322.44],
+    'A': [27.50, 55.00, 110.00, 220.00, 440.00, 880.00, 1760.00, 3520.00],
+    'A#': [29.14, 58.27, 116.54, 233.08, 466.16, 932.33, 1864.66, 3729.31],
+    'B': [30.87, 61.74, 123.47, 246.94, 493.88, 987.77, 1975.53, 3951.07]
+};
+
+// Note ranges for directions (using octaves for flexibility)
+const NOTE_RANGES = {
+    LEFT: { notes: ['C', 'C#', 'D'], octaves: [2, 3], name: 'چپ ⬅️' },      // Low notes
+    DOWN: { notes: ['D#', 'E', 'F'], octaves: [3, 4], name: 'پایین ⬇️' },  // Medium-low notes
+    UP: { notes: ['F#', 'G', 'G#'], octaves: [4, 5], name: 'بالا ⬆️' },     // Medium-high notes
+    RIGHT: { notes: ['A', 'A#', 'B'], octaves: [5, 6], name: 'راست ➡️' }   // High notes
 };
 
 // Tutorial targets (positions on grid where ball needs to go)
 const TUTORIAL_STEPS = [
-    { direction: 'RIGHT', target: { x: 0.75, y: 0.5 }, name: 'راست', instruction: 'صدای بالا تولید کنید (مثل سوت)' },
-    { direction: 'LEFT', target: { x: 0.25, y: 0.5 }, name: 'چپ', instruction: 'صدای پایین تولید کنید (مثل همهمه)' },
-    { direction: 'UP', target: { x: 0.5, y: 0.25 }, name: 'بالا', instruction: 'صدای متوسط-بالا تولید کنید' },
-    { direction: 'DOWN', target: { x: 0.5, y: 0.75 }, name: 'پایین', instruction: 'صدای متوسط-پایین تولید کنید' }
+    { direction: 'RIGHT', target: { x: 0.75, y: 0.5 }, name: 'راست', instruction: 'نت‌های A، A#، B در اکتاو 5-6 بزنید' },
+    { direction: 'LEFT', target: { x: 0.25, y: 0.5 }, name: 'چپ', instruction: 'نت‌های C، C#، D در اکتاو 2-3 بزنید' },
+    { direction: 'UP', target: { x: 0.5, y: 0.25 }, name: 'بالا', instruction: 'نت‌های F#، G، G# در اکتاو 4-5 بزنید' },
+    { direction: 'DOWN', target: { x: 0.5, y: 0.75 }, name: 'پایین', instruction: 'نت‌های D#، E، F در اکتاو 3-4 بزنید' }
 ];
 
 // Game state
@@ -143,19 +160,28 @@ function setupPitchPreview() {
     
     directionButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const pitch = parseFloat(this.dataset.pitch);
+            const note = this.dataset.note;
+            const octave = parseInt(this.dataset.octave);
             const direction = this.dataset.direction;
-            playPitchTone(pitch, button);
+            playNoteTone(note, octave, button);
         });
     });
 }
 
-// Play a tone at the specified frequency
-function playPitchTone(frequency, button) {
+// Play a musical note tone
+function playNoteTone(note, octave, button) {
     try {
         // Create audio context if it doesn't exist
         if (!previewAudioContext) {
             previewAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Get frequency for the note
+        const frequency = MUSICAL_NOTES[note][octave];
+        
+        if (!frequency) {
+            console.error('Invalid note or octave:', note, octave);
+            return;
         }
         
         // Add playing class for visual feedback
@@ -359,7 +385,7 @@ function getVolume(buffer) {
 }
 
 function autoCorrelate(buffer, sampleRate) {
-    // Implements the autocorrelation algorithm for pitch detection
+    // Enhanced autocorrelation algorithm to detect fundamental frequency (most prominent pitch)
     const SIZE = buffer.length;
     const MAX_SAMPLES = Math.floor(SIZE / 2);
     let best_offset = -1;
@@ -376,45 +402,97 @@ function autoCorrelate(buffer, sampleRate) {
     // Not enough volume
     if (rms < 0.01) return -1;
     
-    // Find the best offset (fundamental frequency)
-    let lastCorrelation = 1;
+    // Normalize the buffer
+    const normalizedBuffer = new Float32Array(SIZE);
+    for (let i = 0; i < SIZE; i++) {
+        normalizedBuffer[i] = buffer[i] / rms;
+    }
+    
+    // Find the best offset (fundamental frequency) using improved autocorrelation
+    // This helps detect the most prominent pitch even with harmonics present
+    const correlations = [];
     for (let offset = 1; offset < MAX_SAMPLES; offset++) {
         let correlation = 0;
         
+        // Calculate autocorrelation for this offset
         for (let i = 0; i < MAX_SAMPLES; i++) {
-            correlation += Math.abs((buffer[i]) - (buffer[i + offset]));
+            correlation += normalizedBuffer[i] * normalizedBuffer[i + offset];
         }
         
-        correlation = 1 - (correlation / MAX_SAMPLES);
+        correlation = correlation / MAX_SAMPLES;
+        correlations.push({ offset, correlation });
         
-        if (correlation > 0.9 && correlation > lastCorrelation) {
-            const foundGoodCorrelation = correlation > best_correlation;
-            if (foundGoodCorrelation) {
-                best_correlation = correlation;
-                best_offset = offset;
-            }
+        // Track the best correlation (most prominent pitch)
+        if (correlation > best_correlation && correlation > 0.5) {
+            best_correlation = correlation;
+            best_offset = offset;
         }
-        
-        lastCorrelation = correlation;
     }
     
     if (best_offset === -1) return -1;
     
-    // Calculate frequency
+    // Refine the pitch using parabolic interpolation for better accuracy
+    if (best_offset > 0 && best_offset < correlations.length - 1) {
+        const y1 = correlations[best_offset - 1].correlation;
+        const y2 = correlations[best_offset].correlation;
+        const y3 = correlations[best_offset + 1].correlation;
+        
+        const delta = (y3 - y1) / (2 * (2 * y2 - y1 - y3));
+        best_offset += delta;
+    }
+    
+    // Calculate frequency from offset
     const frequency = sampleRate / best_offset;
     return frequency;
 }
 
-function getDirectionFromPitch(pitch) {
-    if (pitch >= PITCH_RANGES.RIGHT.min && pitch <= PITCH_RANGES.RIGHT.max) {
-        return 'RIGHT';
-    } else if (pitch >= PITCH_RANGES.UP.min && pitch < PITCH_RANGES.RIGHT.min) {
-        return 'UP';
-    } else if (pitch >= PITCH_RANGES.DOWN.min && pitch < PITCH_RANGES.UP.min) {
-        return 'DOWN';
-    } else if (pitch < PITCH_RANGES.DOWN.min) {
-        return 'LEFT';
+// Convert frequency to nearest musical note
+function frequencyToNote(frequency) {
+    if (frequency <= 0) return null;
+    
+    let closestNote = null;
+    let closestOctave = null;
+    let minDiff = Infinity;
+    
+    // Find the closest note across all octaves
+    for (const [note, frequencies] of Object.entries(MUSICAL_NOTES)) {
+        for (let octave = 0; octave < frequencies.length; octave++) {
+            const noteFreq = frequencies[octave];
+            const diff = Math.abs(frequency - noteFreq);
+            
+            // Use logarithmic difference for better perceptual matching
+            const logDiff = Math.abs(Math.log2(frequency / noteFreq));
+            
+            if (logDiff < Math.log2(1.03)) { // Within ~3% (roughly quarter-tone tolerance)
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestNote = note;
+                    closestOctave = octave;
+                }
+            }
+        }
     }
+    
+    return closestNote && closestOctave !== null ? { note: closestNote, octave: closestOctave } : null;
+}
+
+// Determine direction from note and octave
+function getDirectionFromPitch(pitch) {
+    const noteInfo = frequencyToNote(pitch);
+    
+    if (!noteInfo) return null;
+    
+    // Check each direction's note ranges
+    for (const [direction, range] of Object.entries(NOTE_RANGES)) {
+        // Check if the note matches
+        if (range.notes.includes(noteInfo.note)) {
+            // Check if the octave is in the acceptable range
+            if (range.octaves.includes(noteInfo.octave)) {
+                return direction;
+            }
+        }
+    }
+    
     return null;
 }
 
@@ -983,22 +1061,31 @@ function startDemoSimulation() {
             if (currentStep) {
                 gameState.currentDirection = currentStep.direction;
                 
-                // Simulate pitch for the direction
+                // Simulate pitch for the direction using musical notes
                 let demoPitch = 0;
                 switch (currentStep.direction) {
-                    case 'LEFT': demoPitch = 100; break;
-                    case 'DOWN': demoPitch = 200; break;
-                    case 'UP': demoPitch = 300; break;
-                    case 'RIGHT': demoPitch = 500; break;
+                    case 'LEFT': demoPitch = MUSICAL_NOTES['C#'][3]; break;  // C#3
+                    case 'DOWN': demoPitch = MUSICAL_NOTES['E'][4]; break;   // E4
+                    case 'UP': demoPitch = MUSICAL_NOTES['G'][4]; break;     // G4
+                    case 'RIGHT': demoPitch = MUSICAL_NOTES['A'][5]; break;  // A5
                 }
                 gameState.lastPitch = demoPitch;
                 updatePitchDisplay(demoPitch);
             }
         } else {
-            // Random direction in normal mode
+            // Random direction in normal mode with musical notes
             const directions = ['LEFT', 'RIGHT', 'UP', 'DOWN'];
-            gameState.currentDirection = directions[Math.floor(Math.random() * directions.length)];
-            gameState.lastPitch = 100 + Math.random() * 400;
+            const randomDir = directions[Math.floor(Math.random() * directions.length)];
+            gameState.currentDirection = randomDir;
+            
+            // Use musical notes for random pitch
+            const noteExamples = {
+                'LEFT': MUSICAL_NOTES['C#'][3],
+                'DOWN': MUSICAL_NOTES['E'][4],
+                'UP': MUSICAL_NOTES['G'][4],
+                'RIGHT': MUSICAL_NOTES['A'][5]
+            };
+            gameState.lastPitch = noteExamples[randomDir];
         }
     }, 100);
 }
