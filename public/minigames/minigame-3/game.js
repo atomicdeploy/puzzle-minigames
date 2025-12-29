@@ -1157,34 +1157,77 @@ function drawSpectrogram() {
         spectrogramCtx.fillText(`${freq}Hz`, 5, y - 2);
     });
     
-    // Draw data points
-    const columnWidth = width / SPECTROGRAM_HISTORY;
-    
-    spectrogramData.forEach((data, index) => {
-        const x = index * columnWidth;
-        const normalizedFreq = Math.min(data.frequency / 1000, 1);
-        const y = height - (normalizedFreq * height);
+    // Draw frequency curve as a connected line
+    if (spectrogramData.length > 1) {
+        const columnWidth = width / SPECTROGRAM_HISTORY;
         
-        // Color based on amplitude (brightness)
-        const intensity = Math.min(data.amplitude * 3, 1);
-        const hue = 180 + (normalizedFreq * 180); // Cyan to purple gradient
-        spectrogramCtx.fillStyle = `hsla(${hue}, 80%, ${intensity * 60}%, ${intensity})`;
+        // Draw the curve with gradient colors
+        spectrogramCtx.lineWidth = 3;
+        spectrogramCtx.lineCap = 'round';
+        spectrogramCtx.lineJoin = 'round';
         
-        spectrogramCtx.fillRect(x, y - 5, columnWidth + 1, 10);
-    });
+        spectrogramCtx.beginPath();
+        
+        // Start from first point
+        const firstData = spectrogramData[0];
+        const firstNormalizedFreq = Math.min(firstData.frequency / 1000, 1);
+        const firstY = height - (firstNormalizedFreq * height);
+        const firstX = 0;
+        spectrogramCtx.moveTo(firstX, firstY);
+        
+        // Draw lines to each subsequent point
+        spectrogramData.forEach((data, index) => {
+            if (index === 0) return;
+            
+            const x = index * columnWidth;
+            const normalizedFreq = Math.min(data.frequency / 1000, 1);
+            const y = height - (normalizedFreq * height);
+            
+            spectrogramCtx.lineTo(x, y);
+        });
+        
+        // Stroke with cyan color
+        spectrogramCtx.strokeStyle = '#00ffaa';
+        spectrogramCtx.stroke();
+        
+        // Draw filled area under the curve for better visualization
+        spectrogramCtx.lineTo(spectrogramData.length * columnWidth, height);
+        spectrogramCtx.lineTo(0, height);
+        spectrogramCtx.closePath();
+        spectrogramCtx.fillStyle = 'rgba(0, 255, 170, 0.1)';
+        spectrogramCtx.fill();
+        
+        // Draw dots at each data point with color based on amplitude
+        spectrogramData.forEach((data, index) => {
+            const x = index * columnWidth;
+            const normalizedFreq = Math.min(data.frequency / 1000, 1);
+            const y = height - (normalizedFreq * height);
+            
+            // Color based on amplitude (brightness)
+            const intensity = Math.min(data.amplitude * 3, 1);
+            const hue = 180 + (normalizedFreq * 180); // Cyan to purple gradient
+            
+            spectrogramCtx.fillStyle = `hsla(${hue}, 80%, ${intensity * 60}%, ${intensity})`;
+            spectrogramCtx.beginPath();
+            spectrogramCtx.arc(x, y, 3, 0, Math.PI * 2);
+            spectrogramCtx.fill();
+        });
+    }
     
-    // Draw current frequency line
+    // Draw current frequency indicator line
     if (spectrogramData.length > 0) {
         const lastData = spectrogramData[spectrogramData.length - 1];
         const normalizedFreq = Math.min(lastData.frequency / 1000, 1);
         const y = height - (normalizedFreq * height);
         
-        spectrogramCtx.strokeStyle = '#00ffaa';
+        spectrogramCtx.setLineDash([5, 5]);
+        spectrogramCtx.strokeStyle = 'rgba(255, 255, 0, 0.6)';
         spectrogramCtx.lineWidth = 2;
         spectrogramCtx.beginPath();
         spectrogramCtx.moveTo(0, y);
         spectrogramCtx.lineTo(width, y);
         spectrogramCtx.stroke();
+        spectrogramCtx.setLineDash([]);
     }
 }
 

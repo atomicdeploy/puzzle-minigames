@@ -194,7 +194,8 @@ header h1 {
 }
 
 .tab-content.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
 #game-canvas, #spectrogram-canvas {
@@ -204,8 +205,6 @@ header h1 {
 }
 
 #spectrogram-tab {
-    display: flex;
-    flex-direction: column;
     background: #000;
 }
 
