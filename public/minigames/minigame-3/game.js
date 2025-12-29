@@ -659,7 +659,11 @@ function detectPitchFFT_HPS(frequencyData, sampleRate) {
     for (let harmonic = 2; harmonic <= HPS_HARMONIC_LEVELS; harmonic++) {
         const downsampledLength = Math.floor(spectrumLength / harmonic);
         for (let i = 0; i < downsampledLength; i++) {
-            hpsSpectrum[i] *= spectrum[i * harmonic];
+            const harmonicIndex = i * harmonic;
+            // Ensure we don't exceed spectrum array bounds
+            if (harmonicIndex < spectrumLength) {
+                hpsSpectrum[i] *= spectrum[harmonicIndex];
+            }
         }
     }
     

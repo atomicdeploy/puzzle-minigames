@@ -660,7 +660,7 @@ button {
 
 .debug-panel ul {
     margin: 0.3rem 0;
-    padding-right: 1rem;
+    padding-inline-end: 1rem;
     list-style: none;
 }
 
