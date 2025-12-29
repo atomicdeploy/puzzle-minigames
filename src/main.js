@@ -852,8 +852,8 @@ function initUI() {
         showAboutModal();
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
-        // Focus close button for keyboard navigation
-        setTimeout(() => modalClose.focus(), FOCUS_DELAY);
+        // Focus primary action button for keyboard navigation
+        setTimeout(() => startGameBtn.focus(), FOCUS_DELAY);
     });
     
     pageClose.addEventListener('click', () => {
