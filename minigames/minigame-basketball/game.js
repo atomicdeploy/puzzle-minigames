@@ -37,6 +37,7 @@ let userFootsteps = [
 // Initialize the game
 function init() {
     drawBasketballCourt();
+    loadFootstepsFromStorage(); // Load saved positions before creating footsteps
     createFootsteps();
     setupEventListeners();
     setupResizeHandler();
@@ -267,6 +268,9 @@ function handleDrop(e) {
         const footstep = userFootsteps.find(f => f.id === id);
         if (footstep) {
             footstep.line = newLine;
+            console.log(`Footstep ${footstep.order} moved to line ${newLine}`);
+            console.log('Current footstep positions:', userFootsteps.map(f => ({ order: f.order, line: f.line })));
+            saveFootstepsToStorage();
         }
         
         playClickSound();
@@ -324,6 +328,9 @@ function handleTouchEnd(e) {
     const footstep = userFootsteps.find(f => f.id === id);
     if (footstep) {
         footstep.line = newLine;
+        console.log(`Footstep ${footstep.order} moved to line ${newLine}`);
+        console.log('Current footstep positions:', userFootsteps.map(f => ({ order: f.order, line: f.line })));
+        saveFootstepsToStorage();
     }
     
     draggedFootstep.style.opacity = '1';
@@ -618,6 +625,36 @@ function playClickSound() {
         oscillator.stop(audioContext.currentTime + 0.1);
     } catch (e) {
         // Silent fail if audio playback fails
+    }
+}
+
+// Save footstep positions to localStorage
+function saveFootstepsToStorage() {
+    try {
+        const positions = userFootsteps.map(f => ({ id: f.id, line: f.line, order: f.order }));
+        localStorage.setItem('basketball-footsteps', JSON.stringify(positions));
+        console.log('Footstep positions saved to localStorage');
+    } catch (e) {
+        console.error('Failed to save footstep positions:', e);
+    }
+}
+
+// Load footstep positions from localStorage
+function loadFootstepsFromStorage() {
+    try {
+        const saved = localStorage.getItem('basketball-footsteps');
+        if (saved) {
+            const positions = JSON.parse(saved);
+            positions.forEach(savedPos => {
+                const footstep = userFootsteps.find(f => f.id === savedPos.id);
+                if (footstep) {
+                    footstep.line = savedPos.line;
+                }
+            });
+            console.log('Footstep positions loaded from localStorage:', positions);
+        }
+    } catch (e) {
+        console.error('Failed to load footstep positions:', e);
     }
 }
 
