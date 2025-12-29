@@ -53,7 +53,7 @@ export default defineConfig({
       // clientPort: 443, // Use this when behind a reverse proxy with different external port
       // host: 'dev.example.com', // Use this when behind a reverse proxy with different hostname
       protocol: 'ws', // Use 'wss' for HTTPS
-      // timeout: 30000, // HMR connection timeout
+      // timeout: 30000, // HMR connection timeout (ms)
       // overlay: true, // Show overlay for errors
     },
     
