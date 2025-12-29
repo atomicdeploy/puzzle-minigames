@@ -1,0 +1,551 @@
+/* Import Persian/Arabic font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    --primary-color: #ff8c42;
+    --secondary-color: #ff6b6b;
+    --success-color: #00b894;
+    --error-color: #d63031;
+    --warning-color: #fdcb6e;
+    --bg-dark: #0f0e17;
+    --bg-medium: #1a1a2e;
+    --bg-light: #16213e;
+    --text-primary: #fffffe;
+    --text-secondary: #a7a9be;
+    --court-color: #c17b3a;
+    --court-line: #ffffff;
+    --accent-orange: #ff8c42;
+    --accent-green: #4ecdc4;
+    --segment-on: #ff3333;
+    --segment-off: #2a0a0a;
+    --shadow-glow: 0 0 20px rgba(255, 140, 66, 0.4);
+}
+
+body {
+    font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-medium) 50%, var(--bg-light) 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    direction: rtl;
+    position: relative;
+}
+
+/* Animated background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(255, 140, 66, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 107, 107, 0.1) 0%, transparent 50%);
+    animation: float 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+#game-container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    padding: 1.5rem;
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 3px solid var(--primary-color);
+    box-shadow: var(--shadow-glow);
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+header h1 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 30px rgba(255, 140, 66, 0.3);
+}
+
+/* Instructions Panel */
+#instructions-panel {
+    padding: 1.5rem;
+    background: rgba(26, 26, 46, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.instruction-card {
+    background: linear-gradient(135deg, rgba(255, 140, 66, 0.1), rgba(255, 107, 107, 0.1));
+    border: 2px solid var(--primary-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.instruction-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--accent-orange);
+    text-align: center;
+}
+
+.instruction-content p {
+    margin: 0.8rem 0;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    padding-right: 1rem;
+}
+
+.instruction-content strong {
+    color: var(--primary-color);
+}
+
+/* Court Container */
+#court-container {
+    position: relative;
+    flex: 1;
+    min-height: 400px;
+    margin: 1.5rem;
+    background: linear-gradient(135deg, rgba(193, 123, 58, 0.2), rgba(139, 69, 19, 0.3));
+    border: 3px solid var(--court-color);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), 0 5px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Radar Effect */
+#radar-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300px;
+    height: 300px;
+    margin: -150px 0 0 -150px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 140, 66, 0.3) 0%, transparent 70%);
+    animation: radar-pulse 3s ease-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes radar-pulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Basketball Court Canvas */
+#basketball-court {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+/* Footsteps Layer */
+#footsteps-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.footstep {
+    position: absolute;
+    font-size: 2rem;
+    animation: footstep-appear 0.5s ease-out;
+    filter: drop-shadow(0 0 5px rgba(255, 140, 66, 0.6));
+    transform-origin: center;
+}
+
+@keyframes footstep-appear {
+    0% {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.footstep.highlight {
+    animation: footstep-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes footstep-glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 5px rgba(255, 140, 66, 0.6));
+        transform: scale(1);
+    }
+    50% {
+        filter: drop-shadow(0 0 15px rgba(255, 140, 66, 1));
+        transform: scale(1.1);
+    }
+}
+
+/* Answer Panel */
+#answer-panel {
+    padding: 2rem;
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 3px solid var(--primary-color);
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Scoreboard Container */
+.scoreboard-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.scoreboard-label {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-orange);
+    text-shadow: 0 0 10px rgba(255, 140, 66, 0.5);
+}
+
+/* Seven Segment Display */
+.seven-segment-display {
+    display: flex;
+    gap: 1rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #1a0a0a, #2a1a1a);
+    border: 3px solid #ff3333;
+    border-radius: 1rem;
+    box-shadow: 
+        inset 0 0 20px rgba(0, 0, 0, 0.8),
+        0 0 30px rgba(255, 51, 51, 0.4);
+}
+
+.digit {
+    position: relative;
+    width: 60px;
+    height: 100px;
+}
+
+.segment {
+    position: absolute;
+    background: var(--segment-off);
+    transition: all 0.2s ease;
+}
+
+.segment.active {
+    background: var(--segment-on);
+    box-shadow: 
+        0 0 10px var(--segment-on),
+        0 0 20px var(--segment-on),
+        inset 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+/* Horizontal segments */
+.seg-a, .seg-d, .seg-g {
+    width: 50px;
+    height: 8px;
+    left: 5px;
+}
+
+.seg-a { top: 0; }
+.seg-g { top: 46px; }
+.seg-d { top: 92px; }
+
+/* Vertical segments */
+.seg-b, .seg-c, .seg-e, .seg-f {
+    width: 8px;
+    height: 40px;
+}
+
+.seg-b { top: 5px; right: 0; }
+.seg-f { top: 5px; left: 0; }
+.seg-c { top: 52px; right: 0; }
+.seg-e { top: 52px; left: 0; }
+
+/* Score Controls */
+.score-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.control-btn {
+    width: 60px;
+    height: 60px;
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(255, 140, 66, 0.4);
+}
+
+.control-btn:hover, .control-btn:active {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(255, 140, 66, 0.6);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+/* Submit Button */
+.submit-button {
+    width: 100%;
+    padding: 1.2rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--success-color), var(--accent-green));
+    color: white;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.submit-button:hover, .submit-button:active {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 184, 148, 0.6);
+}
+
+.submit-button:active {
+    transform: translateY(0);
+}
+
+.submit-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-icon {
+    font-size: 2rem;
+}
+
+/* Hint Text */
+#hint-text {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+/* Feedback */
+.feedback {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 2rem 3rem;
+    border-radius: 1rem;
+    font-size: 2rem;
+    font-weight: 700;
+    z-index: 10000;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    pointer-events: none;
+}
+
+.feedback.hidden {
+    display: none;
+}
+
+.feedback.success {
+    background: linear-gradient(135deg, var(--success-color), var(--accent-green));
+    color: white;
+    animation: success-pulse 0.6s ease;
+}
+
+.feedback.error {
+    background: linear-gradient(135deg, var(--error-color), var(--secondary-color));
+    color: white;
+    animation: shake 0.5s ease;
+}
+
+@keyframes success-pulse {
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+    25% { transform: translate(-50%, -50%) translateX(-20px); }
+    75% { transform: translate(-50%, -50%) translateX(20px); }
+}
+
+/* Confetti Canvas */
+#confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .instruction-content p {
+        font-size: 1rem;
+    }
+    
+    #court-container {
+        min-height: 300px;
+        margin: 1rem;
+    }
+    
+    .footstep {
+        font-size: 1.5rem;
+    }
+    
+    .digit {
+        width: 45px;
+        height: 75px;
+    }
+    
+    .seg-a, .seg-d, .seg-g {
+        width: 37px;
+        height: 6px;
+    }
+    
+    .seg-b, .seg-c, .seg-e, .seg-f {
+        width: 6px;
+        height: 30px;
+    }
+    
+    .seg-g { top: 34px; }
+    .seg-d { top: 69px; }
+    .seg-c, .seg-e { top: 39px; }
+    
+    .control-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 2rem;
+    }
+    
+    .submit-button {
+        font-size: 1.5rem;
+        padding: 1rem;
+    }
+    
+    .btn-icon {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.2rem;
+    }
+    
+    .instruction-card h2 {
+        font-size: 1.2rem;
+    }
+    
+    .instruction-content p {
+        font-size: 0.9rem;
+    }
+    
+    #court-container {
+        min-height: 250px;
+        margin: 0.5rem;
+    }
+    
+    .footstep {
+        font-size: 1.2rem;
+    }
+    
+    .scoreboard-label {
+        font-size: 1.2rem;
+    }
+    
+    .seven-segment-display {
+        padding: 1rem;
+        gap: 0.5rem;
+    }
+    
+    .digit {
+        width: 35px;
+        height: 60px;
+    }
+    
+    .seg-a, .seg-d, .seg-g {
+        width: 28px;
+        height: 5px;
+    }
+    
+    .seg-b, .seg-c, .seg-e, .seg-f {
+        width: 5px;
+        height: 23px;
+    }
+    
+    .seg-g { top: 27px; }
+    .seg-d { top: 55px; }
+    .seg-c, .seg-e { top: 31px; }
+    
+    .control-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.8rem;
+    }
+    
+    .submit-button {
+        font-size: 1.2rem;
+        padding: 0.8rem;
+    }
+    
+    .feedback {
+        font-size: 1.5rem;
+        padding: 1.5rem 2rem;
+    }
+}
