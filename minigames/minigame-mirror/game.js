@@ -385,6 +385,25 @@ function showFeedback(message, type) {
     feedback.textContent = message;
     feedback.className = `feedback ${type}`;
     
+    // Announce to screen readers
+    const srAnnouncements = document.getElementById('sr-announcements');
+    if (srAnnouncements) {
+        // Remove emojis for cleaner screen reader output
+        const cleanMessage = message.replace(/[🎉✨❌]/g, '').trim();
+        
+        // Set role based on feedback type
+        if (type === 'error') {
+            srAnnouncements.setAttribute('role', 'alert');
+            srAnnouncements.textContent = `خطا: ${cleanMessage}`;
+        } else if (type === 'success') {
+            srAnnouncements.setAttribute('role', 'status');
+            srAnnouncements.textContent = `موفقیت: ${cleanMessage}`;
+        } else {
+            srAnnouncements.setAttribute('role', 'status');
+            srAnnouncements.textContent = cleanMessage;
+        }
+    }
+    
     setTimeout(() => {
         feedback.classList.add('hidden');
     }, 3000);
