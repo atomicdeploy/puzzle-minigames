@@ -10,6 +10,7 @@ const CORRECT_ORDER = {
 // Game state
 let currentStage = 1;
 let isGameComplete = false;
+let isMirrored = false; // Track mirror state
 let currentOrder = {
     top: null,
     middle: null,
@@ -24,6 +25,10 @@ function init() {
 
 // Setup event listeners
 function setupEventListeners() {
+    // Mirror click to toggle flip effect
+    const mirrorContainer = document.getElementById('mirror-container');
+    mirrorContainer.addEventListener('click', handleMirrorClick);
+    
     // Stage 1: Password submission
     const passwordInput = document.getElementById('password-input');
     const passwordSubmit = document.getElementById('password-submit');
@@ -41,6 +46,27 @@ function setupEventListeners() {
     // Stage 2: Order submission
     const orderSubmit = document.getElementById('order-submit');
     orderSubmit.addEventListener('click', handleOrderSubmit);
+}
+
+// Handle mirror click to toggle flip
+function handleMirrorClick() {
+    const mirrorContainer = document.getElementById('mirror-container');
+    const inputGroup = document.querySelector('.input-group');
+    
+    // Add click animation
+    mirrorContainer.classList.add('clicked');
+    setTimeout(() => {
+        mirrorContainer.classList.remove('clicked');
+    }, 1000);
+    
+    // Toggle mirrored state
+    isMirrored = !isMirrored;
+    
+    if (isMirrored) {
+        inputGroup.classList.add('mirrored');
+    } else {
+        inputGroup.classList.remove('mirrored');
+    }
 }
 
 // Handle password submission
