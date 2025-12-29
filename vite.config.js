@@ -5,8 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
 
 export default defineConfig(({ command, mode }) => {
-  // Determine if HTTPS is enabled
-  const useHttps = false; // Change to true to enable HTTPS
+  // Determine if HTTPS is enabled (configure via VITE_HTTPS env var: "true" or "1" to enable)
+  const useHttps = process.env.VITE_HTTPS === 'true' || process.env.VITE_HTTPS === '1';
   
   return {
     plugins: [
