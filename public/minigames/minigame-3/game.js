@@ -169,7 +169,7 @@ function resizeCanvas() {
         canvasHeight = canvas.height;
     }
     
-    if (spectrogramTab.classList.contains('active') || spectrogramCanvas) {
+    if (spectrogramTab.classList.contains('active')) {
         spectrogramCanvas.width = spectrogramTab.clientWidth;
         spectrogramCanvas.height = spectrogramTab.clientHeight;
         spectrogramWidth = spectrogramCanvas.width;
