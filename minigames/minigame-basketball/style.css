@@ -194,6 +194,7 @@ header h1 {
     -webkit-user-select: none;
     opacity: 1;
     pointer-events: auto; /* Allow pointer events on footsteps */
+    animation: footstep-appear 0.5s ease-out backwards;
 }
 
 .footstep.draggable {

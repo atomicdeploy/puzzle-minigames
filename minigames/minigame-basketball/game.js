@@ -147,11 +147,11 @@ function drawBasketballCourt() {
     ctx.font = 'bold 12px Vazirmatn';
     ctx.textAlign = 'center';
     
-    // Show odd line numbers only
+    // Show odd line numbers only (display negative numbers as positive)
     for (let i of [-9, -7, -5, -3, -1, 1, 3, 5, 7, 9, 11, 13, 15]) {
         const x = centerX + (i * lineSpacing);
         if (x >= 0 && x <= width) {
-            ctx.fillText(i.toString(), x, 20);
+            ctx.fillText(Math.abs(i).toString(), x, 20);
         }
     }
 }
@@ -196,6 +196,7 @@ function createFootsteps() {
         footstep.style.top = `${y}px`;
         footstep.style.transform = 'translate(-50%, -50%)';
         footstep.style.cursor = 'move';
+        footstep.style.animationDelay = `${index * 0.15}s`; // Stagger animation
         
         // Add drag event listeners
         footstep.addEventListener('dragstart', handleDragStart);
