@@ -653,12 +653,115 @@ function initGame() {
     initPuzzleBoard();
     initTreasureChests();
     loadGameState();
+    initUI();
     
     // Hide loading screen
     setTimeout(() => {
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'flex';
+        
+        // Show welcome modal on first visit
+        showWelcomeModal();
     }, 1500);
+}
+
+// UI Initialization
+function initUI() {
+    const menuBtn = document.getElementById('menu-btn');
+    const menuCloseBtn = document.getElementById('menu-close-btn');
+    const sideMenu = document.getElementById('side-menu');
+    const welcomeModal = document.getElementById('welcome-modal');
+    const startGameBtn = document.getElementById('start-game-btn');
+    const modalClose = welcomeModal.querySelector('.modal-close');
+    const contactLink = document.getElementById('contact-link');
+    const homeLink = document.getElementById('home-link');
+    const aboutLink = document.getElementById('about-link');
+    const contactPage = document.getElementById('contact-page');
+    const pageClose = contactPage.querySelector('.page-close');
+    
+    // Create menu overlay
+    const menuOverlay = document.createElement('div');
+    menuOverlay.className = 'menu-overlay';
+    document.body.appendChild(menuOverlay);
+    
+    // Menu toggle
+    menuBtn.addEventListener('click', () => {
+        sideMenu.classList.add('open');
+        menuOverlay.classList.add('active');
+    });
+    
+    menuCloseBtn.addEventListener('click', () => {
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+    });
+    
+    menuOverlay.addEventListener('click', () => {
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+    });
+    
+    // Welcome modal
+    startGameBtn.addEventListener('click', () => {
+        welcomeModal.style.display = 'none';
+        localStorage.setItem('infernal-welcome-shown', 'true');
+    });
+    
+    modalClose.addEventListener('click', () => {
+        welcomeModal.style.display = 'none';
+        localStorage.setItem('infernal-welcome-shown', 'true');
+    });
+    
+    // Contact page
+    contactLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        contactPage.style.display = 'block';
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+        updateMenuActive('contact-link');
+    });
+    
+    homeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        contactPage.style.display = 'none';
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+        updateMenuActive('home-link');
+    });
+    
+    aboutLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showAboutModal();
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+    });
+    
+    pageClose.addEventListener('click', () => {
+        contactPage.style.display = 'none';
+        updateMenuActive('home-link');
+    });
+}
+
+// Show welcome modal on first visit
+function showWelcomeModal() {
+    const hasShown = localStorage.getItem('infernal-welcome-shown');
+    if (!hasShown) {
+        const welcomeModal = document.getElementById('welcome-modal');
+        welcomeModal.style.display = 'flex';
+    }
+}
+
+// Show about modal (same as welcome but can be triggered from menu)
+function showAboutModal() {
+    const welcomeModal = document.getElementById('welcome-modal');
+    welcomeModal.style.display = 'flex';
+}
+
+// Update active menu item
+function updateMenuActive(activeId) {
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.getElementById(activeId).classList.add('active');
 }
 
 // Start game when DOM is loaded

@@ -8,6 +8,7 @@
     <title>اینفرنال - بازی پازل</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <div id="app">
@@ -20,6 +21,11 @@
         </div>
         <div id="game-container" style="display: none;">
             <header>
+                <div class="header-left">
+                    <button id="menu-btn" class="icon-btn" aria-label="منو">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
                 <h1>🧩 اینفرنال 🧩</h1>
                 <div class="stats">
                     <span id="discovered-count">0/9</span>
@@ -32,6 +38,105 @@
                 <div id="treasure-chests"></div>
             </div>
             <div id="feedback-overlay" style="display: none;"></div>
+        </div>
+        
+        <!-- Welcome Modal -->
+        <div id="welcome-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <button class="modal-close" aria-label="بستن">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="modal-header">
+                    <i class="fas fa-star"></i>
+                    <h2>به اینفرنال خوش آمدید!</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="event-info">
+                        <h3><i class="fas fa-calendar-alt"></i> رویداد بازیهای فکری</h3>
+                        <p class="event-name">«جهشکاپ»</p>
+                        <p class="event-date">
+                            <i class="fas fa-clock"></i>
+                            هشتم آبان ماه 1404 تا یازدهم آبان ماه 1404
+                        </p>
+                        <a href="https://iqna.ir/fa/news/4283657" target="_blank" rel="noopener noreferrer" class="event-link">
+                            <i class="fas fa-external-link-alt"></i>
+                            اطلاعات بیشتر
+                        </a>
+                    </div>
+                    <div class="app-description">
+                        <p>در این بازی، با باز کردن صندوق‌های گنج، پازل‌های مختلف را کشف کنید و آنها را در جای مناسب قرار دهید.</p>
+                        <p>برخی از پازل‌ها نیاز به حل معماهای فکری دارند. موفق باشید! 🧩✨</p>
+                    </div>
+                </div>
+                <button class="modal-btn" id="start-game-btn">
+                    <i class="fas fa-play"></i>
+                    شروع بازی
+                </button>
+            </div>
+        </div>
+        
+        <!-- Side Menu -->
+        <div id="side-menu" class="side-menu">
+            <div class="menu-header">
+                <h2>منو</h2>
+                <button id="menu-close-btn" class="icon-btn" aria-label="بستن منو">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="menu-nav">
+                <a href="#" id="home-link" class="menu-item active">
+                    <i class="fas fa-home"></i>
+                    <span>صفحه اصلی</span>
+                </a>
+                <a href="#" id="contact-link" class="menu-item">
+                    <i class="fas fa-phone"></i>
+                    <span>تماس با ما</span>
+                </a>
+                <a href="#" id="about-link" class="menu-item">
+                    <i class="fas fa-info-circle"></i>
+                    <span>درباره رویداد</span>
+                </a>
+            </nav>
+        </div>
+        
+        <!-- Contact Page -->
+        <div id="contact-page" class="page-overlay" style="display: none;">
+            <div class="page-content">
+                <button class="page-close" aria-label="بازگشت">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="page-header">
+                    <i class="fas fa-phone"></i>
+                    <h2>تماس با ما</h2>
+                </div>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-mobile-alt"></i>
+                        <div>
+                            <label>تلفن همراه:</label>
+                            <a href="tel:09901212697" class="contact-link">
+                                09901212697
+                            </a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone-alt"></i>
+                        <div>
+                            <label>تلفن ثابت:</label>
+                            <a href="tel:021-91307900" class="contact-link">
+                                021-91307900
+                            </a>
+                        </div>
+                    </div>
+                    <div class="contact-item address">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <label>آدرس:</label>
+                            <p>تهران، خیابان انقلاب اسلامی، خیابان 16 آذر، سالن همایش دانشگاه تهران، غرفه اسکیپ زوم</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script type="module" src="/src/main.js"></script>
