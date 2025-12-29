@@ -68,7 +68,7 @@ function drawBasketballCourt() {
     ctx.fillStyle = 'rgba(193, 123, 58, 0.3)';
     ctx.fillRect(0, 0, width, height);
     
-    // Draw horizontal lines (parallel to the orange center line)
+    // Draw horizontal lines (vertical lines for positioning)
     const lineSpacing = width / 20; // Space between lines
     const numLines = 10;
     
@@ -103,6 +103,22 @@ function drawBasketballCourt() {
             ctx.stroke();
         }
     }
+    
+    // Draw horizontal dotted lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]); // Create dotted pattern
+    
+    const numHorizontalLines = 8;
+    for (let i = 1; i < numHorizontalLines; i++) {
+        const y = (height / numHorizontalLines) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+    }
+    
+    ctx.setLineDash([]); // Reset to solid lines
     
     // Draw three-point arc (decorative)
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';

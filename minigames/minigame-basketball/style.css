@@ -258,6 +258,7 @@ header h1 {
 /* Seven Segment Display */
 .seven-segment-display {
     display: flex;
+    direction: ltr;
     gap: 0.5rem;
     padding: 2rem;
     background: linear-gradient(135deg, #1a0a0a, #2a1a1a);
