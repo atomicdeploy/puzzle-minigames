@@ -96,6 +96,10 @@ let pitchDetectionInterval = null;
 // Web Speech Recognition
 let speechRecognition = null;
 let isListening = false;
+let speechRecognitionErrorCount = 0;
+let speechRecognitionRetryTimeout = null;
+const MAX_SPEECH_RECOGNITION_ERRORS = 5;
+const SPEECH_RECOGNITION_BASE_DELAY = 1000; // 1 second base delay
 
 // Canvas
 let canvas, ctx;
@@ -320,15 +324,39 @@ function initSpeechRecognition() {
                 // Ignore no-speech errors (common when silent)
                 return;
             }
+            
+            // Increment error count for persistent errors
+            speechRecognitionErrorCount++;
             isListening = false;
+            
+            if (speechRecognitionErrorCount >= MAX_SPEECH_RECOGNITION_ERRORS) {
+                console.warn(`Speech recognition failed ${MAX_SPEECH_RECOGNITION_ERRORS} times. Stopping auto-restart.`);
+            }
         };
         
         speechRecognition.onend = () => {
-            // Auto-restart if game is playing
-            if (gameState.isPlaying && !gameState.isPaused) {
-                startSpeechRecognition();
-            } else {
-                isListening = false;
+            isListening = false;
+            
+            // Auto-restart if game is playing and we haven't exceeded error limit
+            if (gameState.isPlaying && !gameState.isPaused && speechRecognitionErrorCount < MAX_SPEECH_RECOGNITION_ERRORS) {
+                // Calculate exponential backoff delay
+                const delay = speechRecognitionErrorCount > 0 
+                    ? SPEECH_RECOGNITION_BASE_DELAY * Math.pow(2, speechRecognitionErrorCount - 1)
+                    : 0;
+                
+                if (delay > 0) {
+                    console.log(`Speech recognition restarting in ${delay}ms (attempt ${speechRecognitionErrorCount + 1})`);
+                }
+                
+                // Clear any existing timeout
+                if (speechRecognitionRetryTimeout) {
+                    clearTimeout(speechRecognitionRetryTimeout);
+                }
+                
+                // Schedule restart with backoff
+                speechRecognitionRetryTimeout = setTimeout(() => {
+                    startSpeechRecognition();
+                }, delay);
             }
         };
         
@@ -344,6 +372,8 @@ function startSpeechRecognition() {
         try {
             speechRecognition.start();
             isListening = true;
+            // Reset error count on successful start
+            speechRecognitionErrorCount = 0;
             console.log('Speech recognition started');
         } catch (error) {
             // Handle the case where recognition is already running
@@ -351,9 +381,11 @@ function startSpeechRecognition() {
                 console.warn('Speech recognition was already started; syncing isListening state.');
                 // If start() failed because it was already running, reflect that in our flag
                 isListening = true;
+                speechRecognitionErrorCount = 0;
             } else {
                 console.error('Failed to start speech recognition:', error);
                 isListening = false;
+                speechRecognitionErrorCount++;
             }
         }
     }
@@ -362,8 +394,16 @@ function startSpeechRecognition() {
 // Stop speech recognition
 function stopSpeechRecognition() {
     if (speechRecognition && isListening) {
+        // Clear any pending retry timeout
+        if (speechRecognitionRetryTimeout) {
+            clearTimeout(speechRecognitionRetryTimeout);
+            speechRecognitionRetryTimeout = null;
+        }
+        
         speechRecognition.stop();
         isListening = false;
+        // Reset error count when manually stopped
+        speechRecognitionErrorCount = 0;
         console.log('Speech recognition stopped');
     }
 }
