@@ -31,6 +31,9 @@ let balls = {
 };
 let isGameComplete = false;
 let userAnswer = null;
+let startTime = null;
+let endTime = null;
+let attempts = 0;
 
 // Ball weights (based on the puzzle logic)
 const ballWeights = {
@@ -43,6 +46,9 @@ const ballWeights = {
 function init() {
     const canvas = document.getElementById('physics-canvas');
     const canvasContainer = document.getElementById('canvas-container');
+    
+    // Start timer
+    startTime = Date.now();
     
     // Create engine
     engine = Engine.create();
@@ -312,6 +318,7 @@ function handleSubmit() {
     }
     
     userAnswer = answer;
+    attempts++;
     
     // Start the physics engine when user submits their first answer
     if (!runner.enabled) {
@@ -328,6 +335,8 @@ function handleSubmit() {
 // Handle correct answer
 function handleCorrectAnswer() {
     isGameComplete = true;
+    endTime = Date.now();
+    const completionTime = endTime - startTime;
     
     showFeedback('🎉 آفرین! پاسخ صحیح است! 🎉', 'success');
     playConfetti();
@@ -336,13 +345,31 @@ function handleCorrectAnswer() {
     document.getElementById('answer-input').disabled = true;
     document.getElementById('submit-btn').disabled = true;
     
+    // Calculate score (higher score for faster completion and fewer attempts)
+    const timeScore = Math.max(0, 10000 - completionTime / 10); // Time-based score
+    const attemptPenalty = (attempts - 1) * 500; // Penalty for wrong attempts
+    const finalScore = Math.round(Math.max(0, timeScore - attemptPenalty));
+    
+    // Save score to leaderboard
+    saveScoreToLeaderboard({
+        puzzleNumber: PUZZLE_NUMBER,
+        answer: CORRECT_ANSWER,
+        completionTime: completionTime,
+        attempts: attempts,
+        score: finalScore,
+        timestamp: Date.now()
+    });
+    
     // Notify parent window
     setTimeout(() => {
         window.parent.postMessage({
             type: 'minigame-complete',
             success: true,
             puzzleNumber: PUZZLE_NUMBER,
-            answer: CORRECT_ANSWER
+            answer: CORRECT_ANSWER,
+            completionTime: completionTime,
+            attempts: attempts,
+            score: finalScore
         }, window.location.origin);
     }, 3000);
 }
@@ -459,6 +486,45 @@ function handleResize() {
     render.canvas.height = canvasContainer.clientHeight;
     render.options.width = canvasContainer.clientWidth;
     render.options.height = canvasContainer.clientHeight;
+}
+
+// Save score to leaderboard
+function saveScoreToLeaderboard(scoreData) {
+    try {
+        // Get existing leaderboard data
+        const leaderboardKey = 'infernal-leaderboard';
+        let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || '[]');
+        
+        // Get user name (or generate a default one)
+        let userName = localStorage.getItem('infernal-username');
+        if (!userName) {
+            userName = `بازیکن ${Math.floor(Math.random() * 1000)}`;
+            localStorage.setItem('infernal-username', userName);
+        }
+        
+        // Add new entry
+        const entry = {
+            id: Date.now() + Math.random(),
+            userName: userName,
+            puzzleNumber: scoreData.puzzleNumber,
+            score: scoreData.score,
+            completionTime: scoreData.completionTime,
+            attempts: scoreData.attempts,
+            timestamp: scoreData.timestamp,
+            status: 'completed'
+        };
+        
+        leaderboard.push(entry);
+        
+        // Sort by score (descending) and keep top 100
+        leaderboard.sort((a, b) => b.score - a.score);
+        leaderboard = leaderboard.slice(0, 100);
+        
+        // Save back to localStorage
+        localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
+    } catch (e) {
+        console.error('Failed to save score to leaderboard:', e);
+    }
 }
 
 // Initialize game when DOM is loaded

@@ -127,6 +127,8 @@ header {
     justify-content: space-between;
     align-items: center;
     box-shadow: var(--shadow-glow);
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 header h1 {
@@ -135,6 +137,33 @@ header h1 {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.leaderboard-button {
+    background: linear-gradient(135deg, var(--accent-3), var(--warning-color));
+    border: 2px solid var(--accent-3);
+    color: var(--bg-dark);
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Vazirmatn', sans-serif;
+    box-shadow: 0 4px 15px rgba(255, 230, 109, 0.3);
+}
+
+.leaderboard-button:hover,
+.leaderboard-button:active {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(255, 230, 109, 0.5);
 }
 
 .stats {
