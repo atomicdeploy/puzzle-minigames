@@ -776,7 +776,10 @@ function updateMenuActive(activeId) {
     document.querySelectorAll('.menu-item').forEach(item => {
         item.classList.remove('active');
     });
-    document.getElementById(activeId).classList.add('active');
+    const activeElement = document.getElementById(activeId);
+    if (activeElement) {
+        activeElement.classList.add('active');
+    }
 }
 
 // Start game when DOM is loaded
