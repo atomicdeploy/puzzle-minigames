@@ -8,6 +8,9 @@ const PITCH_SMOOTHING = 0.7; // Higher = smoother but slower response
 const MIN_VOLUME_THRESHOLD = 0.01; // Minimum volume to detect sound
 const GRID_SIZE = 50; // Size of grid cells for radar effect
 const AMPLITUDE_SPEED_MULTIPLIER = 15; // How much amplitude affects speed
+const MAX_SPEED_MULTIPLIER = 2; // Maximum speed multiplier from amplitude
+const TARGET_REACH_THRESHOLD = 40; // Distance in pixels to reach target
+const ARROW_MIN_DISTANCE = 60; // Minimum distance to show arrow to target
 
 // Check for demo mode (for testing without microphone)
 const urlParams = new URLSearchParams(window.location.search);
@@ -375,7 +378,7 @@ function updateBall() {
     // Apply control based on voice direction with amplitude-based speed
     if (gameState.currentDirection) {
         // Calculate speed multiplier based on amplitude (louder = faster)
-        const speedMultiplier = Math.min(gameState.currentAmplitude * AMPLITUDE_SPEED_MULTIPLIER, 2);
+        const speedMultiplier = Math.min(gameState.currentAmplitude * AMPLITUDE_SPEED_MULTIPLIER, MAX_SPEED_MULTIPLIER);
         
         switch (gameState.currentDirection) {
             case 'LEFT':
@@ -463,8 +466,8 @@ function checkTutorialTarget() {
         Math.pow(gameState.ball.y - targetY, 2)
     );
     
-    // Target reached if ball is within 40 pixels
-    if (distance < 40 && !gameState.targetReached) {
+    // Target reached if ball is within threshold
+    if (distance < TARGET_REACH_THRESHOLD && !gameState.targetReached) {
         gameState.targetReached = true;
         
         // Wait a moment then move to next step
@@ -645,7 +648,7 @@ function drawTutorialTarget() {
         Math.pow(gameState.ball.y - targetY, 2)
     );
     
-    const isNear = distance < 40;
+    const isNear = distance < TARGET_REACH_THRESHOLD;
     const targetColor = gameState.targetReached ? '#00b894' : (isNear ? '#fdcb6e' : '#d63031');
     
     // Draw pulsing target
@@ -701,7 +704,7 @@ function drawArrowToTarget(targetX, targetY, color) {
     
     // Don't draw if too close
     const distance = Math.sqrt(Math.pow(targetX - ballX, 2) + Math.pow(targetY - ballY, 2));
-    if (distance < 60) return;
+    if (distance < ARROW_MIN_DISTANCE) return;
     
     // Calculate arrow start and end points
     const angle = Math.atan2(targetY - ballY, targetX - ballX);
