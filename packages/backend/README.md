@@ -52,7 +52,10 @@ npm start
 - `POST /api/players/:playerId/progress` - Save player progress
 
 ### Leaderboard
-- `GET /api/leaderboard?limit=10` - Get top players
+- `GET /api/leaderboard?limit=10&cursor=123` - Get top players with cursor-based pagination
+  - `limit` (optional): Number of results (1-100, default: 10)
+  - `cursor` (optional): ID cursor for pagination (fetch records with ID less than this value)
+  - Response includes `nextCursor` for fetching the next page
 
 ## Socket.io Events
 

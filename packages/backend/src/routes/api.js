@@ -72,7 +72,8 @@ router.post('/players/:playerId/progress', [
 
 // Get leaderboard
 router.get('/leaderboard', [
-  query('limit').optional().isInt({ min: 1, max: 100 })
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('cursor').optional().isInt({ min: 1 })
 ], validate, async (req, res) => {
   try {
     let limit = parseInt(req.query.limit, 10);
@@ -84,11 +85,36 @@ router.get('/leaderboard', [
       limit = 100;
     }
     
-    const [rows] = await dbPromise.query(
-      'SELECT player_id, score, updated_at FROM player_progress ORDER BY score DESC LIMIT ?',
-      [limit]
-    );
-    res.json({ success: true, data: rows });
+    const cursor = req.query.cursor ? parseInt(req.query.cursor, 10) : null;
+    
+    let query = 'SELECT id, player_id, score, updated_at FROM player_progress';
+    const params = [];
+    
+    if (cursor) {
+      // Cursor-based pagination: fetch records with id less than cursor
+      // This works because we order by score DESC, then by id DESC for stability
+      query += ' WHERE id < ?';
+      params.push(cursor);
+    }
+    
+    query += ' ORDER BY score DESC, id DESC LIMIT ?';
+    params.push(limit);
+    
+    const [rows] = await dbPromise.query(query, params);
+    
+    // Determine next cursor
+    const nextCursor = rows.length === limit && rows.length > 0 
+      ? rows[rows.length - 1].id 
+      : null;
+    
+    res.json({ 
+      success: true, 
+      data: rows,
+      pagination: {
+        nextCursor,
+        hasMore: nextCursor !== null
+      }
+    });
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     res.status(500).json({ success: false, error: error.message });
