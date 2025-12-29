@@ -48,8 +48,9 @@ window.handleProfileUpload = (event) => {
     }
 };
 
-// Sign In form handler
+// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
+    // Sign In form handler
     const signinForm = document.getElementById('signin-form');
     if (signinForm) {
         signinForm.addEventListener('submit', (e) => {
@@ -69,10 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
             sendOTP(phone, 'signin');
         });
     }
-});
-
-// Registration form handler
-document.addEventListener('DOMContentLoaded', () => {
+    
+    // Registration form handler
     const registrationForm = document.getElementById('registration-form');
     if (registrationForm) {
         registrationForm.addEventListener('submit', (e) => {
@@ -179,8 +178,10 @@ function showError(fieldId, message) {
 
 // Send OTP (simulated)
 function sendOTP(phone, type) {
-    // Generate random 6-digit OTP
-    state.otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate cryptographically secure random 6-digit OTP
+    const randomValues = new Uint32Array(1);
+    crypto.getRandomValues(randomValues);
+    state.otpCode = (100000 + (randomValues[0] % 900000)).toString();
     
     console.log(`OTP for ${phone}: ${state.otpCode}`); // For development/testing
     
@@ -213,9 +214,15 @@ function setupOTPInputs(screenId) {
     const inputs = screen.querySelectorAll('.otp-input');
     
     inputs.forEach((input, index) => {
-        // Clear previous value
+        // Clear previous value and event listeners
         input.value = '';
-        
+        input.replaceWith(input.cloneNode(true));
+    });
+    
+    // Re-query after cloning to get fresh elements
+    const freshInputs = screen.querySelectorAll('.otp-input');
+    
+    freshInputs.forEach((input, index) => {
         // Auto-focus first input
         if (index === 0) {
             input.focus();
@@ -231,15 +238,15 @@ function setupOTPInputs(screenId) {
             }
             
             // Move to next input
-            if (value && index < inputs.length - 1) {
-                inputs[index + 1].focus();
+            if (value && index < freshInputs.length - 1) {
+                freshInputs[index + 1].focus();
             }
         });
         
         input.addEventListener('keydown', (e) => {
             // Handle backspace
             if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                inputs[index - 1].focus();
+                freshInputs[index - 1].focus();
             }
         });
         
@@ -250,11 +257,11 @@ function setupOTPInputs(screenId) {
             
             if (/^\d{6}$/.test(pastedData)) {
                 pastedData.split('').forEach((digit, i) => {
-                    if (inputs[i]) {
-                        inputs[i].value = digit;
+                    if (freshInputs[i]) {
+                        freshInputs[i].value = digit;
                     }
                 });
-                inputs[inputs.length - 1].focus();
+                freshInputs[freshInputs.length - 1].focus();
             }
         });
     });
@@ -435,22 +442,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if user is already logged in
     const currentUser = localStorage.getItem('infernal-current-user');
     if (currentUser) {
-        const userData = JSON.parse(currentUser);
-        // Show a quick welcome back message and redirect
-        const welcomeBackDiv = document.createElement('div');
-        welcomeBackDiv.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-dark);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 20000;
-            color: white;
+        try {
+            const userData = JSON.parse(currentUser);
+            // Show a quick welcome back message and redirect
+            const welcomeBackDiv = document.createElement('div');
+            welcomeBackDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: var(--bg-dark);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 20000;
+                color: white;
             text-align: center;
         `;
         welcomeBackDiv.innerHTML = `
@@ -462,5 +470,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             window.location.href = '/index.html';
         }, 2000);
+        } catch (error) {
+            console.error('Failed to parse user data:', error);
+            // Clear corrupted data
+            localStorage.removeItem('infernal-current-user');
+        }
     }
 });
