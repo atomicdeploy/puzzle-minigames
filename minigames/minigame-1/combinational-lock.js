@@ -220,7 +220,8 @@ function initDigitFields() {
     fields.forEach((field, index) => {
         field.addEventListener('click', () => openNumpad(index));
         // Remove preventDefault to allow scrolling, consistent with hint item scroll detection
-        field.addEventListener('touchstart', () => {
+        field.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             openNumpad(index);
         });
     });
@@ -1154,6 +1155,16 @@ function initGame() {
         document.getElementById('game-container').style.display = 'flex';
     }, 1000);
 }
+
+// Add fadeOut animation to CSS dynamically
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translate(-50%, -50%); }
+        to { opacity: 0; transform: translate(-50%, -60%); }
+    }
+`;
+document.head.appendChild(style);
 
 // Start game when DOM is loaded
 if (document.readyState === 'loading') {
