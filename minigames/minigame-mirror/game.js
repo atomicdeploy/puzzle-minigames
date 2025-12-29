@@ -394,7 +394,6 @@ function handleZoneTap(e) {
         placeWordInZone(selectedCard, zone);
         selectedCard.classList.remove('selected');
         selectedCard = null;
-        updateWordsPoolVisibility();
         return;
     }
 }
