@@ -255,13 +255,26 @@ function placeWordInZone(wordCard, zone) {
     const wordClone = wordCard.cloneNode(true);
     wordClone.draggable = false;
     wordClone.classList.remove('dragging');
+    // Make placed word focusable for keyboard users
+    wordClone.setAttribute('tabindex', '0');
     
-    // Add click to remove functionality
-    wordClone.addEventListener('click', () => {
+    const removeFromZone = () => {
         returnWordToPool(word);
         currentOrder[position] = null;
         zoneContent.innerHTML = '';
         zone.classList.remove('filled');
+    };
+    
+    // Add click to remove functionality
+    wordClone.addEventListener('click', removeFromZone);
+    
+    // Add keyboard support (Enter/Space) to remove the word
+    wordClone.addEventListener('keydown', (event) => {
+        const key = event.key;
+        if (key === 'Enter' || key === ' ' || key === 'Spacebar') {
+            event.preventDefault();
+            removeFromZone();
+        }
     });
     
     zoneContent.innerHTML = '';
