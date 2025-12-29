@@ -315,7 +315,7 @@ async function initMicrophone() {
         return true;
     } catch (error) {
         console.error('Microphone initialization failed:', error);
-        throw new Error('دسترسی به میکروفون رد شد. لطفاً اجازه دسترسی را بدهید.');
+        throw new Error('دسترسی به میکروفون رد شد. لطفاً اجازه دسترسی را بدهید.', { cause: error });
     }
 }
 
