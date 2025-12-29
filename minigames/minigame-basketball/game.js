@@ -27,11 +27,11 @@ let draggedFootstep = null;
 
 // User-draggable footsteps - 5 total, can be placed on decimal and negative lines
 let userFootsteps = [
-    { line: -1, row: 0.3, order: 1, id: 'footstep-1' },
-    { line: -0.5, row: 0.35, order: 2, id: 'footstep-2' },
-    { line: 0, row: 0.4, order: 3, id: 'footstep-3' },
-    { line: 2.5, row: 0.45, order: 4, id: 'footstep-4' },
-    { line: 1, row: 0.5, order: 5, id: 'footstep-5' }
+    { line: -1, row: 0.75, order: 1, id: 'footstep-1' },
+    { line: 0, row: 0.25, order: 2, id: 'footstep-2' },
+    { line: 1, row: 0.4, order: 3, id: 'footstep-3' },
+    { line: 3, row: 0.5, order: 4, id: 'footstep-4' },
+    { line: 1, row: 0.65, order: 5, id: 'footstep-5' }
 ];
 
 // Initialize the game
