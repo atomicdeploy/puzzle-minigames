@@ -677,7 +677,7 @@ function initGame() {
 function initUI() {
     // Prevent duplicate initialization
     if (gameState.uiInitialized) {
-        console.warn('UI already initialized, skipping duplicate initialization');
+        console.debug('UI already initialized, skipping duplicate initialization');
         return;
     }
     gameState.uiInitialized = true;
@@ -836,7 +836,8 @@ function initUI() {
     // Contact page
     contactLink.addEventListener('click', (e) => {
         e.preventDefault();
-        // Store focus before menu was opened, or fallback to menu button if menu wasn't used
+        // Store focus before menu was opened. If menu wasn't used (focusBeforeMenu is null),
+        // fallback to menuBtn to ensure focus returns to a visible, meaningful element
         lastFocusedElement = focusBeforeMenu || menuBtn;
         contactPage.style.display = 'block';
         sideMenu.classList.remove('open');
@@ -860,7 +861,8 @@ function initUI() {
     
     aboutLink.addEventListener('click', (e) => {
         e.preventDefault();
-        // Store focus before menu was opened, or fallback to menu button if menu wasn't used
+        // Store focus before menu was opened. If menu wasn't used (focusBeforeMenu is null),
+        // fallback to menuBtn to ensure focus returns to a visible, meaningful element
         lastFocusedElement = focusBeforeMenu || menuBtn;
         showAboutModal();
         sideMenu.classList.remove('open');
