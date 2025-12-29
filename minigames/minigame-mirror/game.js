@@ -126,10 +126,10 @@ function setupDragAndDrop() {
         card.addEventListener('dragstart', handleDragStart);
         card.addEventListener('dragend', handleDragEnd);
         
-        // Touch events for mobile
-        card.addEventListener('touchstart', handleTouchStart, { passive: false });
-        card.addEventListener('touchmove', handleTouchMove, { passive: false });
-        card.addEventListener('touchend', handleTouchEnd, { passive: false });
+        // Touch events for mobile (passive for better scroll performance)
+        card.addEventListener('touchstart', handleTouchStart, { passive: true });
+        card.addEventListener('touchmove', handleTouchMove, { passive: true });
+        card.addEventListener('touchend', handleTouchEnd, { passive: true });
     });
     
     // Drop events for drop zones
