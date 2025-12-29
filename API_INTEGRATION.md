@@ -99,15 +99,17 @@ Response:
 }
 ```
 
+**Note:** The registration endpoint should handle OTP verification internally. The frontend sends the OTP and session with the registration data, and the backend validates the OTP before creating the user account. This ensures atomic operation and prevents race conditions.
+
 #### 4. Login (Sign In)
 ```
-POST /auth/login
+POST /auth/verify-otp
 Content-Type: application/json
 
-Note: Login uses the same flow as registration:
+Note: Login uses the verify-otp endpoint:
 1. Call /auth/send-otp with phone number
 2. Call /auth/verify-otp with phone and OTP
-3. On successful verification, backend returns existing user data
+3. Backend verifies OTP and returns existing user data + token
 ```
 
 #### 5. Get User Profile
@@ -155,7 +157,11 @@ Response:
 4. Backend sends OTP via SMS and returns session ID
 5. User enters OTP
 6. Frontend calls `POST /auth/register` with all user data + OTP + session
-7. Backend verifies OTP, creates user, generates player ID, returns user data + auth token
+7. **Backend atomically verifies OTP and creates user** - returns user data + auth token
+8. Frontend stores token and user data (as cache)
+9. User is redirected to game
+
+**Important:** The registration endpoint must verify OTP internally to ensure atomicity and prevent race conditions.
 8. Frontend stores token and user data (as cache)
 9. User is redirected to game
 

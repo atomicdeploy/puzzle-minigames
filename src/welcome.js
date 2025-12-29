@@ -115,6 +115,85 @@ window.handleProfileUpload = (event) => {
     reader.readAsDataURL(file);
 };
 
+// Initialize Persian/Jalali date picker
+function initializePersianDatePicker() {
+    const yearSelect = document.getElementById('birthday-year');
+    const monthSelect = document.getElementById('birthday-month');
+    const daySelect = document.getElementById('birthday-day');
+    
+    if (!yearSelect || !monthSelect || !daySelect) return;
+    
+    // Persian month names
+    const persianMonths = [
+        'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+        'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+    ];
+    
+    // Populate years (1350-1390 Shamsi)
+    for (let year = 1350; year <= 1390; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    }
+    
+    // Populate months
+    persianMonths.forEach((month, index) => {
+        const option = document.createElement('option');
+        option.value = index + 1;
+        option.textContent = month;
+        monthSelect.appendChild(option);
+    });
+    
+    // Function to update days based on selected month and year
+    const updateDays = () => {
+        const selectedYear = parseInt(yearSelect.value);
+        const selectedMonth = parseInt(monthSelect.value);
+        
+        daySelect.innerHTML = '<option value="">روز</option>';
+        
+        if (!selectedMonth) return;
+        
+        let maxDays = 31;
+        if (selectedMonth >= 1 && selectedMonth <= 6) {
+            maxDays = 31;
+        } else if (selectedMonth >= 7 && selectedMonth <= 11) {
+            maxDays = 30;
+        } else if (selectedMonth === 12) {
+            // Esfand: 29 or 30 days depending on leap year
+            maxDays = isLeapYear(selectedYear) ? 30 : 29;
+        }
+        
+        for (let day = 1; day <= maxDays; day++) {
+            const option = document.createElement('option');
+            option.value = day;
+            option.textContent = day;
+            daySelect.appendChild(option);
+        }
+    };
+    
+    // Check if a Jalali year is leap
+    function isLeapYear(year) {
+        const breaks = [1, 5, 9, 13, 17, 22, 26, 30];
+        const cycle = 128;
+        const yearInCycle = ((year - 1) % cycle) + 1;
+        let jump = 0;
+        for (let i = 0; i < breaks.length; i++) {
+            const b = breaks[i];
+            if (yearInCycle <= b) {
+                jump = b;
+                break;
+            }
+        }
+        if (jump === 0) jump = 33;
+        return ((yearInCycle - breaks[0] + jump) % 33) % 4 === 1;
+    }
+    
+    // Add event listeners
+    yearSelect.addEventListener('change', updateDays);
+    monthSelect.addEventListener('change', updateDays);
+}
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Persian date picker
@@ -436,6 +515,9 @@ window.verifySignInOTP = async () => {
         const response = await api.verifyOTP(state.signinData.phone, enteredOTP);
         
         if (response.success && response.user) {
+            // Clear OTP session
+            state.otpSession = null;
+            
             // Store auth token
             if (response.token) {
                 localStorage.setItem('auth-token', response.token);
@@ -451,6 +533,13 @@ window.verifySignInOTP = async () => {
         }
     } catch (error) {
         console.error('OTP verification error:', error);
+        showNotification(error.message || 'کد تایید اشتباه است', 'error');
+        // Clear OTP session on error
+        state.otpSession = null;
+        // Clear inputs
+        inputs.forEach(input => input.value = '');
+        inputs[0].focus();
+    }
         showNotification(error.message || 'کد تایید اشتباه است', 'error');
         // Clear inputs
         inputs.forEach(input => input.value = '');
@@ -473,14 +562,7 @@ window.verifyRegistrationOTP = async () => {
         // Show loading state
         showNotification('در حال ثبت نام...', 'info');
         
-        // First verify OTP
-        const verifyResponse = await api.verifyOTP(state.registrationData.phone, enteredOTP);
-        
-        if (!verifyResponse.success) {
-            throw new Error('کد تایید اشتباه است');
-        }
-        
-        // Then register the user
+        // Register user with OTP verification (backend handles verification)
         const userData = {
             ...state.registrationData,
             otp: enteredOTP,
@@ -490,6 +572,9 @@ window.verifyRegistrationOTP = async () => {
         const registerResponse = await api.register(userData);
         
         if (registerResponse.success && registerResponse.user) {
+            // Clear OTP session
+            state.otpSession = null;
+            
             // Store auth token
             if (registerResponse.token) {
                 localStorage.setItem('auth-token', registerResponse.token);
@@ -505,6 +590,8 @@ window.verifyRegistrationOTP = async () => {
     } catch (error) {
         console.error('Registration error:', error);
         showNotification(error.message || 'خطا در ثبت نام', 'error');
+        // Clear OTP session on error
+        state.otpSession = null;
         // Clear inputs
         inputs.forEach(input => input.value = '');
         inputs[0].focus();
