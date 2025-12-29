@@ -32,11 +32,12 @@ const NOTE_FREQUENCIES = {
 };
 
 // Map notes to directions (using musical ranges)
+// Order: Lowest to Highest pitch
 const PITCH_RANGES = {
-    LEFT: { minNote: 'C2', maxNote: 'G2', name: 'چپ ⬅️' },      // ~65-196 Hz
-    DOWN: { minNote: 'G#2', maxNote: 'D3', name: 'پایین ⬇️' },  // ~196-293 Hz
-    UP: { minNote: 'D#3', maxNote: 'A3', name: 'بالا ⬆️' },     // ~293-440 Hz
-    RIGHT: { minNote: 'A#3', maxNote: 'C5', name: 'راست ➡️' }   // ~440-800 Hz
+    DOWN: { minNote: 'G#2', maxNote: 'C3', name: 'پایین ⬇️' },   // ~104-131 Hz (Lowest)
+    LEFT: { minNote: 'C#3', maxNote: 'F3', name: 'چپ ⬅️' },     // ~139-175 Hz (Medium low)
+    RIGHT: { minNote: 'F#3', maxNote: 'A#3', name: 'راست ➡️' },  // ~185-233 Hz (Medium high)
+    UP: { minNote: 'B3', maxNote: 'G4', name: 'بالا ⬆️' }        // ~247-392 Hz (Highest)
 };
 
 // HPS algorithm configuration
@@ -52,10 +53,10 @@ const MAGIC_WORDS = {
 
 // Tutorial targets (positions on grid where ball needs to go)
 const TUTORIAL_STEPS = [
-    { direction: 'RIGHT', target: { x: 0.75, y: 0.5 }, name: 'راست', instruction: 'صدای بالا تولید کنید' },
-    { direction: 'LEFT', target: { x: 0.25, y: 0.5 }, name: 'چپ', instruction: 'صدای پایین تولید کنید' },
-    { direction: 'UP', target: { x: 0.5, y: 0.25 }, name: 'بالا', instruction: 'صدای متوسط-بالا تولید کنید' },
-    { direction: 'DOWN', target: { x: 0.5, y: 0.75 }, name: 'پایین', instruction: 'صدای متوسط-پایین تولید کنید' }
+    { direction: 'UP', target: { x: 0.5, y: 0.25 }, name: 'بالا', instruction: 'صدای بالاترین را تولید کنید' },
+    { direction: 'RIGHT', target: { x: 0.75, y: 0.5 }, name: 'راست', instruction: 'صدای متوسط-بالا تولید کنید' },
+    { direction: 'LEFT', target: { x: 0.25, y: 0.5 }, name: 'چپ', instruction: 'صدای متوسط-پایین تولید کنید' },
+    { direction: 'DOWN', target: { x: 0.5, y: 0.75 }, name: 'پایین', instruction: 'صدای پایین‌ترین را تولید کنید' }
 ];
 
 // Game state
