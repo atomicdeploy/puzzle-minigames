@@ -336,6 +336,7 @@ header h1 {
 /* Score Controls */
 .score-controls {
     display: flex;
+    direction: ltr;
     gap: 1rem;
 }
 
