@@ -419,6 +419,131 @@ header h1 {
     }
 }
 
+/* AR Mode Styles */
+.ar-toggle-btn {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-glow);
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.ar-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(108, 92, 231, 0.5);
+}
+
+.ar-toggle-btn:active {
+    transform: translateY(0);
+}
+
+#ar-container {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.ar-instructions {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(26, 26, 46, 0.95);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(108, 92, 231, 0.3);
+    z-index: 10;
+    max-width: 90%;
+}
+
+.ar-instructions p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.ar-close-btn {
+    margin-top: 1rem;
+    background: var(--error-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ar-close-btn:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+}
+
+.ar-close-btn:active {
+    transform: translateY(0);
+}
+
+/* AR Video styles */
+#ar-container video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* AR Canvas styles */
+#ar-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Hide regular scene when AR is active */
+.ar-active #scene-container {
+    display: none;
+}
+
+.ar-active #ui-overlay {
+    z-index: 20;
+}
+
+/* AR Marker info */
+.ar-marker-info {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(26, 26, 46, 0.9);
+    padding: 1rem 2rem;
+    border-radius: 1rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(78, 205, 196, 0.3);
+}
+
+.ar-marker-info a {
+    color: var(--accent-2);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.ar-marker-info a:hover {
+    text-decoration: underline;
+}
+
 /* Accessibility */
 .visually-hidden {
     position: absolute;

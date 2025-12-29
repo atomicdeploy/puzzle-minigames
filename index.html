@@ -8,6 +8,8 @@
     <title>اینفرنال - بازی پازل</title>
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <!-- AR.js library -->
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/three.js/build/ar-threex.js"></script>
 </head>
 <body>
     <div id="app">
@@ -25,8 +27,18 @@
                     <span id="discovered-count">0/9</span>
                     <span>پازل‌های کشف شده</span>
                 </div>
+                <button id="ar-toggle-btn" class="ar-toggle-btn" aria-label="فعال‌سازی حالت واقعیت افزوده">
+                    📷 AR
+                </button>
             </header>
             <div id="scene-container"></div>
+            <div id="ar-container" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5;">
+                <div id="ar-instructions" class="ar-instructions">
+                    <p>📷 دوربین را به سمت مارکر Hiro بگیرید</p>
+                    <p>🎁 روی صندوق‌های گنج کلیک کنید</p>
+                    <button id="ar-close-btn" class="ar-close-btn">✕ بستن AR</button>
+                </div>
+            </div>
             <div id="ui-overlay">
                 <div id="puzzle-board"></div>
                 <div id="treasure-chests"></div>
