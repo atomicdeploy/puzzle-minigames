@@ -262,8 +262,12 @@ function updateSevenSegmentDisplay(value) {
     const digits = document.querySelectorAll('.digit');
     const valueStr = value.toString().padStart(2, '0');
     
+    // In RTL layout, we need to reverse the digit assignment
+    // First digit in DOM (right) should show the ones place
+    // Second digit in DOM (left) should show the tens place
     digits.forEach((digit, index) => {
-        const digitValue = parseInt(valueStr[index]);
+        // Reverse the index for RTL layout
+        const digitValue = parseInt(valueStr[valueStr.length - 1 - index]);
         const pattern = SEGMENT_PATTERNS[digitValue];
         
         digit.dataset.value = digitValue;
