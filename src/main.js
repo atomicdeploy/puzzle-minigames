@@ -10,7 +10,6 @@ import {
     addObjectToMarker,
     animateARObjects,
     cleanupAR,
-    isAREnabled,
     getMarkerRoot
 } from './ar-scene.js';
 
@@ -32,7 +31,9 @@ const gameState = {
     arMode: false,
     arScene: null,
     arCamera: null,
-    arRenderer: null
+    arRenderer: null,
+    arClickHandler: null,
+    arTouchHandler: null
 };
 
 // Initialize Audio
@@ -726,10 +727,22 @@ function disableARMode() {
     arContainer.style.display = 'none';
     gameContainer.classList.remove('ar-active');
     
-    // Cleanup AR resources
-    if (gameState.arRenderer && gameState.arRenderer.domElement) {
-        gameState.arRenderer.domElement.remove();
+    // Remove AR event listeners
+    if (gameState.arClickHandler) {
+        arContainer.removeEventListener('click', gameState.arClickHandler);
+        gameState.arClickHandler = null;
     }
+    if (gameState.arTouchHandler) {
+        arContainer.removeEventListener('touchend', gameState.arTouchHandler);
+        gameState.arTouchHandler = null;
+    }
+    
+    // Remove all dynamically added children from AR container
+    while (arContainer.firstChild) {
+        arContainer.removeChild(arContainer.firstChild);
+    }
+    
+    // Cleanup AR resources
     cleanupAR();
     
     gameState.arScene = null;
@@ -755,38 +768,43 @@ function setupARInteraction() {
     
     const arContainer = document.getElementById('ar-container');
     
-    function onARClick(event) {
-        if (!gameState.arMode) return;
-        
-        // Calculate mouse position in normalized device coordinates
-        const rect = arContainer.getBoundingClientRect();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        
-        raycaster.setFromCamera(mouse, gameState.arCamera);
-        
-        const markerRoot = getMarkerRoot();
-        if (!markerRoot) return;
-        
-        const intersects = raycaster.intersectObjects(markerRoot.children, true);
-        
-        if (intersects.length > 0) {
-            // Find the chest object (traverse up to find userData.chestNumber)
-            let object = intersects[0].object;
-            while (object && !object.userData.chestNumber) {
-                object = object.parent;
-            }
+    // Only attach listeners if they haven't been attached yet
+    if (!gameState.arClickHandler) {
+        gameState.arClickHandler = function onARClick(event) {
+            if (!gameState.arMode) return;
             
-            if (object && object.userData.chestNumber) {
-                openTreasureChest(object.userData.chestNumber);
-                // Remove chest from AR scene after opening
-                object.parent.remove(object);
+            // Calculate mouse position in normalized device coordinates
+            const rect = arContainer.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, gameState.arCamera);
+            
+            const markerRoot = getMarkerRoot();
+            if (!markerRoot) return;
+            
+            const intersects = raycaster.intersectObjects(markerRoot.children, true);
+            
+            if (intersects.length > 0) {
+                // Find the chest object (traverse up to find userData.chestNumber)
+                let object = intersects[0].object;
+                while (object && !object.userData.chestNumber) {
+                    object = object.parent;
+                }
+                
+                if (object && object.userData.chestNumber) {
+                    openTreasureChest(object.userData.chestNumber);
+                    // Remove chest from AR scene after opening
+                    object.parent.remove(object);
+                }
             }
-        }
+        };
+        
+        gameState.arTouchHandler = gameState.arClickHandler;
+        
+        arContainer.addEventListener('click', gameState.arClickHandler);
+        arContainer.addEventListener('touchend', gameState.arTouchHandler);
     }
-    
-    arContainer.addEventListener('click', onARClick);
-    arContainer.addEventListener('touchend', onARClick);
 }
 
 // Initialize game

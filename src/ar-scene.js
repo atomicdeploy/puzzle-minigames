@@ -11,6 +11,8 @@ let camera = null;
 let scene = null;
 let renderer = null;
 let markerRoot = null;
+let markerControls = null;
+let resizeListener = null;
 let arEnabled = false;
 
 /**
@@ -32,7 +34,9 @@ export function initARScene(container) {
         alpha: true
     });
     renderer.setClearColor(new THREE.Color('lightgrey'), 0);
-    renderer.setSize(640, 480);
+    const width = (container && container.clientWidth) ? container.clientWidth : window.innerWidth;
+    const height = (container && container.clientHeight) ? container.clientHeight : window.innerHeight;
+    renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0px';
@@ -77,12 +81,16 @@ export function initARToolkit(rendererInstance, cameraInstance, sceneInstance) {
     
     arToolkitSource.init(function onReady() {
         onResize();
+    }, function onError(error) {
+        console.error('Failed to initialize AR camera:', error);
+        throw new Error('AR camera initialization failed');
     });
     
     // Listen for window resize events
-    window.addEventListener('resize', function() {
+    resizeListener = function() {
         onResize();
-    });
+    };
+    window.addEventListener('resize', resizeListener);
     
     // Create AR context
     arToolkitContext = new window.THREEx.ArToolkitContext({
@@ -94,6 +102,9 @@ export function initARToolkit(rendererInstance, cameraInstance, sceneInstance) {
     arToolkitContext.init(function onCompleted() {
         // Copy projection matrix to camera
         camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+    }, function onError(error) {
+        console.error('Failed to initialize AR context:', error);
+        throw new Error('AR context initialization failed');
     });
     
     // Create marker root (where AR objects will be attached)
@@ -101,7 +112,7 @@ export function initARToolkit(rendererInstance, cameraInstance, sceneInstance) {
     scene.add(markerRoot);
     
     // Setup marker tracking - using Hiro marker (default)
-    const markerControls = new window.THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
+    markerControls = new window.THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
         type: 'pattern',
         patternUrl: 'https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/data/data/patt.hiro'
     });
@@ -300,14 +311,35 @@ export function renderAR() {
  * Cleanup AR resources
  */
 export function cleanupAR() {
+    // Stop video tracks from ARToolkit source
     if (arToolkitSource && arToolkitSource.domElement) {
         const video = arToolkitSource.domElement;
         if (video.srcObject) {
             video.srcObject.getTracks().forEach(track => track.stop());
         }
     }
-    
+
+    // Dispose Three.js renderer and remove its canvas from the DOM
+    if (renderer) {
+        if (renderer.domElement && renderer.domElement.parentNode) {
+            renderer.domElement.parentNode.removeChild(renderer.domElement);
+        }
+        renderer.dispose();
+    }
+
+    // Remove resize event listener
+    if (resizeListener) {
+        window.removeEventListener('resize', resizeListener);
+        resizeListener = null;
+    }
+
+    // Reset AR state and release references for GC
     arEnabled = false;
     arToolkitSource = null;
     arToolkitContext = null;
+    markerControls = null;
+    scene = null;
+    camera = null;
+    renderer = null;
+    markerRoot = null;
 }
