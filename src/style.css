@@ -67,7 +67,7 @@ body::before {
 
 #app {
     position: relative;
-    z-index: 1;
+    /* z-index: 1; */ /* causes the sidebar to appear below the overlay! */
 }
 
 /* Loading Screen */
