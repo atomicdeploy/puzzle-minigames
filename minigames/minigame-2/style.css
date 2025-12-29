@@ -164,6 +164,7 @@ header h1 {
     color: var(--text-primary);
     font-family: 'Vazirmatn', sans-serif;
     transition: all 0.3s ease;
+    direction: ltr;
 }
 
 #answer-input:focus {
@@ -317,6 +318,12 @@ header h1 {
         font-size: 1.2rem;
         padding: 1rem 1.5rem;
     }
+}
+
+/* Force LTR direction for numeric inputs */
+input[type="number"],
+input[inputmode="numeric"] {
+    direction: ltr;
 }
 
 /* Accessibility */
