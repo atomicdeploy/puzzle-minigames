@@ -93,7 +93,7 @@ The game uses the **FFT + Harmonic Product Spectrum (HPS)** algorithm for accura
 6. **Ball Control**: Updates ball velocity based on detected direction
 
 ### Speech Recognition
-- Uses Web Audio Speech Recognition API
+- Uses the Web Speech API (`SpeechRecognition` interface)
 - Continuous listening for magic words
 - Displays Persian translations with animations
 - Plays celebratory chord on detection
