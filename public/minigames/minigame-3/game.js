@@ -691,12 +691,42 @@ function detectPitchFFT_HPS(frequencyData, sampleRate) {
     }
     peaks.sort((a, b) => b.magnitude - a.magnitude);
     
-    // Detect harmonics (multiples of fundamental)
+    // Detect harmonics (multiples of fundamental) that actually appear in the spectrum
     const harmonics = [];
+    const harmonicThreshold = maxMagnitude * 0.1; // minimum relative strength for a harmonic
+    const searchWindow = 2; // number of bins to search around the expected harmonic bin
     for (let h = 1; h <= 5; h++) {
         const harmonicFreq = frequency * h;
-        if (harmonicFreq <= FREQUENCY_MAX) {
-            harmonics.push(harmonicFreq);
+        if (harmonicFreq > FREQUENCY_MAX) {
+            break;
+        }
+
+        // Convert expected harmonic frequency to an index in the local spectrum array
+        let harmonicBin = Math.round(harmonicFreq / binSize) - minBin;
+        if (harmonicBin <= 0 || harmonicBin >= spectrum.length - 1) {
+            continue;
+        }
+
+        // Search for the strongest local peak near the expected harmonic bin
+        let bestIndex = harmonicBin;
+        let bestMagnitude = spectrum[harmonicBin];
+        const start = Math.max(1, harmonicBin - searchWindow);
+        const end = Math.min(spectrum.length - 2, harmonicBin + searchWindow);
+        for (let i = start; i <= end; i++) {
+            if (spectrum[i] > bestMagnitude) {
+                bestMagnitude = spectrum[i];
+                bestIndex = i;
+            }
+        }
+
+        // Ensure this is a real local peak and above the threshold
+        if (
+            bestMagnitude > harmonicThreshold &&
+            bestMagnitude > spectrum[bestIndex - 1] &&
+            bestMagnitude > spectrum[bestIndex + 1]
+        ) {
+            const detectedHarmonicFreq = (minBin + bestIndex) * binSize;
+            harmonics.push(detectedHarmonicFreq);
         }
     }
     
