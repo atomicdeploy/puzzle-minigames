@@ -126,13 +126,13 @@ function drawBasketballCourt() {
     ctx.lineTo(centerX + 40, height - 30);
     ctx.stroke();
     
-    // Add line numbers including negative and decimal values
+    // Add line numbers - only odd numbers
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.font = 'bold 12px Vazirmatn';
     ctx.textAlign = 'center';
     
-    // Show more line numbers including negative and decimals
-    for (let i of [-10, -5, -1.5, -1, 0, 1, 1.5, 3, 5, 7, 10, 15]) {
+    // Show odd line numbers only
+    for (let i of [-9, -7, -5, -3, -1, 1, 3, 5, 7, 9, 11, 13, 15]) {
         const x = centerX + (i * lineSpacing);
         if (x >= 0 && x <= width) {
             ctx.fillText(i.toString(), x, 20);

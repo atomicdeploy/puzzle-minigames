@@ -193,6 +193,7 @@ header h1 {
     user-select: none;
     -webkit-user-select: none;
     opacity: 1;
+    pointer-events: auto; /* Allow pointer events on footsteps */
 }
 
 .footstep.draggable {
