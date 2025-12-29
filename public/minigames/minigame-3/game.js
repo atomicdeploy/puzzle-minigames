@@ -371,7 +371,7 @@ function startPitchDetection() {
     console.log('Starting pitch detection...');
     
     pitchDetectionInterval = setInterval(() => {
-        if (!gameState.isPlaying || !analyser) return;
+        if (!gameState.isPlaying || !analyser || gameState.isPaused) return;
         
         // Get audio data
         analyser.getFloatTimeDomainData(audioDataArray);
@@ -529,10 +529,13 @@ function updatePitchDisplay(pitch) {
 function gameLoop() {
     if (!gameState.isPlaying) return;
     
-    // Update ball physics
-    updateBall();
+    // Don't update game state when paused, but keep animation loop running
+    if (!gameState.isPaused) {
+        // Update ball physics
+        updateBall();
+    }
     
-    // Draw everything
+    // Always draw (even when paused) to maintain visual state
     drawGame();
     
     // Continue loop
@@ -675,11 +678,13 @@ function startActualGame() {
     
     // Start game timer
     gameTimer = setInterval(() => {
-        gameState.timeRemaining--;
-        updateUI();
-        
-        if (gameState.timeRemaining <= 0) {
-            endGame(true);
+        if (!gameState.isPaused) {
+            gameState.timeRemaining--;
+            updateUI();
+            
+            if (gameState.timeRemaining <= 0) {
+                endGame(true);
+            }
         }
     }, 1000);
 }
