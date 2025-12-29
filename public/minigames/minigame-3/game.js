@@ -16,37 +16,27 @@ const ARROW_MIN_DISTANCE = 60; // Minimum distance to show arrow to target
 const urlParams = new URLSearchParams(window.location.search);
 const DEMO_MODE = urlParams.has('demo');
 
-// Musical notes frequencies (A4 = 440Hz as reference)
-// Using equal temperament tuning
-const MUSICAL_NOTES = {
-    'C': [16.35, 32.70, 65.41, 130.81, 261.63, 523.25, 1046.50, 2093.00],  // C0-C7
-    'C#': [17.32, 34.65, 69.30, 138.59, 277.18, 554.37, 1108.73, 2217.46],
-    'D': [18.35, 36.71, 73.42, 146.83, 293.66, 587.33, 1174.66, 2349.32],
-    'D#': [19.45, 38.89, 77.78, 155.56, 311.13, 622.25, 1244.51, 2489.02],
-    'E': [20.60, 41.20, 82.41, 164.81, 329.63, 659.25, 1318.51, 2637.02],
-    'F': [21.83, 43.65, 87.31, 174.61, 349.23, 698.46, 1396.91, 2793.83],
-    'F#': [23.12, 46.25, 92.50, 185.00, 369.99, 739.99, 1479.98, 2959.96],
-    'G': [24.50, 49.00, 98.00, 196.00, 392.00, 783.99, 1567.98, 3135.96],
-    'G#': [25.96, 51.91, 103.83, 207.65, 415.30, 830.61, 1661.22, 3322.44],
-    'A': [27.50, 55.00, 110.00, 220.00, 440.00, 880.00, 1760.00, 3520.00],
-    'A#': [29.14, 58.27, 116.54, 233.08, 466.16, 932.33, 1864.66, 3729.31],
-    'B': [30.87, 61.74, 123.47, 246.94, 493.88, 987.77, 1975.53, 3951.07]
-};
+// Pitch frequency mapping - will be configured based on testing
+// For now, we'll map detected frequencies to numbers 1-20 for debugging
+const PITCH_NUMBER_MIN = 1;
+const PITCH_NUMBER_MAX = 20;
+const FREQUENCY_MIN = 50;  // Minimum detectable frequency (Hz)
+const FREQUENCY_MAX = 1000; // Maximum detectable frequency (Hz)
 
-// Note ranges for directions (using octaves for flexibility)
-const NOTE_RANGES = {
-    LEFT: { notes: ['C', 'C#', 'D'], octaves: [2, 3], name: 'چپ ⬅️' },      // Low notes
-    DOWN: { notes: ['D#', 'E', 'F'], octaves: [3, 4], name: 'پایین ⬇️' },  // Medium-low notes
-    UP: { notes: ['F#', 'G', 'G#'], octaves: [4, 5], name: 'بالا ⬆️' },     // Medium-high notes
-    RIGHT: { notes: ['A', 'A#', 'B'], octaves: [5, 6], name: 'راست ➡️' }   // High notes
+// Placeholder direction ranges - to be configured after testing
+const PITCH_RANGES = {
+    LEFT: { min: 1, max: 5, name: 'چپ ⬅️' },
+    DOWN: { min: 6, max: 10, name: 'پایین ⬇️' },
+    UP: { min: 11, max: 15, name: 'بالا ⬆️' },
+    RIGHT: { min: 16, max: 20, name: 'راست ➡️' }
 };
 
 // Tutorial targets (positions on grid where ball needs to go)
 const TUTORIAL_STEPS = [
-    { direction: 'RIGHT', target: { x: 0.75, y: 0.5 }, name: 'راست', instruction: 'نت‌های A، A#، B در اکتاو 5-6 بزنید' },
-    { direction: 'LEFT', target: { x: 0.25, y: 0.5 }, name: 'چپ', instruction: 'نت‌های C، C#، D در اکتاو 2-3 بزنید' },
-    { direction: 'UP', target: { x: 0.5, y: 0.25 }, name: 'بالا', instruction: 'نت‌های F#، G، G# در اکتاو 4-5 بزنید' },
-    { direction: 'DOWN', target: { x: 0.5, y: 0.75 }, name: 'پایین', instruction: 'نت‌های D#، E، F در اکتاو 3-4 بزنید' }
+    { direction: 'RIGHT', target: { x: 0.75, y: 0.5 }, name: 'راست', instruction: 'صدای بالا تولید کنید' },
+    { direction: 'LEFT', target: { x: 0.25, y: 0.5 }, name: 'چپ', instruction: 'صدای پایین تولید کنید' },
+    { direction: 'UP', target: { x: 0.5, y: 0.25 }, name: 'بالا', instruction: 'صدای متوسط-بالا تولید کنید' },
+    { direction: 'DOWN', target: { x: 0.5, y: 0.75 }, name: 'پایین', instruction: 'صدای متوسط-پایین تولید کنید' }
 ];
 
 // Game state
@@ -160,27 +150,23 @@ function setupPitchPreview() {
     
     directionButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const note = this.dataset.note;
-            const octave = parseInt(this.dataset.octave);
+            const frequency = parseFloat(this.dataset.frequency);
             const direction = this.dataset.direction;
-            playNoteTone(note, octave, button);
+            playFrequencyTone(frequency, button);
         });
     });
 }
 
-// Play a musical note tone
-function playNoteTone(note, octave, button) {
+// Play a tone at specified frequency
+function playFrequencyTone(frequency, button) {
     try {
         // Create audio context if it doesn't exist
         if (!previewAudioContext) {
             previewAudioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
         
-        // Get frequency for the note
-        const frequency = MUSICAL_NOTES[note][octave];
-        
-        if (!frequency) {
-            console.error('Invalid note or octave:', note, octave);
+        if (!frequency || frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
+            console.error('Invalid frequency:', frequency);
             return;
         }
         
@@ -366,8 +352,14 @@ function startPitchDetection() {
             // Smooth pitch value
             gameState.lastPitch = gameState.lastPitch * PITCH_SMOOTHING + pitch * (1 - PITCH_SMOOTHING);
             
-            // Determine direction from pitch
-            const direction = getDirectionFromPitch(gameState.lastPitch);
+            // Convert frequency to pitch number (1-20)
+            const pitchNumber = frequencyToPitchNumber(gameState.lastPitch);
+            
+            // Log pitch number for configuration
+            console.log(`Pitch Number: ${pitchNumber} (Frequency: ${gameState.lastPitch.toFixed(2)} Hz)`);
+            
+            // Determine direction from pitch number
+            const direction = getDirectionFromPitchNumber(pitchNumber);
             gameState.currentDirection = direction;
             
             // Update UI
@@ -446,50 +438,32 @@ function autoCorrelate(buffer, sampleRate) {
     return frequency;
 }
 
-// Convert frequency to nearest musical note
-function frequencyToNote(frequency) {
-    if (frequency <= 0) return null;
-    
-    let closestNote = null;
-    let closestOctave = null;
-    let minDiff = Infinity;
-    
-    // Find the closest note across all octaves
-    for (const [note, frequencies] of Object.entries(MUSICAL_NOTES)) {
-        for (let octave = 0; octave < frequencies.length; octave++) {
-            const noteFreq = frequencies[octave];
-            const diff = Math.abs(frequency - noteFreq);
-            
-            // Use logarithmic difference for better perceptual matching
-            const logDiff = Math.abs(Math.log2(frequency / noteFreq));
-            
-            if (logDiff < Math.log2(1.03)) { // Within ~3% (roughly quarter-tone tolerance)
-                if (diff < minDiff) {
-                    minDiff = diff;
-                    closestNote = note;
-                    closestOctave = octave;
-                }
-            }
-        }
+// Convert frequency to pitch number (1-20)
+function frequencyToPitchNumber(frequency) {
+    if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
+        return null;
     }
     
-    return closestNote && closestOctave !== null ? { note: closestNote, octave: closestOctave } : null;
+    // Map frequency logarithmically to pitch number 1-20
+    // Using logarithmic scale for better perceptual mapping
+    const logMin = Math.log(FREQUENCY_MIN);
+    const logMax = Math.log(FREQUENCY_MAX);
+    const logFreq = Math.log(frequency);
+    
+    const normalized = (logFreq - logMin) / (logMax - logMin);
+    const pitchNumber = Math.round(normalized * (PITCH_NUMBER_MAX - PITCH_NUMBER_MIN) + PITCH_NUMBER_MIN);
+    
+    return Math.max(PITCH_NUMBER_MIN, Math.min(PITCH_NUMBER_MAX, pitchNumber));
 }
 
-// Determine direction from note and octave
-function getDirectionFromPitch(pitch) {
-    const noteInfo = frequencyToNote(pitch);
+// Determine direction from pitch number
+function getDirectionFromPitchNumber(pitchNumber) {
+    if (pitchNumber === null) return null;
     
-    if (!noteInfo) return null;
-    
-    // Check each direction's note ranges
-    for (const [direction, range] of Object.entries(NOTE_RANGES)) {
-        // Check if the note matches
-        if (range.notes.includes(noteInfo.note)) {
-            // Check if the octave is in the acceptable range
-            if (range.octaves.includes(noteInfo.octave)) {
-                return direction;
-            }
+    // Check each direction's pitch number range
+    for (const [direction, range] of Object.entries(PITCH_RANGES)) {
+        if (pitchNumber >= range.min && pitchNumber <= range.max) {
+            return direction;
         }
     }
     
@@ -1061,31 +1035,31 @@ function startDemoSimulation() {
             if (currentStep) {
                 gameState.currentDirection = currentStep.direction;
                 
-                // Simulate pitch for the direction using musical notes
+                // Simulate pitch for the direction using sample frequencies
                 let demoPitch = 0;
                 switch (currentStep.direction) {
-                    case 'LEFT': demoPitch = MUSICAL_NOTES['C#'][3]; break;  // C#3
-                    case 'DOWN': demoPitch = MUSICAL_NOTES['E'][4]; break;   // E4
-                    case 'UP': demoPitch = MUSICAL_NOTES['G'][4]; break;     // G4
-                    case 'RIGHT': demoPitch = MUSICAL_NOTES['A'][5]; break;  // A5
+                    case 'LEFT': demoPitch = 100; break;
+                    case 'DOWN': demoPitch = 200; break;
+                    case 'UP': demoPitch = 300; break;
+                    case 'RIGHT': demoPitch = 500; break;
                 }
                 gameState.lastPitch = demoPitch;
                 updatePitchDisplay(demoPitch);
             }
         } else {
-            // Random direction in normal mode with musical notes
+            // Random direction in normal mode
             const directions = ['LEFT', 'RIGHT', 'UP', 'DOWN'];
             const randomDir = directions[Math.floor(Math.random() * directions.length)];
             gameState.currentDirection = randomDir;
             
-            // Use musical notes for random pitch
-            const noteExamples = {
-                'LEFT': MUSICAL_NOTES['C#'][3],
-                'DOWN': MUSICAL_NOTES['E'][4],
-                'UP': MUSICAL_NOTES['G'][4],
-                'RIGHT': MUSICAL_NOTES['A'][5]
+            // Use sample frequencies for random pitch
+            const freqExamples = {
+                'LEFT': 100,
+                'DOWN': 200,
+                'UP': 300,
+                'RIGHT': 500
             };
-            gameState.lastPitch = noteExamples[randomDir];
+            gameState.lastPitch = freqExamples[randomDir];
         }
     }, 100);
 }
