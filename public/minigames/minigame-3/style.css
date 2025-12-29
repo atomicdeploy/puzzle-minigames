@@ -317,3 +317,124 @@ button {
 .secondary-button.active {
     animation: pulse 2s infinite;
 }
+
+/* Pitch preview section */
+.pitch-preview {
+    width: 100%;
+    background: rgba(26, 26, 46, 0.9);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    text-align: center;
+}
+
+.pitch-preview h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.8rem;
+    font-size: 1.3rem;
+}
+
+.pitch-preview p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.direction-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.horizontal-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.direction-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 100px;
+    min-height: 100px;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.3), rgba(253, 121, 168, 0.3));
+    border: 2px solid var(--primary-color);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Vazirmatn', sans-serif;
+    color: var(--text-light);
+}
+
+.direction-btn:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(108, 92, 231, 0.5);
+    border-color: var(--secondary-color);
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.5), rgba(253, 121, 168, 0.5));
+}
+
+.direction-btn:active {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.direction-btn .arrow {
+    font-size: 2rem;
+}
+
+.direction-btn .label {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.direction-btn.playing {
+    animation: pulse-play 0.5s ease-in-out;
+    border-color: var(--success-color);
+    background: linear-gradient(135deg, rgba(0, 184, 148, 0.5), rgba(108, 92, 231, 0.5));
+}
+
+@keyframes pulse-play {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Responsive adjustments for pitch preview */
+@media (max-width: 768px) {
+    .pitch-preview {
+        padding: 1rem;
+    }
+    
+    .pitch-preview h3 {
+        font-size: 1.1rem;
+    }
+    
+    .pitch-preview p {
+        font-size: 0.85rem;
+    }
+    
+    .direction-btn {
+        min-width: 80px;
+        min-height: 80px;
+        padding: 0.8rem;
+    }
+    
+    .direction-btn .arrow {
+        font-size: 1.5rem;
+    }
+    
+    .direction-btn .label {
+        font-size: 0.85rem;
+    }
+}

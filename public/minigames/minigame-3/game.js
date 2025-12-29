@@ -68,7 +68,10 @@ let canvasWidth, canvasHeight;
 // UI Elements
 let startBtn, micBtn, skipTutorialBtn, scoreDisplay, timerDisplay;
 let pitchLevel, currentDirectionDisplay;
-let feedbackDiv;
+let feedbackDiv, pitchPreviewDiv;
+
+// Audio context for pitch preview
+let previewAudioContext = null;
 
 // Timer
 let gameTimer = null;
@@ -94,11 +97,18 @@ function init() {
     pitchLevel = document.getElementById('pitch-level');
     currentDirectionDisplay = document.getElementById('current-direction');
     feedbackDiv = document.getElementById('feedback');
+    pitchPreviewDiv = document.getElementById('pitch-preview');
     
     // Setup event listeners
     startBtn.addEventListener('click', handleStart);
     micBtn.addEventListener('click', handleMicToggle);
     skipTutorialBtn.addEventListener('click', handleSkipTutorial);
+    
+    // Setup pitch preview buttons
+    setupPitchPreview();
+    
+    // Show pitch preview initially
+    pitchPreviewDiv.classList.remove('hidden');
     
     // Initialize ball position (center)
     resetBall();
@@ -127,9 +137,70 @@ function resetBall() {
     gameState.ball.vy = (Math.random() - 0.5) * 2;
 }
 
+// Setup pitch preview buttons
+function setupPitchPreview() {
+    const directionButtons = document.querySelectorAll('.direction-btn');
+    
+    directionButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const pitch = parseFloat(this.dataset.pitch);
+            const direction = this.dataset.direction;
+            playPitchTone(pitch, button);
+        });
+    });
+}
+
+// Play a tone at the specified frequency
+function playPitchTone(frequency, button) {
+    try {
+        // Create audio context if it doesn't exist
+        if (!previewAudioContext) {
+            previewAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Add playing class for visual feedback
+        button.classList.add('playing');
+        
+        // Create oscillator for the tone
+        const oscillator = previewAudioContext.createOscillator();
+        const gainNode = previewAudioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(previewAudioContext.destination);
+        
+        // Set frequency and type
+        oscillator.frequency.setValueAtTime(frequency, previewAudioContext.currentTime);
+        oscillator.type = 'sine';
+        
+        // Envelope for smooth sound
+        gainNode.gain.setValueAtTime(0, previewAudioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, previewAudioContext.currentTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, previewAudioContext.currentTime + 0.8);
+        
+        // Play the tone
+        oscillator.start(previewAudioContext.currentTime);
+        oscillator.stop(previewAudioContext.currentTime + 0.8);
+        
+        // Remove playing class after animation
+        setTimeout(() => {
+            button.classList.remove('playing');
+        }, 500);
+    } catch (error) {
+        console.error('Error playing pitch tone:', error);
+        // Show visual feedback even if audio fails
+        button.classList.add('playing');
+        setTimeout(() => {
+            button.classList.remove('playing');
+        }, 500);
+    }
+}
+
 async function handleStart() {
     console.log('Start button clicked');
     startBtn.disabled = true;
+    
+    // Hide pitch preview when starting
+    pitchPreviewDiv.classList.add('hidden');
     
     // In demo mode, skip microphone
     if (DEMO_MODE) {
@@ -870,6 +941,9 @@ function endGame(timeUp) {
             micBtn.classList.add('hidden');
             micBtn.classList.remove('active');
             skipTutorialBtn.classList.add('hidden');
+            
+            // Show pitch preview again
+            pitchPreviewDiv.classList.remove('hidden');
             
             // Reset game state to tutorial mode
             gameState.isTutorialMode = true;

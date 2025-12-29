@@ -38,6 +38,31 @@
             <canvas id="game-canvas"></canvas>
         </div>
         
+        <div id="pitch-preview" class="pitch-preview hidden">
+            <h3>گوش دادن به نمونه صداها:</h3>
+            <p>قبل از شروع، روی هر دکمه کلیک کنید تا صدای مربوط به آن جهت را بشنوید</p>
+            <div class="direction-buttons">
+                <button class="direction-btn" data-direction="UP" data-pitch="325">
+                    <span class="arrow">⬆️</span>
+                    <span class="label">بالا</span>
+                </button>
+                <div class="horizontal-btns">
+                    <button class="direction-btn" data-direction="LEFT" data-pitch="100">
+                        <span class="arrow">⬅️</span>
+                        <span class="label">چپ</span>
+                    </button>
+                    <button class="direction-btn" data-direction="DOWN" data-pitch="200">
+                        <span class="arrow">⬇️</span>
+                        <span class="label">پایین</span>
+                    </button>
+                    <button class="direction-btn" data-direction="RIGHT" data-pitch="500">
+                        <span class="arrow">➡️</span>
+                        <span class="label">راست</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <div id="controls">
             <button id="start-btn" class="primary-button">شروع آموزش</button>
             <button id="skip-tutorial-btn" class="secondary-button hidden">رد شدن از آموزش</button>
