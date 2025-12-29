@@ -83,6 +83,7 @@ header {
     text-align: center;
     margin-bottom: 3rem;
     position: relative;
+    padding-top: 4rem;
 }
 
 .back-button {
@@ -100,6 +101,7 @@ header {
     cursor: pointer;
     transition: all 0.3s ease;
     font-family: 'Vazirmatn', sans-serif;
+    z-index: 100;
 }
 
 .back-button:hover,
