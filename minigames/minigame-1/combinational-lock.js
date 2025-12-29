@@ -1078,13 +1078,16 @@ function initStickyBehavior() {
             observer.disconnect();
         }
         
-        // Create/update sentinel element if needed
-        if (!sentinel) {
-            sentinel = document.createElement('div');
-            sentinel.style.height = '1px';
-            sentinel.style.pointerEvents = 'none';
-            combinationInput.parentNode.insertBefore(sentinel, combinationInput);
+        // Remove old sentinel if it exists to prevent memory leak
+        if (sentinel && sentinel.parentNode) {
+            sentinel.parentNode.removeChild(sentinel);
         }
+        
+        // Create new sentinel element
+        sentinel = document.createElement('div');
+        sentinel.style.height = '1px';
+        sentinel.style.pointerEvents = 'none';
+        combinationInput.parentNode.insertBefore(sentinel, combinationInput);
         
         // Create new observer with updated rootMargin
         observer = new IntersectionObserver(
