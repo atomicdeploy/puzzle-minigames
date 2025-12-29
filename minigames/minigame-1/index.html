@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="جایگذاری منطقی - بازی قفل ترکیبی">
+    <title>جایگذاری منطقی - اینفرنال</title>
+    <link rel="stylesheet" href="combinational-lock.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading-screen">
+            <div class="loading-content">
+                <h1>جایگذاری منطقی</h1>
+                <div class="loading-spinner"></div>
+                <p>در حال بارگذاری...</p>
+            </div>
+        </div>
+
+        <!-- Game Container -->
+        <div id="game-container" style="display: none;">
+            <!-- Header -->
+            <header>
+                <button id="back-btn" class="back-button" aria-label="بازگشت">
+                    <span>← بازگشت</span>
+                </button>
+                <h1>🔐 جایگذاری منطقی</h1>
+                <div class="spacer"></div>
+            </header>
+
+            <!-- Main Content -->
+            <main>
+                <!-- Lock Icon -->
+                <div class="lock-container">
+                    <div id="lock-icon" class="lock-icon locked" role="img" aria-label="قفل قرمز">🔒</div>
+                </div>
+
+                <!-- Title -->
+                <div class="game-title">
+                    <h2>قفل ترکیبی را باز کنید</h2>
+                    <p>پنج رقم صحیح را پیدا کنید</p>
+                    <p class="instruction-note">⚠️ توجه: هر رقم فقط یک بار استفاده می‌شود</p>
+                </div>
+
+                <!-- Combination Input Fields -->
+                <div id="combination-input" class="combination-input" role="group" aria-label="ورودی ترکیب پنج رقمی" aria-live="polite">
+                    <div class="digit-field" data-index="0" role="button" aria-label="رقم موقعیت 1" tabindex="0">
+                        <div class="digit-display">-</div>
+                    </div>
+                    <div class="digit-field" data-index="1" role="button" aria-label="رقم موقعیت 2" tabindex="0">
+                        <div class="digit-display">-</div>
+                    </div>
+                    <div class="digit-field" data-index="2" role="button" aria-label="رقم موقعیت 3" tabindex="0">
+                        <div class="digit-display">-</div>
+                    </div>
+                    <div class="digit-field" data-index="3" role="button" aria-label="رقم موقعیت 4" tabindex="0">
+                        <div class="digit-display">-</div>
+                    </div>
+                    <div class="digit-field" data-index="4" role="button" aria-label="رقم موقعیت 5" tabindex="0">
+                        <div class="digit-display">-</div>
+                    </div>
+                </div>
+
+                <!-- Hints Section -->
+                <div class="hints-container">
+                    <h3>💡 سرنخ‌ها</h3>
+                    <div class="hints-list" role="list" aria-label="لیست سرنخ‌ها">
+                        <div class="hint-item" data-hint-index="0" role="listitem" tabindex="0" aria-label="سرنخ 1: 82619 - دو رقم درست و در جای اشتباه">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
+                            <span class="hint-number" dir="ltr">82619</span>
+                            <span class="hint-text">دو رقم درست و در جای اشتباه</span>
+                        </div>
+                        <div class="hint-item" data-hint-index="1" role="listitem" tabindex="0" aria-label="سرنخ 2: 70629 - یک رقم درست و در جای درست">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
+                            <span class="hint-number" dir="ltr">70629</span>
+                            <span class="hint-text">یک رقم درست و در جای درست</span>
+                        </div>
+                        <div class="hint-item" data-hint-index="2" role="listitem" tabindex="0" aria-label="سرنخ 3: 47530 - سه رقم درست و در جای اشتباه">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
+                            <span class="hint-number" dir="ltr">47530</span>
+                            <span class="hint-text">سه رقم درست و در جای اشتباه</span>
+                        </div>
+                        <div class="hint-item" data-hint-index="3" role="listitem" tabindex="0" aria-label="سرنخ 4: 86302 - دو رقم درست، یکی در جای درست و یکی در جای اشتباه">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
+                            <span class="hint-number" dir="ltr">86302</span>
+                            <span class="hint-text">دو رقم درست، یکی در جای درست و یکی در جای اشتباه</span>
+                        </div>
+                        <div class="hint-item" data-hint-index="4" role="listitem" tabindex="0" aria-label="سرنخ 5: 91704 - دو رقم درست و در جای درست">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
+                            <span class="hint-number" dir="ltr">91704</span>
+                            <span class="hint-text">دو رقم درست و در جای درست</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button id="reset-btn" class="reset-button">🔄 پاک کردن همه</button>
+                    <button id="submit-btn" class="submit-button">تأیید</button>
+                </div>
+            </main>
+
+            <!-- Numpad Modal -->
+            <div id="numpad-modal" class="numpad-modal" style="display: none;">
+                <div class="numpad-content">
+                    <div class="numpad-header">
+                        <h3>انتخاب رقم</h3>
+                        <button id="close-numpad" class="close-button">×</button>
+                    </div>
+                    <div class="numpad-grid">
+                        <button class="numpad-digit" data-digit="0">0</button>
+                        <button class="numpad-digit" data-digit="1">1</button>
+                        <button class="numpad-digit" data-digit="2">2</button>
+                        <button class="numpad-digit" data-digit="3">3</button>
+                        <button class="numpad-digit" data-digit="4">4</button>
+                        <button class="numpad-digit" data-digit="5">5</button>
+                        <button class="numpad-digit" data-digit="6">6</button>
+                        <button class="numpad-digit" data-digit="7">7</button>
+                        <button class="numpad-digit" data-digit="8">8</button>
+                        <button class="numpad-digit" data-digit="9">9</button>
+                    </div>
+                    <div class="numpad-actions">
+                        <button id="clear-digit" class="numpad-action-btn">پاک کردن</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback Overlay -->
+            <div id="feedback-overlay" style="display: none;"></div>
+            
+            <!-- Hint Explanation Dialog -->
+            <div id="hint-explanation-dialog" class="hint-dialog" style="display: none;">
+                <div class="hint-dialog-content">
+                    <div class="hint-dialog-header">
+                        <h3>توضیح سرنخ</h3>
+                        <button id="close-hint-dialog" class="close-button">×</button>
+                    </div>
+                    <div class="hint-dialog-body">
+                        <div id="hint-dialog-text"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="combinational-lock.js"></script>
+</body>
+</html>
