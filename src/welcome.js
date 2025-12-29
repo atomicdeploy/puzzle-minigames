@@ -403,7 +403,10 @@ window.verifyRegistrationOTP = () => {
 function generatePlayerId() {
     const prefix = 'INF';
     const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    // Use crypto-secure randomness for the random segment
+    const randomArray = new Uint32Array(1);
+    window.crypto.getRandomValues(randomArray);
+    const random = randomArray[0].toString(36).toUpperCase().padStart(4, '0').slice(0, 4);
     return `${prefix}-${timestamp}-${random}`;
 }
 
