@@ -709,11 +709,14 @@ function initUI() {
     // Store the last focused element for focus management
     let lastFocusedElement = null;
     
+    // Delay for focus after DOM updates/animations (in milliseconds)
+    const FOCUS_DELAY = 100;
+    
     // Keyboard accessibility - Escape key handler
     const handleEscapeKey = (event) => {
         if (event.key === 'Escape' || event.key === 'Esc') {
             // Close modal if open
-            if (welcomeModal.style.display === 'flex') {
+            if (welcomeModal.style.display !== 'none') {
                 welcomeModal.style.display = 'none';
                 try {
                     localStorage.setItem('infernal-welcome-shown', 'true');
@@ -735,7 +738,7 @@ function initUI() {
                 }
             }
             // Close contact page if open
-            else if (contactPage.style.display === 'block') {
+            else if (contactPage.style.display !== 'none') {
                 contactPage.style.display = 'none';
                 updateMenuActive('home-link');
                 if (lastFocusedElement) {
@@ -755,7 +758,7 @@ function initUI() {
         sideMenu.classList.add('open');
         menuOverlay.classList.add('active');
         // Focus first menu item for keyboard navigation
-        setTimeout(() => homeLink.focus(), 100);
+        setTimeout(() => homeLink.focus(), FOCUS_DELAY);
     });
     
     menuCloseBtn.addEventListener('click', () => {
@@ -828,7 +831,7 @@ function initUI() {
         menuOverlay.classList.remove('active');
         updateMenuActive('contact-link');
         // Focus close button for keyboard navigation
-        setTimeout(() => pageClose.focus(), 100);
+        setTimeout(() => pageClose.focus(), FOCUS_DELAY);
     });
     
     homeLink.addEventListener('click', (e) => {
@@ -850,7 +853,7 @@ function initUI() {
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
         // Focus close button for keyboard navigation
-        setTimeout(() => modalClose.focus(), 100);
+        setTimeout(() => modalClose.focus(), FOCUS_DELAY);
     });
     
     pageClose.addEventListener('click', () => {
