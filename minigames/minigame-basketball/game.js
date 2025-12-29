@@ -27,11 +27,11 @@ let draggedFootstep = null;
 
 // User-draggable footsteps - 5 total, can be placed on decimal and negative lines
 let userFootsteps = [
-    { line: 0, order: 1, id: 'footstep-1' },
-    { line: 1, order: 2, id: 'footstep-2' },
-    { line: 2, order: 3, id: 'footstep-3' },
-    { line: 3, order: 4, id: 'footstep-4' },
-    { line: 4, order: 5, id: 'footstep-5' }
+    { line: -1, row: 0.3, order: 1, id: 'footstep-1' },
+    { line: -0.5, row: 0.35, order: 2, id: 'footstep-2' },
+    { line: 0, row: 0.4, order: 3, id: 'footstep-3' },
+    { line: 2.5, row: 0.45, order: 4, id: 'footstep-4' },
+    { line: 1, row: 0.5, order: 5, id: 'footstep-5' }
 ];
 
 // Initialize the game
@@ -182,16 +182,20 @@ function createFootsteps() {
     userFootsteps.forEach((step, index) => {
         const footstep = document.createElement('div');
         footstep.className = 'footstep draggable';
-        footstep.textContent = '👣';
+        
+        // Display footstep ID number and emoji
+        footstep.innerHTML = `<span style="font-size: 10px; font-weight: bold; color: #fff; position: absolute; top: -8px; left: 50%; transform: translateX(-50%);">${step.order}</span>👣`;
+        
         footstep.dataset.order = step.order;
         footstep.dataset.line = step.line;
+        footstep.dataset.row = step.row;
         footstep.dataset.id = step.id;
         footstep.id = step.id;
         footstep.draggable = true;
         
-        // Calculate position
+        // Calculate position using stored row value
         const x = centerX + (step.line * lineSpacing);
-        const y = height * 0.3 + (index * (height * 0.05)); // Stagger vertically
+        const y = height * step.row;
         
         footstep.style.left = `${x}px`;
         footstep.style.top = `${y}px`;
@@ -247,18 +251,22 @@ function handleDrop(e) {
         const courtContainer = document.getElementById('court-container');
         const rect = courtContainer.getBoundingClientRect();
         const width = courtContainer.clientWidth;
+        const height = courtContainer.clientHeight;
         const centerX = width / 2;
         const lineSpacing = width / 20;
         
         // Calculate which line the drop position corresponds to
         const dropX = e.clientX - rect.left;
+        const dropY = e.clientY - rect.top;
         const relativeX = dropX - centerX;
         const newLine = Math.round((relativeX / lineSpacing) * 2) / 2; // Round to nearest 0.5
+        const newRow = dropY / height; // Store as fraction of height
         
         // Update footstep position
         draggedFootstep.dataset.line = newLine;
+        draggedFootstep.dataset.row = newRow;
         const x = centerX + (newLine * lineSpacing);
-        const y = e.clientY - rect.top;
+        const y = dropY;
         
         draggedFootstep.style.left = `${x}px`;
         draggedFootstep.style.top = `${y}px`;
@@ -268,8 +276,9 @@ function handleDrop(e) {
         const footstep = userFootsteps.find(f => f.id === id);
         if (footstep) {
             footstep.line = newLine;
-            console.log(`Footstep ${footstep.order} moved to line ${newLine}`);
-            console.log('Current footstep positions:', userFootsteps.map(f => ({ order: f.order, line: f.line })));
+            footstep.row = newRow;
+            console.log(`Footstep ${footstep.order} moved to line ${newLine}, row ${newRow.toFixed(3)}`);
+            console.log('Current footstep positions:', userFootsteps.map(f => ({ order: f.order, line: f.line, row: f.row })));
             saveFootstepsToStorage();
         }
         
@@ -311,25 +320,30 @@ function handleTouchEnd(e) {
     const courtContainer = document.getElementById('court-container');
     const rect = courtContainer.getBoundingClientRect();
     const width = courtContainer.clientWidth;
+    const height = courtContainer.clientHeight;
     const centerX = width / 2;
     const lineSpacing = width / 20;
     
     const currentLeft = parseFloat(draggedFootstep.style.left);
+    const currentTop = parseFloat(draggedFootstep.style.top);
     const relativeX = currentLeft - centerX;
     const newLine = Math.round((relativeX / lineSpacing) * 2) / 2; // Round to nearest 0.5
+    const newRow = currentTop / height; // Store as fraction of height
     
     // Snap to line
     const x = centerX + (newLine * lineSpacing);
     draggedFootstep.style.left = `${x}px`;
     draggedFootstep.dataset.line = newLine;
+    draggedFootstep.dataset.row = newRow;
     
     // Update userFootsteps array
     const id = draggedFootstep.dataset.id;
     const footstep = userFootsteps.find(f => f.id === id);
     if (footstep) {
         footstep.line = newLine;
-        console.log(`Footstep ${footstep.order} moved to line ${newLine}`);
-        console.log('Current footstep positions:', userFootsteps.map(f => ({ order: f.order, line: f.line })));
+        footstep.row = newRow;
+        console.log(`Footstep ${footstep.order} moved to line ${newLine}, row ${newRow.toFixed(3)}`);
+        console.log('Current footstep positions:', userFootsteps.map(f => ({ order: f.order, line: f.line, row: f.row })));
         saveFootstepsToStorage();
     }
     
@@ -348,13 +362,14 @@ function updateFootstepPositions() {
     const lineSpacing = width / 20;
     
     const footsteps = document.querySelectorAll('.footstep');
-    footsteps.forEach((footstep, index) => {
+    footsteps.forEach((footstep) => {
         const line = parseFloat(footstep.dataset.line);
+        const row = parseFloat(footstep.dataset.row) || 0.3; // Default to 0.3 if not set
         const x = centerX + (line * lineSpacing);
-        const currentTop = parseFloat(footstep.style.top) || (height * 0.3 + (index * (height * 0.05)));
+        const y = height * row;
         
         footstep.style.left = `${x}px`;
-        footstep.style.top = `${currentTop}px`;
+        footstep.style.top = `${y}px`;
     });
 }
 
@@ -631,7 +646,7 @@ function playClickSound() {
 // Save footstep positions to localStorage
 function saveFootstepsToStorage() {
     try {
-        const positions = userFootsteps.map(f => ({ id: f.id, line: f.line, order: f.order }));
+        const positions = userFootsteps.map(f => ({ id: f.id, line: f.line, row: f.row, order: f.order }));
         localStorage.setItem('basketball-footsteps', JSON.stringify(positions));
         console.log('Footstep positions saved to localStorage');
     } catch (e) {
@@ -649,6 +664,7 @@ function loadFootstepsFromStorage() {
                 const footstep = userFootsteps.find(f => f.id === savedPos.id);
                 if (footstep) {
                     footstep.line = savedPos.line;
+                    footstep.row = savedPos.row !== undefined ? savedPos.row : footstep.row; // Use saved row or keep default
                 }
             });
             console.log('Footstep positions loaded from localStorage:', positions);
