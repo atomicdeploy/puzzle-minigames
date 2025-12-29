@@ -143,8 +143,10 @@ function handlePasswordBlur(e) {
     // Trim all leading spaces
     value = value.replace(/^\s+/, '');
     
-    // Allow only one trailing space, remove the rest
-    value = value.replace(/\s+$/, ' ');
+    // Allow only one trailing space (preserve if it exists, otherwise don't add)
+    if (value.endsWith(' ')) {
+        value = value.replace(/\s+$/, ' ');
+    }
     
     input.value = value;
 }
