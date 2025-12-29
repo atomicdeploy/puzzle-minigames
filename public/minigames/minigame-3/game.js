@@ -80,8 +80,7 @@ let gameState = {
     currentNote: null,
     detectedWord: null,
     fftPeaks: [],
-    harmonics: [],
-    debugMode: false
+    harmonics: []
 };
 
 // Audio/Microphone state
@@ -156,9 +155,6 @@ function init() {
     // Setup pitch preview buttons
     setupPitchPreview();
     
-    // Setup keyboard listeners
-    setupKeyboardListeners();
-    
     // Show pitch preview initially
     pitchPreviewDiv.classList.remove('hidden');
     
@@ -168,7 +164,7 @@ function init() {
     // Draw initial state
     drawGame();
     
-    // Initialize speech recognition
+    // Initialize speech recognition (not started by default)
     initSpeechRecognition();
 }
 
@@ -285,25 +281,6 @@ function playFrequencyTone(frequency, button) {
         setTimeout(() => {
             button.classList.remove('playing');
         }, 500);
-    }
-}
-
-// Setup keyboard listeners
-function setupKeyboardListeners() {
-    document.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 'd') {
-            gameState.debugMode = !gameState.debugMode;
-            console.log('Debug mode:', gameState.debugMode ? 'ON' : 'OFF');
-            toggleDebugPanel();
-        }
-    });
-}
-
-// Toggle debug panel visibility
-function toggleDebugPanel() {
-    const debugPanel = document.getElementById('debug-panel');
-    if (debugPanel) {
-        debugPanel.style.display = gameState.debugMode ? 'block' : 'none';
     }
 }
 
@@ -544,9 +521,6 @@ function startGame() {
     // Start pitch detection
     startPitchDetection();
     
-    // Start speech recognition
-    startSpeechRecognition();
-    
     // If not in tutorial mode, start the timer immediately
     if (!gameState.isTutorialMode) {
         gameState.score = 0;
@@ -779,43 +753,6 @@ function updatePitchDisplay(pitch) {
     } else {
         currentDirectionDisplay.textContent = '---';
     }
-    
-    // Update debug display if enabled
-    updateDebugDisplay();
-}
-
-// Update debug display with detailed information
-function updateDebugDisplay() {
-    if (!gameState.debugMode) return;
-    
-    const debugPanel = document.getElementById('debug-panel');
-    if (!debugPanel) return;
-    
-    let html = '<h3>Debug Information</h3>';
-    html += `<p><strong>Frequency:</strong> ${gameState.lastPitch.toFixed(2)} Hz</p>`;
-    html += `<p><strong>Note:</strong> ${gameState.currentNote || 'N/A'}</p>`;
-    html += `<p><strong>Direction:</strong> ${gameState.currentDirection || 'None'}</p>`;
-    html += `<p><strong>Amplitude:</strong> ${(gameState.currentAmplitude * 100).toFixed(1)}%</p>`;
-    html += `<p><strong>Speech Status:</strong> ${isListening ? 'Listening' : 'Not listening'}</p>`;
-    html += `<p><strong>Detected Word:</strong> ${gameState.detectedWord || 'None'}</p>`;
-    
-    if (gameState.fftPeaks && gameState.fftPeaks.length > 0) {
-        html += '<p><strong>FFT Peaks:</strong></p><ul>';
-        gameState.fftPeaks.slice(0, 3).forEach(peak => {
-            html += `<li>${peak.frequency.toFixed(2)} Hz (${(peak.magnitude * 100).toFixed(1)}%)</li>`;
-        });
-        html += '</ul>';
-    }
-    
-    if (gameState.harmonics && gameState.harmonics.length > 0) {
-        html += '<p><strong>Harmonics:</strong></p><ul>';
-        gameState.harmonics.forEach((harmonic, i) => {
-            html += `<li>H${i + 1}: ${harmonic.toFixed(2)} Hz</li>`;
-        });
-        html += '</ul>';
-    }
-    
-    debugPanel.innerHTML = html;
 }
 
 function gameLoop() {
