@@ -50,10 +50,6 @@ export default defineConfig(({ command, mode }) => {
       // CORS configuration
       cors: true, // Enable CORS for all origins in development
       
-      // Allowed hosts configuration
-      // Set to true to allow all hosts, or provide an array of allowed host patterns
-      allowedHosts: true, // Allow all hosts for development
-      
       // HMR (Hot Module Replacement) configuration
       hmr: {
         // Use default port (server.port + 1) or specify custom port
