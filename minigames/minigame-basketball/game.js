@@ -183,8 +183,8 @@ function createFootsteps() {
         const footstep = document.createElement('div');
         footstep.className = 'footstep draggable';
         
-        // Display footstep ID number and emoji
-        footstep.innerHTML = `<span style="font-size: 10px; font-weight: bold; color: #fff; position: absolute; top: -8px; left: 50%; transform: translateX(-50%);">${step.order}</span>👣`;
+        // Display footstep ID number (hidden initially) and emoji
+        footstep.innerHTML = `<span class="footstep-id">${step.order}</span>👣`;
         
         footstep.dataset.order = step.order;
         footstep.dataset.line = step.line;
@@ -517,6 +517,12 @@ function handleCorrectAnswer(combinationCode) {
     
     showFeedback('🎉 عالی! رمز ترکیبی ثبت شد! 🏀', 'success');
     playConfetti();
+    
+    // Reveal footstep ID numbers
+    const footstepIds = document.querySelectorAll('.footstep-id');
+    footstepIds.forEach(id => {
+        id.classList.add('revealed');
+    });
     
     // Disable controls
     document.getElementById('increase-btn').disabled = true;

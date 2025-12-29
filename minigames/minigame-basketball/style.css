@@ -207,11 +207,11 @@ header h1 {
 
 @keyframes footstep-appear {
     0% {
-        transform: scale(0) rotate(-45deg);
+        transform: translate(-50%, -50%) scale(0) rotate(-45deg);
         opacity: 0;
     }
     100% {
-        transform: scale(1) rotate(0deg);
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
         opacity: 1;
     }
 }
@@ -229,6 +229,26 @@ header h1 {
         filter: drop-shadow(0 0 15px rgba(255, 140, 66, 1));
         transform: scale(1.1);
     }
+}
+
+/* Footstep ID label */
+.footstep-id {
+    font-size: 10px;
+    font-weight: bold;
+    color: #fff;
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Reveal footstep IDs when puzzle is solved */
+.footstep-id.revealed {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Answer Panel */
