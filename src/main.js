@@ -16,7 +16,9 @@ const gameState = {
         error: null,
         success: null,
         discover: null
-    }
+    },
+    // UI state for event listener management
+    uiInitialized: false
 };
 
 // Initialize Audio
@@ -673,65 +675,176 @@ function initGame() {
 
 // UI Initialization
 function initUI() {
+    // Prevent duplicate initialization
+    if (gameState.uiInitialized) {
+        console.debug('UI already initialized, skipping duplicate initialization');
+        return;
+    }
+    gameState.uiInitialized = true;
+    
     const menuBtn = document.getElementById('menu-btn');
     const menuCloseBtn = document.getElementById('menu-close-btn');
     const sideMenu = document.getElementById('side-menu');
     const welcomeModal = document.getElementById('welcome-modal');
     const startGameBtn = document.getElementById('start-game-btn');
-    const modalClose = welcomeModal.querySelector('.modal-close');
     const contactLink = document.getElementById('contact-link');
     const homeLink = document.getElementById('home-link');
     const aboutLink = document.getElementById('about-link');
     const contactPage = document.getElementById('contact-page');
+    
+    // Null checks for required elements
+    if (!menuBtn || !menuCloseBtn || !sideMenu || !welcomeModal || !startGameBtn || 
+        !contactLink || !homeLink || !aboutLink || !contactPage) {
+        console.error('Required UI elements not found');
+        return;
+    }
+    
+    const modalClose = welcomeModal.querySelector('.modal-close');
     const pageClose = contactPage.querySelector('.page-close');
     
-    // Create menu overlay
-    const menuOverlay = document.createElement('div');
-    menuOverlay.className = 'menu-overlay';
-    document.body.appendChild(menuOverlay);
+    if (!modalClose || !pageClose) {
+        console.error('Required close buttons not found');
+        return;
+    }
+    
+    // Create or get menu overlay (prevent duplicate creation)
+    let menuOverlay = document.querySelector('.menu-overlay');
+    if (!menuOverlay) {
+        menuOverlay = document.createElement('div');
+        menuOverlay.className = 'menu-overlay';
+        document.body.appendChild(menuOverlay);
+    }
+    
+    // Store the last focused element for focus management
+    // Use a stack to handle nested overlays (menu -> contact page or menu -> modal)
+    let lastFocusedElement = null;
+    let focusBeforeMenu = null;
+    
+    // Delay for focus after DOM updates/animations (in milliseconds)
+    const FOCUS_DELAY = 100;
+    
+    // Keyboard accessibility - Escape key handler
+    const handleEscapeKey = (event) => {
+        if (event.key === 'Escape' || event.key === 'Esc') {
+            // Close modal if open
+            if (welcomeModal.style.display !== 'none') {
+                welcomeModal.style.display = 'none';
+                try {
+                    localStorage.setItem('infernal-welcome-shown', 'true');
+                } catch (e) {
+                    console.warn('localStorage not available:', e);
+                }
+                if (lastFocusedElement) {
+                    lastFocusedElement.focus();
+                    lastFocusedElement = null;
+                }
+            }
+            // Close side menu if open
+            else if (sideMenu.classList.contains('open')) {
+                sideMenu.classList.remove('open');
+                menuOverlay.classList.remove('active');
+                if (focusBeforeMenu) {
+                    focusBeforeMenu.focus();
+                    focusBeforeMenu = null;
+                }
+            }
+            // Close contact page if open
+            else if (contactPage.style.display !== 'none') {
+                contactPage.style.display = 'none';
+                updateMenuActive('home-link');
+                if (lastFocusedElement) {
+                    lastFocusedElement.focus();
+                    lastFocusedElement = null;
+                }
+            }
+        }
+    };
+    
+    // Add global escape key listener (only once due to initialization guard)
+    document.addEventListener('keydown', handleEscapeKey);
     
     // Menu toggle
     menuBtn.addEventListener('click', () => {
+        focusBeforeMenu = document.activeElement;
         sideMenu.classList.add('open');
         menuOverlay.classList.add('active');
+        // Focus first menu item for keyboard navigation
+        setTimeout(() => homeLink.focus(), FOCUS_DELAY);
     });
     
     menuCloseBtn.addEventListener('click', () => {
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
+        if (focusBeforeMenu) {
+            focusBeforeMenu.focus();
+            focusBeforeMenu = null;
+        }
     });
     
     menuOverlay.addEventListener('click', () => {
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
+        if (focusBeforeMenu) {
+            focusBeforeMenu.focus();
+            focusBeforeMenu = null;
+        }
     });
     
     // Welcome modal
     startGameBtn.addEventListener('click', () => {
         welcomeModal.style.display = 'none';
-        localStorage.setItem('infernal-welcome-shown', 'true');
+        try {
+            localStorage.setItem('infernal-welcome-shown', 'true');
+        } catch (e) {
+            console.warn('localStorage not available:', e);
+        }
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
     
     modalClose.addEventListener('click', () => {
         welcomeModal.style.display = 'none';
-        localStorage.setItem('infernal-welcome-shown', 'true');
+        try {
+            localStorage.setItem('infernal-welcome-shown', 'true');
+        } catch (e) {
+            console.warn('localStorage not available:', e);
+        }
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
     
     // Close welcome modal when clicking on the backdrop (outside modal content)
     welcomeModal.addEventListener('click', (event) => {
         if (event.target === welcomeModal) {
             welcomeModal.style.display = 'none';
-            localStorage.setItem('infernal-welcome-shown', 'true');
+            try {
+                localStorage.setItem('infernal-welcome-shown', 'true');
+            } catch (e) {
+                console.warn('localStorage not available:', e);
+            }
+            if (lastFocusedElement) {
+                lastFocusedElement.focus();
+                lastFocusedElement = null;
+            }
         }
     });
     
     // Contact page
     contactLink.addEventListener('click', (e) => {
         e.preventDefault();
+        // Store focus before menu was opened. If menu wasn't used (focusBeforeMenu is null),
+        // fallback to menuBtn to ensure focus returns to a visible, meaningful element
+        lastFocusedElement = focusBeforeMenu || menuBtn;
         contactPage.style.display = 'block';
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
         updateMenuActive('contact-link');
+        // Focus close button for keyboard navigation
+        setTimeout(() => pageClose.focus(), FOCUS_DELAY);
     });
     
     homeLink.addEventListener('click', (e) => {
@@ -740,18 +853,31 @@ function initUI() {
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
         updateMenuActive('home-link');
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
     
     aboutLink.addEventListener('click', (e) => {
         e.preventDefault();
+        // Store focus before menu was opened. If menu wasn't used (focusBeforeMenu is null),
+        // fallback to menuBtn to ensure focus returns to a visible, meaningful element
+        lastFocusedElement = focusBeforeMenu || menuBtn;
         showAboutModal();
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
+        // Focus primary action button for keyboard navigation
+        setTimeout(() => startGameBtn.focus(), FOCUS_DELAY);
     });
     
     pageClose.addEventListener('click', () => {
         contactPage.style.display = 'none';
         updateMenuActive('home-link');
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
     });
 }
 
@@ -766,8 +892,14 @@ function setWelcomeModalVisibility(visible) {
 
 // Show welcome modal on first visit
 function showWelcomeModal() {
-    const hasShown = localStorage.getItem('infernal-welcome-shown');
-    if (hasShown !== 'true') {
+    try {
+        const hasShown = localStorage.getItem('infernal-welcome-shown');
+        if (hasShown !== 'true') {
+            setWelcomeModalVisibility(true);
+        }
+    } catch (e) {
+        console.warn('localStorage not available:', e);
+        // Show modal by default if localStorage is not available
         setWelcomeModalVisibility(true);
     }
 }
