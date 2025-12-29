@@ -8,8 +8,11 @@ Node.js backend server for Puzzle Minigames with Express, Socket.io, and MySQL/M
 - Real-time communication with Socket.io
 - MySQL/MariaDB database integration
 - Player progress tracking
-- Leaderboard system
+- Leaderboard system with cursor-based pagination
 - CORS enabled
+- **Real-time request logging** with IP, browser, device info
+- **Static file serving** with per-domain configuration
+- **Single-port deployment** serving both API and frontend
 
 ## Setup
 
@@ -106,6 +109,99 @@ CREATE INDEX idx_score ON player_progress(score DESC);
 ## Environment Variables
 
 See `.env.example` for all available configuration options.
+
+### Key Configuration Options
+
+**Server:**
+- `PORT`: Server port (default: 3001)
+- `NODE_ENV`: Environment (development/production)
+
+**CORS:**
+- `CORS_ORIGIN`: Comma-separated list of allowed origins
+
+**Database:**
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+
+**Static File Serving:**
+- `DOMAIN_STATIC_PATHS`: Per-domain static file paths
+  - Format: `domain1:path1,domain2:path2`
+  - Example: `example.com:/var/www/example,app.example.com:/var/www/app`
+  - Default: Serves mobile app from `../mobile-app/.output/public` on localhost
+
+## Real-Time Request Logging
+
+The server logs detailed information for every request:
+- 📥 HTTP method and URL
+- 🕐 Timestamp
+- 🌐 Client IP address (handles proxies)
+- 🖥️ Browser information
+- 💻 Operating system
+- 📱 Device type
+- ⏱️ Response time and status
+
+Example output:
+```
+┌─────────────────────────────────────────────────────────
+│ 📥 GET /api/leaderboard
+│ 🕐 2025-12-29T09:30:00.000Z
+│ 🌐 IP: 192.168.1.100
+│ 🖥️  Browser: Chrome 120.0.0
+│ 💻 OS: Windows 10
+│ 📱 Device: Desktop
+│ 🟢 Status: 200
+│ ⏱️  Duration: 45ms
+└─────────────────────────────────────────────────────────
+```
+
+## Static File Serving
+
+The server can serve static files (frontend) on the same port as the API:
+
+### Default Configuration
+- Serves mobile app from `../mobile-app/.output/public`
+- Available at `http://localhost:3001/`
+- API endpoints available at `http://localhost:3001/api/*`
+- Socket.io available at same port
+
+### Per-Domain Configuration
+
+Configure different static file directories for different domains:
+
+**Via Environment Variable:**
+```bash
+DOMAIN_STATIC_PATHS=example.com:/var/www/example,app.example.com:/var/www/app
+```
+
+**Programmatic Configuration:**
+```javascript
+import { configureDomain } from './middleware/domainStatic.js';
+
+configureDomain('example.com', '/path/to/static/files');
+configureDomain('*.subdomain.com', '/path/to/wildcard/files');
+```
+
+### How It Works
+1. Request arrives at the server
+2. If path matches `/api/*` → handled by API routes
+3. If path matches `/health` → health check endpoint
+4. Otherwise → check domain-specific static file configuration
+5. Serve file if exists, or serve `index.html` for SPA routing
+6. Fallback to default mobile app static files
+
+## Single-Port Deployment
+
+Everything runs on a single port (default 3001):
+- ✅ REST API endpoints (`/api/*`)
+- ✅ Socket.io real-time communication
+- ✅ Static file serving (frontend)
+- ✅ Health check (`/health`)
+- ✅ Per-domain static file routing
+
+Benefits:
+- Simplified deployment
+- Single SSL certificate needed
+- Easier firewall configuration
+- No CORS issues between API and frontend
 
 ## License
 
