@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>آینه - Mini Game Mirror</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>🪞 آینه 🪞</h1>
+        </header>
+        
+        <!-- Stage 1: Password Input -->
+        <div id="stage-1" class="stage active">
+            <div class="stage-content">
+                <div class="mirror-icon">🪞</div>
+                <div class="instruction-text">
+                    برای گشودن آینه، رمز عبور را وارد کنید
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="password-input" placeholder="رمز عبور" autocomplete="off" aria-label="رمز عبور را وارد کنید">
+                    <button id="password-submit" class="submit-button" aria-label="تأیید رمز عبور">
+                        <span class="button-text">تأیید</span>
+                        <span class="button-icon">→</span>
+                    </button>
+                </div>
+                
+                <div id="password-hint" class="hint-text">
+                    راهنما: پاسخ در سکوت پنهان است
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stage 2: Word Ordering -->
+        <div id="stage-2" class="stage">
+            <div class="stage-content">
+                <div class="success-message">
+                    ✨ آفرین! اکنون کلمات را به ترتیب صحیح قرار دهید ✨
+                </div>
+                
+                <div class="ordering-container">
+                    <!-- Drop zones -->
+                    <div class="drop-zones">
+                        <div class="drop-zone" data-position="top" aria-label="محل قرارگیری کلمه بالا">
+                            <span class="zone-label">بالا</span>
+                            <div class="zone-content"></div>
+                        </div>
+                        <div class="drop-zone" data-position="middle" aria-label="محل قرارگیری کلمه وسط">
+                            <span class="zone-label">وسط</span>
+                            <div class="zone-content"></div>
+                        </div>
+                        <div class="drop-zone" data-position="bottom" aria-label="محل قرارگیری کلمه پایین">
+                            <span class="zone-label">پایین</span>
+                            <div class="zone-content"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Draggable words -->
+                    <div class="words-pool">
+                        <div class="word-card" draggable="true" data-word="Zoom">
+                            <span class="word-text">Zoom</span>
+                        </div>
+                        <div class="word-card" draggable="true" data-word="Escape">
+                            <span class="word-text">Escape</span>
+                        </div>
+                        <div class="word-card" draggable="true" data-word="Infernal">
+                            <span class="word-text">Infernal</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="order-submit" class="submit-button" aria-label="تأیید ترتیب">
+                    <span class="button-text">تأیید ترتیب</span>
+                    <span class="button-icon">✓</span>
+                </button>
+            </div>
+        </div>
+        
+        <div id="feedback" class="feedback hidden"></div>
+        <canvas id="confetti-canvas"></canvas>
+    </div>
+    
+    <script type="module" src="game.js"></script>
+</body>
+</html>
