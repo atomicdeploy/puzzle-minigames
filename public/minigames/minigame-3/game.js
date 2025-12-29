@@ -35,6 +35,7 @@ let gameState = {
 let audioContext = null;
 let analyser = null;
 let microphone = null;
+let microphoneStream = null; // Store the MediaStream for cleanup
 let audioDataArray = null;
 let pitchDetectionInterval = null;
 
@@ -129,6 +130,9 @@ async function initMicrophone() {
                 autoGainControl: false
             } 
         });
+        
+        // Store the stream for cleanup
+        microphoneStream = stream;
         
         // Create audio context
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -483,8 +487,8 @@ function endGame(timeUp) {
     if (pitchDetectionInterval) clearInterval(pitchDetectionInterval);
     
     // Stop microphone
-    if (microphone && microphone.mediaStream) {
-        microphone.mediaStream.getTracks().forEach(track => track.stop());
+    if (microphoneStream) {
+        microphoneStream.getTracks().forEach(track => track.stop());
     }
     
     // Determine success (survived for at least 20 seconds or until time ran out)
