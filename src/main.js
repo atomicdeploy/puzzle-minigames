@@ -16,7 +16,9 @@ const gameState = {
         error: null,
         success: null,
         discover: null
-    }
+    },
+    // UI state for event listener management
+    uiInitialized: false
 };
 
 // Initialize Audio
@@ -673,6 +675,13 @@ function initGame() {
 
 // UI Initialization
 function initUI() {
+    // Prevent duplicate initialization
+    if (gameState.uiInitialized) {
+        console.warn('UI already initialized, skipping duplicate initialization');
+        return;
+    }
+    gameState.uiInitialized = true;
+    
     const menuBtn = document.getElementById('menu-btn');
     const menuCloseBtn = document.getElementById('menu-close-btn');
     const sideMenu = document.getElementById('side-menu');
@@ -751,9 +760,7 @@ function initUI() {
         }
     };
     
-    // Remove existing escape key listener if it exists (prevent duplicates)
-    document.removeEventListener('keydown', handleEscapeKey);
-    // Add global escape key listener
+    // Add global escape key listener (only once due to initialization guard)
     document.addEventListener('keydown', handleEscapeKey);
     
     // Menu toggle
@@ -829,8 +836,8 @@ function initUI() {
     // Contact page
     contactLink.addEventListener('click', (e) => {
         e.preventDefault();
-        // Store focus before menu was opened (not current menu link)
-        lastFocusedElement = focusBeforeMenu || document.activeElement;
+        // Store focus before menu was opened, or fallback to menu button if menu wasn't used
+        lastFocusedElement = focusBeforeMenu || menuBtn;
         contactPage.style.display = 'block';
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
@@ -853,8 +860,8 @@ function initUI() {
     
     aboutLink.addEventListener('click', (e) => {
         e.preventDefault();
-        // Store focus before menu was opened (not current menu link)
-        lastFocusedElement = focusBeforeMenu || document.activeElement;
+        // Store focus before menu was opened, or fallback to menu button if menu wasn't used
+        lastFocusedElement = focusBeforeMenu || menuBtn;
         showAboutModal();
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
