@@ -876,11 +876,14 @@ function showWelcomeModal() {
         const hasShown = localStorage.getItem('infernal-welcome-shown');
         if (hasShown !== 'true') {
             const welcomeModal = document.getElementById('welcome-modal');
+            if (!welcomeModal) return;
+            
             const menuBtn = document.getElementById('menu-btn');
             
             // Store focus target in the modal's dataset for later restoration
-            if (document.activeElement && document.activeElement !== document.body) {
-                welcomeModal.dataset.focusReturn = document.activeElement.id || '';
+            // Only store if element has an ID, otherwise fallback to menu button
+            if (document.activeElement && document.activeElement !== document.body && document.activeElement.id) {
+                welcomeModal.dataset.focusReturn = document.activeElement.id;
             } else if (menuBtn) {
                 // Fallback to menu button as a meaningful focus target
                 welcomeModal.dataset.focusReturn = 'menu-btn';
