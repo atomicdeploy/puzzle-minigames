@@ -16,19 +16,38 @@ const ARROW_MIN_DISTANCE = 60; // Minimum distance to show arrow to target
 const urlParams = new URLSearchParams(window.location.search);
 const DEMO_MODE = urlParams.has('demo');
 
-// Pitch frequency mapping - will be configured based on testing
-// For now, we'll map detected frequencies to numbers 1-20 for debugging
-const PITCH_NUMBER_MIN = 1;
-const PITCH_NUMBER_MAX = 20;
-const FREQUENCY_MIN = 50;  // Minimum detectable frequency (Hz)
-const FREQUENCY_MAX = 1000; // Maximum detectable frequency (Hz)
+// Optimized frequency range for human voice
+const FREQUENCY_MIN = 100;  // Minimum detectable frequency (Hz)
+const FREQUENCY_MAX = 800; // Maximum detectable frequency (Hz)
 
-// Placeholder direction ranges - to be configured after testing
+// Musical note frequencies (C2 to C4+)
+const NOTE_FREQUENCIES = {
+    'C2': 65.41, 'C#2': 69.30, 'D2': 73.42, 'D#2': 77.78, 'E2': 82.41, 'F2': 87.31,
+    'F#2': 92.50, 'G2': 98.00, 'G#2': 103.83, 'A2': 110.00, 'A#2': 116.54, 'B2': 123.47,
+    'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61,
+    'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
+    'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23,
+    'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+    'C5': 523.25
+};
+
+// Map notes to directions (using musical ranges)
 const PITCH_RANGES = {
-    LEFT: { min: 1, max: 5, name: 'چپ ⬅️' },
-    DOWN: { min: 6, max: 10, name: 'پایین ⬇️' },
-    UP: { min: 11, max: 15, name: 'بالا ⬆️' },
-    RIGHT: { min: 16, max: 20, name: 'راست ➡️' }
+    LEFT: { minNote: 'C2', maxNote: 'G2', name: 'چپ ⬅️' },      // ~65-196 Hz
+    DOWN: { minNote: 'G#2', maxNote: 'D3', name: 'پایین ⬇️' },  // ~196-293 Hz
+    UP: { minNote: 'D#3', maxNote: 'A3', name: 'بالا ⬆️' },     // ~293-440 Hz
+    RIGHT: { minNote: 'A#3', maxNote: 'C5', name: 'راست ➡️' }   // ~440-800 Hz
+};
+
+// HPS algorithm configuration
+const HPS_HARMONIC_LEVELS = 5; // Number of harmonic levels to analyze
+const FFT_SIZE = 4096; // Larger FFT for better frequency resolution
+
+// Words to detect with Web Speech Recognition API
+const MAGIC_WORDS = {
+    'zoom': { persian: 'زوم', color: '#00b894' },
+    'escape': { persian: 'فرار', color: '#fdcb6e' },
+    'infernal': { persian: 'جهنمی', color: '#d63031' }
 };
 
 // Tutorial targets (positions on grid where ball needs to go)
@@ -57,7 +76,12 @@ let gameState = {
     currentDirection: null,
     lastPitch: 0,
     currentAmplitude: 0,
-    targetReached: false
+    targetReached: false,
+    currentNote: null,
+    detectedWord: null,
+    fftPeaks: [],
+    harmonics: [],
+    debugMode: false
 };
 
 // Audio/Microphone state
@@ -66,7 +90,12 @@ let analyser = null;
 let microphone = null;
 let microphoneStream = null; // Store the MediaStream for cleanup
 let audioDataArray = null;
+let frequencyDataArray = null; // For FFT analysis
 let pitchDetectionInterval = null;
+
+// Web Speech Recognition
+let speechRecognition = null;
+let isListening = false;
 
 // Canvas
 let canvas, ctx;
@@ -127,6 +156,9 @@ function init() {
     // Setup pitch preview buttons
     setupPitchPreview();
     
+    // Setup keyboard listeners
+    setupKeyboardListeners();
+    
     // Show pitch preview initially
     pitchPreviewDiv.classList.remove('hidden');
     
@@ -135,6 +167,9 @@ function init() {
     
     // Draw initial state
     drawGame();
+    
+    // Initialize speech recognition
+    initSpeechRecognition();
 }
 
 function setupTabs() {
@@ -253,6 +288,166 @@ function playFrequencyTone(frequency, button) {
     }
 }
 
+// Setup keyboard listeners
+function setupKeyboardListeners() {
+    document.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'd') {
+            gameState.debugMode = !gameState.debugMode;
+            console.log('Debug mode:', gameState.debugMode ? 'ON' : 'OFF');
+            toggleDebugPanel();
+        }
+    });
+}
+
+// Toggle debug panel visibility
+function toggleDebugPanel() {
+    const debugPanel = document.getElementById('debug-panel');
+    if (debugPanel) {
+        debugPanel.style.display = gameState.debugMode ? 'block' : 'none';
+    }
+}
+
+// Initialize Web Speech Recognition API
+function initSpeechRecognition() {
+    try {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.warn('Speech Recognition API not supported in this browser');
+            return;
+        }
+        
+        speechRecognition = new SpeechRecognition();
+        speechRecognition.continuous = true;
+        speechRecognition.interimResults = true;
+        speechRecognition.lang = 'en-US';
+        
+        speechRecognition.onresult = (event) => {
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript.toLowerCase().trim();
+                console.log('Speech detected:', transcript);
+                
+                // Check for magic words
+                for (const [word, data] of Object.entries(MAGIC_WORDS)) {
+                    if (transcript.includes(word)) {
+                        handleMagicWord(word, data);
+                        break;
+                    }
+                }
+            }
+        };
+        
+        speechRecognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            if (event.error === 'no-speech') {
+                // Ignore no-speech errors (common when silent)
+                return;
+            }
+            isListening = false;
+        };
+        
+        speechRecognition.onend = () => {
+            // Auto-restart if game is playing
+            if (gameState.isPlaying && !gameState.isPaused) {
+                startSpeechRecognition();
+            } else {
+                isListening = false;
+            }
+        };
+        
+        console.log('Speech Recognition initialized');
+    } catch (error) {
+        console.error('Failed to initialize Speech Recognition:', error);
+    }
+}
+
+// Start speech recognition
+function startSpeechRecognition() {
+    if (speechRecognition && !isListening) {
+        try {
+            speechRecognition.start();
+            isListening = true;
+            console.log('Speech recognition started');
+        } catch (error) {
+            console.error('Failed to start speech recognition:', error);
+        }
+    }
+}
+
+// Stop speech recognition
+function stopSpeechRecognition() {
+    if (speechRecognition && isListening) {
+        speechRecognition.stop();
+        isListening = false;
+        console.log('Speech recognition stopped');
+    }
+}
+
+// Handle detected magic word
+function handleMagicWord(word, data) {
+    console.log('Magic word detected:', word);
+    gameState.detectedWord = word;
+    
+    // Show reward animation
+    showWordReward(word, data);
+    
+    // Play bingo audio (if available)
+    playBingoAudio();
+    
+    // Clear after 3 seconds
+    setTimeout(() => {
+        gameState.detectedWord = null;
+    }, 3000);
+}
+
+// Show word reward animation
+function showWordReward(word, data) {
+    const rewardDiv = document.getElementById('word-reward');
+    if (rewardDiv) {
+        rewardDiv.textContent = `${word.toUpperCase()} - ${data.persian}`;
+        rewardDiv.style.color = data.color;
+        rewardDiv.style.display = 'block';
+        rewardDiv.classList.add('animate');
+        
+        setTimeout(() => {
+            rewardDiv.classList.remove('animate');
+            rewardDiv.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// Play bingo audio
+function playBingoAudio() {
+    try {
+        if (!previewAudioContext) {
+            previewAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Create a celebratory sound with multiple tones
+        const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 (C major chord)
+        const duration = 0.5;
+        
+        frequencies.forEach((freq, index) => {
+            const oscillator = previewAudioContext.createOscillator();
+            const gainNode = previewAudioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(previewAudioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(freq, previewAudioContext.currentTime);
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0, previewAudioContext.currentTime + index * 0.15);
+            gainNode.gain.linearRampToValueAtTime(0.2, previewAudioContext.currentTime + index * 0.15 + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, previewAudioContext.currentTime + index * 0.15 + duration);
+            
+            oscillator.start(previewAudioContext.currentTime + index * 0.15);
+            oscillator.stop(previewAudioContext.currentTime + index * 0.15 + duration);
+        });
+    } catch (error) {
+        console.error('Error playing bingo audio:', error);
+    }
+}
+
 async function handleStart() {
     console.log('Start button clicked');
     startBtn.disabled = true;
@@ -298,14 +493,15 @@ async function initMicrophone() {
         // Create audio context
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioContext.createAnalyser();
-        analyser.fftSize = 2048;
+        analyser.fftSize = FFT_SIZE; // Use larger FFT for better resolution
         
         // Connect microphone to analyser
         microphone = audioContext.createMediaStreamSource(stream);
         microphone.connect(analyser);
         
-        // Create data array for pitch detection
+        // Create data arrays for pitch detection
         audioDataArray = new Float32Array(analyser.fftSize);
+        frequencyDataArray = new Float32Array(analyser.frequencyBinCount);
         
         console.log('Microphone initialized successfully');
         micBtn.classList.remove('hidden');
@@ -348,6 +544,9 @@ function startGame() {
     // Start pitch detection
     startPitchDetection();
     
+    // Start speech recognition
+    startSpeechRecognition();
+    
     // If not in tutorial mode, start the timer immediately
     if (!gameState.isTutorialMode) {
         gameState.score = 0;
@@ -368,51 +567,57 @@ function startGame() {
 }
 
 function startPitchDetection() {
-    console.log('Starting pitch detection...');
+    console.log('Starting pitch detection with FFT + HPS algorithm...');
     
     pitchDetectionInterval = setInterval(() => {
-        if (!gameState.isPlaying || !analyser || gameState.isPaused) return;
-        
-        // Get audio data
-        analyser.getFloatTimeDomainData(audioDataArray);
-        
-        // Check volume level
-        const volume = getVolume(audioDataArray);
-        
-        // Store amplitude for speed control
-        gameState.currentAmplitude = volume;
-        
-        if (volume < MIN_VOLUME_THRESHOLD) {
-            // No sound detected
-            gameState.currentDirection = null;
-            gameState.currentAmplitude = 0;
-            currentDirectionDisplay.textContent = '---';
-            pitchLevel.style.width = '0%';
-            return;
-        }
-        
-        // Detect pitch using autocorrelation
-        const pitch = autoCorrelate(audioDataArray, audioContext.sampleRate);
-        
-        if (pitch > 0) {
-            // Smooth pitch value
-            gameState.lastPitch = gameState.lastPitch * PITCH_SMOOTHING + pitch * (1 - PITCH_SMOOTHING);
+        // Always update spectrogram and bars, even when paused or not playing
+        if (analyser) {
+            // Get frequency data for FFT analysis
+            analyser.getFloatFrequencyData(frequencyDataArray);
+            analyser.getFloatTimeDomainData(audioDataArray);
             
-            // Convert frequency to pitch number (1-20)
-            const pitchNumber = frequencyToPitchNumber(gameState.lastPitch);
+            // Check volume level
+            const volume = getVolume(audioDataArray);
             
-            // Log pitch number for configuration
-            console.log(`Pitch Number: ${pitchNumber} (Frequency: ${gameState.lastPitch.toFixed(2)} Hz)`);
+            // Detect pitch using FFT + HPS algorithm
+            const result = detectPitchFFT_HPS(frequencyDataArray, audioContext.sampleRate);
             
-            // Determine direction from pitch number
-            const direction = getDirectionFromPitchNumber(pitchNumber);
-            gameState.currentDirection = direction;
-            
-            // Update UI
-            updatePitchDisplay(gameState.lastPitch);
-            
-            // Update spectrogram
-            updateSpectrogram(gameState.lastPitch, volume);
+            if (result && result.frequency > 0 && volume > MIN_VOLUME_THRESHOLD) {
+                // Smooth pitch value
+                gameState.lastPitch = gameState.lastPitch * PITCH_SMOOTHING + result.frequency * (1 - PITCH_SMOOTHING);
+                gameState.currentAmplitude = volume;
+                gameState.fftPeaks = result.peaks || [];
+                gameState.harmonics = result.harmonics || [];
+                
+                // Convert frequency to musical note
+                const note = frequencyToNote(gameState.lastPitch);
+                gameState.currentNote = note;
+                
+                // Determine direction from note
+                const direction = getDirectionFromNote(note);
+                
+                if (gameState.isPlaying && !gameState.isPaused) {
+                    gameState.currentDirection = direction;
+                }
+                
+                // Update UI
+                updatePitchDisplay(gameState.lastPitch);
+                
+                // Update spectrogram (always)
+                updateSpectrogram(gameState.lastPitch, volume);
+            } else {
+                // Still update spectrogram even with no pitch
+                if (volume > MIN_VOLUME_THRESHOLD / 2) {
+                    updateSpectrogram(gameState.lastPitch || 0, volume);
+                }
+                
+                if (gameState.isPlaying && !gameState.isPaused) {
+                    gameState.currentDirection = null;
+                    gameState.currentAmplitude = 0;
+                    currentDirectionDisplay.textContent = '---';
+                    pitchLevel.style.width = '0%';
+                }
+            }
         }
     }, 50); // Check every 50ms
 }
@@ -425,86 +630,132 @@ function getVolume(buffer) {
     return Math.sqrt(sum / buffer.length);
 }
 
-function autoCorrelate(buffer, sampleRate) {
-    // Simplified and more robust autocorrelation for pitch detection
-    const SIZE = buffer.length;
-    let rms = 0;
+// FFT + HPS (Harmonic Product Spectrum) pitch detection algorithm
+function detectPitchFFT_HPS(frequencyData, sampleRate) {
+    const binCount = frequencyData.length;
+    const binSize = sampleRate / (binCount * 2); // Frequency per bin
     
-    // Calculate RMS (root mean square) for volume detection
-    for (let i = 0; i < SIZE; i++) {
-        const val = buffer[i];
-        rms += val * val;
+    // Convert frequency range to bin indices
+    const minBin = Math.floor(FREQUENCY_MIN / binSize);
+    const maxBin = Math.min(Math.ceil(FREQUENCY_MAX / binSize), binCount - 1);
+    
+    if (minBin >= maxBin) return null;
+    
+    // Create a spectrum array in the frequency range we care about
+    const spectrumLength = maxBin - minBin + 1;
+    const spectrum = new Float32Array(spectrumLength);
+    
+    // Copy and convert from dB to linear magnitude
+    for (let i = 0; i < spectrumLength; i++) {
+        const dbValue = frequencyData[minBin + i];
+        // Convert dB to linear: magnitude = 10^(dB/20)
+        spectrum[i] = Math.pow(10, dbValue / 20);
     }
-    rms = Math.sqrt(rms / SIZE);
     
-    // Not enough volume
-    if (rms < 0.01) return -1;
+    // Apply Harmonic Product Spectrum algorithm
+    // HPS: Multiply downsampled versions of the spectrum to emphasize fundamental
+    const hpsSpectrum = new Float32Array(spectrum);
     
-    // Define reasonable pitch range for human voice (80-1000 Hz)
-    const MIN_FREQUENCY = 80;  // Lowest expected frequency
-    const MAX_FREQUENCY = 1000; // Highest expected frequency
-    const MIN_SAMPLES = Math.ceil(sampleRate / MAX_FREQUENCY);
-    const MAX_SAMPLES = Math.floor(sampleRate / MIN_FREQUENCY);
-    
-    // Autocorrelation using AMDF (Average Magnitude Difference Function)
-    let best_offset = -1;
-    let best_score = Infinity;
-    
-    for (let offset = MIN_SAMPLES; offset <= MAX_SAMPLES && offset < SIZE / 2; offset++) {
-        let sum = 0;
-        
-        // Calculate average magnitude difference
-        for (let i = 0; i < SIZE / 2; i++) {
-            sum += Math.abs(buffer[i] - buffer[i + offset]);
-        }
-        
-        const score = sum / (SIZE / 2);
-        
-        // Find minimum (best match)
-        if (score < best_score) {
-            best_score = score;
-            best_offset = offset;
+    for (let harmonic = 2; harmonic <= HPS_HARMONIC_LEVELS; harmonic++) {
+        const downsampledLength = Math.floor(spectrumLength / harmonic);
+        for (let i = 0; i < downsampledLength; i++) {
+            hpsSpectrum[i] *= spectrum[i * harmonic];
         }
     }
     
-    if (best_offset === -1) return -1;
+    // Find the peak in HPS spectrum
+    let maxMagnitude = -Infinity;
+    let maxBin = -1;
     
-    // Calculate frequency from offset
-    const frequency = sampleRate / best_offset;
-    
-    // Sanity check - ensure frequency is in expected range
-    if (frequency < MIN_FREQUENCY || frequency > MAX_FREQUENCY) {
-        return -1;
+    // Look for peak in HPS spectrum (with some smoothing)
+    const smoothWindow = 3;
+    for (let i = smoothWindow; i < hpsSpectrum.length - smoothWindow; i++) {
+        // Apply simple smoothing
+        let smoothed = 0;
+        for (let j = -smoothWindow; j <= smoothWindow; j++) {
+            smoothed += hpsSpectrum[i + j];
+        }
+        smoothed /= (smoothWindow * 2 + 1);
+        
+        if (smoothed > maxMagnitude) {
+            maxMagnitude = smoothed;
+            maxBin = i;
+        }
     }
     
-    return frequency;
-}
-
-// Convert frequency to pitch number (1-20)
-function frequencyToPitchNumber(frequency) {
+    if (maxBin === -1 || maxMagnitude < 0.01) return null;
+    
+    // Calculate frequency from bin index
+    const frequency = (minBin + maxBin) * binSize;
+    
+    // Validate frequency range
     if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
         return null;
     }
     
-    // Map frequency logarithmically to pitch number 1-20
-    // Using logarithmic scale for better perceptual mapping
-    const logMin = Math.log(FREQUENCY_MIN);
-    const logMax = Math.log(FREQUENCY_MAX);
-    const logFreq = Math.log(frequency);
+    // Find peaks for debug display (top 5 peaks in original spectrum)
+    const peaks = [];
+    for (let i = 1; i < spectrum.length - 1; i++) {
+        if (spectrum[i] > spectrum[i - 1] && spectrum[i] > spectrum[i + 1]) {
+            peaks.push({
+                frequency: (minBin + i) * binSize,
+                magnitude: spectrum[i]
+            });
+        }
+    }
+    peaks.sort((a, b) => b.magnitude - a.magnitude);
     
-    const normalized = (logFreq - logMin) / (logMax - logMin);
-    const pitchNumber = Math.round(normalized * (PITCH_NUMBER_MAX - PITCH_NUMBER_MIN) + PITCH_NUMBER_MIN);
+    // Detect harmonics (multiples of fundamental)
+    const harmonics = [];
+    for (let h = 1; h <= 5; h++) {
+        const harmonicFreq = frequency * h;
+        if (harmonicFreq <= FREQUENCY_MAX) {
+            harmonics.push(harmonicFreq);
+        }
+    }
     
-    return Math.max(PITCH_NUMBER_MIN, Math.min(PITCH_NUMBER_MAX, pitchNumber));
+    return {
+        frequency,
+        magnitude: maxMagnitude,
+        peaks: peaks.slice(0, 5),
+        harmonics
+    };
 }
 
-// Determine direction from pitch number
-function getDirectionFromPitchNumber(pitchNumber) {
-    if (pitchNumber === null) return null;
+// Convert frequency to musical note
+function frequencyToNote(frequency) {
+    if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
+        return null;
+    }
     
-    // Check each direction's pitch number range
+    let closestNote = null;
+    let minDiff = Infinity;
+    
+    // Find the closest note
+    for (const [note, noteFreq] of Object.entries(NOTE_FREQUENCIES)) {
+        const diff = Math.abs(frequency - noteFreq);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closestNote = note;
+        }
+    }
+    
+    return closestNote;
+}
+
+// Get direction from musical note
+function getDirectionFromNote(note) {
+    if (!note) return null;
+    
+    const noteFreq = NOTE_FREQUENCIES[note];
+    if (!noteFreq) return null;
+    
+    // Check each direction's note range
     for (const [direction, range] of Object.entries(PITCH_RANGES)) {
-        if (pitchNumber >= range.min && pitchNumber <= range.max) {
+        const minFreq = NOTE_FREQUENCIES[range.minNote];
+        const maxFreq = NOTE_FREQUENCIES[range.maxNote];
+        
+        if (noteFreq >= minFreq && noteFreq <= maxFreq) {
             return direction;
         }
     }
@@ -513,8 +764,8 @@ function getDirectionFromPitchNumber(pitchNumber) {
 }
 
 function updatePitchDisplay(pitch) {
-    // Update pitch level bar (0-1000 Hz range)
-    const percentage = Math.min((pitch / 1000) * 100, 100);
+    // Update pitch level bar (0-800 Hz range for human voice)
+    const percentage = Math.min((pitch / FREQUENCY_MAX) * 100, 100);
     pitchLevel.style.width = `${percentage}%`;
     
     // Update direction display
@@ -524,6 +775,43 @@ function updatePitchDisplay(pitch) {
     } else {
         currentDirectionDisplay.textContent = '---';
     }
+    
+    // Update debug display if enabled
+    updateDebugDisplay();
+}
+
+// Update debug display with detailed information
+function updateDebugDisplay() {
+    if (!gameState.debugMode) return;
+    
+    const debugPanel = document.getElementById('debug-panel');
+    if (!debugPanel) return;
+    
+    let html = '<h3>Debug Information</h3>';
+    html += `<p><strong>Frequency:</strong> ${gameState.lastPitch.toFixed(2)} Hz</p>`;
+    html += `<p><strong>Note:</strong> ${gameState.currentNote || 'N/A'}</p>`;
+    html += `<p><strong>Direction:</strong> ${gameState.currentDirection || 'None'}</p>`;
+    html += `<p><strong>Amplitude:</strong> ${(gameState.currentAmplitude * 100).toFixed(1)}%</p>`;
+    html += `<p><strong>Speech Status:</strong> ${isListening ? 'Listening' : 'Not listening'}</p>`;
+    html += `<p><strong>Detected Word:</strong> ${gameState.detectedWord || 'None'}</p>`;
+    
+    if (gameState.fftPeaks && gameState.fftPeaks.length > 0) {
+        html += '<p><strong>FFT Peaks:</strong></p><ul>';
+        gameState.fftPeaks.slice(0, 3).forEach(peak => {
+            html += `<li>${peak.frequency.toFixed(2)} Hz (${(peak.magnitude * 100).toFixed(1)}%)</li>`;
+        });
+        html += '</ul>';
+    }
+    
+    if (gameState.harmonics && gameState.harmonics.length > 0) {
+        html += '<p><strong>Harmonics:</strong></p><ul>';
+        gameState.harmonics.forEach((harmonic, i) => {
+            html += `<li>H${i + 1}: ${harmonic.toFixed(2)} Hz</li>`;
+        });
+        html += '</ul>';
+    }
+    
+    debugPanel.innerHTML = html;
 }
 
 function gameLoop() {
@@ -1013,6 +1301,9 @@ function endGame(timeUp) {
         microphoneStream.getTracks().forEach(track => track.stop());
     }
     
+    // Stop speech recognition
+    stopSpeechRecognition();
+    
     // Determine success (survived for at least 20 seconds or until time ran out)
     const success = timeUp && gameState.timeRemaining === 0;
     
@@ -1149,8 +1440,7 @@ function frequencyToLogY(frequency, minFreq, maxFreq, height) {
 
 // Update direction bar meters based on current frequency
 function updateDirectionBars(frequency) {
-    const pitchNumber = frequencyToPitchNumber(frequency);
-    if (pitchNumber === null) return;
+    if (!frequency || frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) return;
     
     // Calculate how much the current pitch matches each direction range
     const bars = document.querySelectorAll('.direction-bar');
@@ -1159,22 +1449,25 @@ function updateDirectionBars(frequency) {
         const range = PITCH_RANGES[direction];
         const fill = bar.querySelector('.direction-bar-fill');
         
+        if (!range || !fill) return;
+        
+        const minFreq = NOTE_FREQUENCIES[range.minNote];
+        const maxFreq = NOTE_FREQUENCIES[range.maxNote];
+        
         // Calculate overlap/proximity to this range
         let fillPercent = 0;
-        if (pitchNumber >= range.min && pitchNumber <= range.max) {
-            // Inside range - fill based on position in range
-            const rangeSize = range.max - range.min;
-            const positionInRange = pitchNumber - range.min;
-            fillPercent = 100; // Full when in range
+        if (frequency >= minFreq && frequency <= maxFreq) {
+            // Inside range - full bar
+            fillPercent = 100;
             bar.classList.add('active');
         } else {
             bar.classList.remove('active');
             // Outside range - show proximity
             const distanceToRange = Math.min(
-                Math.abs(pitchNumber - range.min),
-                Math.abs(pitchNumber - range.max)
+                Math.abs(frequency - minFreq),
+                Math.abs(frequency - maxFreq)
             );
-            fillPercent = Math.max(0, 100 - (distanceToRange * 20));
+            fillPercent = Math.max(0, 100 - (distanceToRange / 10));
         }
         
         fill.style.width = `${fillPercent}%`;
@@ -1186,8 +1479,8 @@ function drawSpectrogram() {
     
     const width = spectrogramCanvas.width;
     const height = spectrogramCanvas.height;
-    const minFreq = 80;
-    const maxFreq = 1000;
+    const minFreq = FREQUENCY_MIN; // Use optimized range 100 Hz
+    const maxFreq = FREQUENCY_MAX; // Use optimized range 800 Hz
     
     // Clear canvas
     spectrogramCtx.fillStyle = '#000';
@@ -1197,8 +1490,8 @@ function drawSpectrogram() {
     spectrogramCtx.strokeStyle = 'rgba(100, 255, 218, 0.1)';
     spectrogramCtx.lineWidth = 1;
     
-    // Use logarithmic spacing for grid lines
-    const freqSteps = [80, 100, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+    // Use logarithmic spacing for grid lines (optimized for human voice)
+    const freqSteps = [100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800];
     freqSteps.forEach(freq => {
         const y = frequencyToLogY(freq, minFreq, maxFreq, height);
         spectrogramCtx.beginPath();
