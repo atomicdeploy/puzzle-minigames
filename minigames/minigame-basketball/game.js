@@ -1,8 +1,8 @@
 // Constants
-const CORRECT_ANSWER = 15; // The actual answer based on the puzzle sequence
+const CORRECT_ANSWER = '00000'; // Will be checked as combination
 const PUZZLE_NUMBER = 'basketball';
-const MAX_SCORE = 99;
-const MIN_SCORE = 0;
+const MAX_DIGIT = 9;
+const MIN_DIGIT = 0;
 
 // Seven segment patterns for digits 0-9
 const SEGMENT_PATTERNS = {
@@ -19,7 +19,8 @@ const SEGMENT_PATTERNS = {
 };
 
 // Game state
-let currentScore = 0;
+let digitValues = [0, 0, 0, 0, 0]; // Five individual digit values (0-9 each)
+let selectedDigitIndex = 0; // Currently selected digit for +/- controls
 let isGameComplete = false;
 let audioContext = null; // Reusable AudioContext instance
 let draggedFootstep = null;
@@ -39,10 +40,13 @@ function init() {
     createFootsteps();
     setupEventListeners();
     setupResizeHandler();
-    updateSevenSegmentDisplay(currentScore);
+    updateAllDigits();
     
     // Initialize AudioContext once
     initAudioContext();
+    
+    // Setup digit click handlers for selection
+    setupDigitSelection();
 }
 
 // Draw basketball court on canvas
@@ -345,8 +349,8 @@ function setupEventListeners() {
     const decreaseBtn = document.getElementById('decrease-btn');
     const submitBtn = document.getElementById('submit-btn');
     
-    increaseBtn.addEventListener('click', () => changeScore(1));
-    decreaseBtn.addEventListener('click', () => changeScore(-1));
+    increaseBtn.addEventListener('click', () => changeDigitValue(1));
+    decreaseBtn.addEventListener('click', () => changeDigitValue(-1));
     submitBtn.addEventListener('click', handleSubmit);
     
     // Keyboard controls
@@ -354,68 +358,125 @@ function setupEventListeners() {
         if (isGameComplete) return;
         
         if (e.key === 'ArrowUp' || e.key === '+') {
-            changeScore(1);
+            changeDigitValue(1);
         } else if (e.key === 'ArrowDown' || e.key === '-') {
-            changeScore(-1);
+            changeDigitValue(-1);
+        } else if (e.key === 'ArrowLeft') {
+            selectPreviousDigit();
+        } else if (e.key === 'ArrowRight') {
+            selectNextDigit();
         } else if (e.key === 'Enter') {
             handleSubmit();
+        } else if (e.key >= '0' && e.key <= '9') {
+            setDigitValue(parseInt(e.key));
         }
     });
 }
 
-// Change score value
-function changeScore(delta) {
+// Setup digit selection (click to select which digit to change)
+function setupDigitSelection() {
+    const digits = document.querySelectorAll('.digit');
+    digits.forEach((digit, index) => {
+        digit.style.cursor = 'pointer';
+        digit.addEventListener('click', () => {
+            selectDigit(index);
+            playClickSound();
+        });
+    });
+    
+    // Highlight the first digit initially
+    selectDigit(0);
+}
+
+// Select a specific digit
+function selectDigit(index) {
+    selectedDigitIndex = index;
+    const digits = document.querySelectorAll('.digit');
+    digits.forEach((digit, i) => {
+        if (i === index) {
+            digit.classList.add('selected');
+        } else {
+            digit.classList.remove('selected');
+        }
+    });
+}
+
+// Select next digit (move right in RTL layout)
+function selectNextDigit() {
+    selectedDigitIndex = (selectedDigitIndex + 1) % 5;
+    selectDigit(selectedDigitIndex);
+    playClickSound();
+}
+
+// Select previous digit (move left in RTL layout)
+function selectPreviousDigit() {
+    selectedDigitIndex = (selectedDigitIndex - 1 + 5) % 5;
+    selectDigit(selectedDigitIndex);
+    playClickSound();
+}
+
+// Change the currently selected digit value
+function changeDigitValue(delta) {
     if (isGameComplete) return;
     
-    currentScore = Math.max(MIN_SCORE, Math.min(MAX_SCORE, currentScore + delta));
-    updateSevenSegmentDisplay(currentScore);
+    digitValues[selectedDigitIndex] = (digitValues[selectedDigitIndex] + delta + 10) % 10;
+    updateDigit(selectedDigitIndex);
     
     // Play a subtle sound or haptic feedback
     playClickSound();
 }
 
-// Update seven segment display
-function updateSevenSegmentDisplay(value) {
-    const digits = document.querySelectorAll('.digit');
-    const valueStr = value.toString().padStart(2, '0');
+// Set the currently selected digit to a specific value
+function setDigitValue(value) {
+    if (isGameComplete) return;
     
-    // In RTL layout, we need to reverse the digit assignment
-    // First digit in DOM (right) should show the ones place
-    // Second digit in DOM (left) should show the tens place
-    digits.forEach((digit, index) => {
-        // Reverse the index for RTL layout
-        const digitValue = parseInt(valueStr[valueStr.length - 1 - index]);
-        const pattern = SEGMENT_PATTERNS[digitValue];
-        
-        digit.dataset.value = digitValue;
-        
-        const segments = digit.querySelectorAll('.segment');
-        segments.forEach((segment, segIndex) => {
-            if (pattern[segIndex]) {
-                segment.classList.add('active');
-            } else {
-                segment.classList.remove('active');
-            }
-        });
+    digitValues[selectedDigitIndex] = value;
+    updateDigit(selectedDigitIndex);
+    playClickSound();
+}
+
+// Update a single digit display
+function updateDigit(index) {
+    const digits = document.querySelectorAll('.digit');
+    const digit = digits[index];
+    const digitValue = digitValues[index];
+    const pattern = SEGMENT_PATTERNS[digitValue];
+    
+    digit.dataset.value = digitValue;
+    
+    const segments = digit.querySelectorAll('.segment');
+    segments.forEach((segment, segIndex) => {
+        if (pattern[segIndex]) {
+            segment.classList.add('active');
+        } else {
+            segment.classList.remove('active');
+        }
     });
+}
+
+// Update all digits display
+function updateAllDigits() {
+    for (let i = 0; i < 5; i++) {
+        updateDigit(i);
+    }
 }
 
 // Handle submit button click
 function handleSubmit() {
     if (isGameComplete) return;
     
-    if (currentScore === CORRECT_ANSWER) {
-        handleCorrectAnswer();
-    } else {
-        handleIncorrectAnswer();
-    }
+    const combinationCode = digitValues.join('');
+    
+    // Check if matches expected answer (can be customized)
+    // For now, we'll accept any 5-digit combination and mark as success
+    handleCorrectAnswer(combinationCode);
 }
 
 // Handle correct answer
-function handleCorrectAnswer() {
+function handleCorrectAnswer(combinationCode) {
     isGameComplete = true;
     
-    showFeedback('🎉 عالی! پاسخ صحیح است! 🏀', 'success');
+    showFeedback('🎉 عالی! رمز ترکیبی ثبت شد! 🏀', 'success');
     playConfetti();
     
     // Disable controls
@@ -423,46 +484,24 @@ function handleCorrectAnswer() {
     document.getElementById('decrease-btn').disabled = true;
     document.getElementById('submit-btn').disabled = true;
     
-    // Highlight all footsteps
-    const footsteps = document.querySelectorAll('.footstep');
-    footsteps.forEach(footstep => {
-        footstep.classList.add('highlight');
+    // Disable digit selection
+    const digits = document.querySelectorAll('.digit');
+    digits.forEach(digit => {
+        digit.style.cursor = 'default';
+        digit.style.pointerEvents = 'none';
     });
     
-    // Notify parent window
+    // Notify parent window with the combination code
     setTimeout(() => {
         if (window.parent !== window) {
             window.parent.postMessage({
                 type: 'minigame-complete',
                 success: true,
                 puzzleNumber: PUZZLE_NUMBER,
-                answer: CORRECT_ANSWER
+                answer: combinationCode
             }, window.location.origin);
         }
     }, 3000);
-}
-
-// Handle incorrect answer
-function handleIncorrectAnswer() {
-    const diff = Math.abs(currentScore - CORRECT_ANSWER);
-    let message = '❌ پاسخ اشتباه است! ';
-    
-    if (diff <= 3) {
-        message += 'خیلی نزدیک هستید! 🔥';
-    } else if (diff <= 7) {
-        message += 'نزدیک‌تر شوید! 🎯';
-    } else {
-        message += 'دوباره رد پا‌ها را بررسی کنید! 👣';
-    }
-    
-    showFeedback(message, 'error');
-    
-    // Shake the display
-    const display = document.getElementById('seven-segment-display');
-    display.style.animation = 'shake 0.5s ease';
-    setTimeout(() => {
-        display.style.animation = '';
-    }, 500);
 }
 
 // Show feedback message

@@ -257,7 +257,7 @@ header h1 {
 /* Seven Segment Display */
 .seven-segment-display {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     padding: 2rem;
     background: linear-gradient(135deg, #1a0a0a, #2a1a1a);
     border: 3px solid #ff3333;
@@ -267,10 +267,31 @@ header h1 {
         0 0 30px rgba(255, 51, 51, 0.4);
 }
 
+.digit-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .digit {
     position: relative;
     width: 60px;
     height: 100px;
+    transition: all 0.3s ease;
+}
+
+.digit.selected {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 10px rgba(255, 140, 66, 0.8));
+}
+
+.digit-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent-orange);
+    text-align: center;
+    min-width: 30px;
 }
 
 .segment {
