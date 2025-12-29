@@ -744,7 +744,7 @@ function initUI() {
 // Show welcome modal on first visit
 function showWelcomeModal() {
     const hasShown = localStorage.getItem('infernal-welcome-shown');
-    if (!hasShown) {
+    if (hasShown !== 'true') {
         const welcomeModal = document.getElementById('welcome-modal');
         welcomeModal.style.display = 'flex';
     }
