@@ -743,7 +743,7 @@ function addARMarkerInfo() {
     markerInfo.className = 'ar-marker-info';
     markerInfo.innerHTML = `
         <p>📱 به دنبال مارکر Hiro می‌گردید؟</p>
-        <p><a href="https://github.com/AR-js-org/AR.js/blob/master/data/images/hiro.png" target="_blank">دانلود مارکر Hiro</a></p>
+        <p><a href="https://github.com/AR-js-org/AR.js/blob/master/data/images/hiro.png" target="_blank" rel="noopener noreferrer">دانلود مارکر Hiro</a></p>
     `;
     arContainer.appendChild(markerInfo);
 }
