@@ -1,4 +1,5 @@
 // Welcome Page Logic for Infernal Puzzle Game
+import { api } from './api.js';
 
 // Global state
 const state = {
@@ -6,7 +7,8 @@ const state = {
     registrationData: null,
     signinData: null,
     otpCode: null,
-    profilePicture: null
+    profilePicture: null,
+    otpSession: null // Store OTP session from backend
 };
 
 // Screen management
@@ -114,11 +116,48 @@ window.handleProfileUpload = (event) => {
 };
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize Persian date picker
+    initializePersianDatePicker();
+    
+    // Check if user is already logged in - verify with backend
+    const authToken = localStorage.getItem('auth-token');
+    const cachedUser = localStorage.getItem('infernal-current-user');
+    
+    if (authToken && cachedUser) {
+        try {
+            // Verify token with backend
+            const userData = JSON.parse(cachedUser);
+            
+            // Try to get fresh user data from backend
+            try {
+                const response = await api.getUserProfile();
+                if (response.success && response.user) {
+                    // Update cached data
+                    localStorage.setItem('infernal-current-user', JSON.stringify(response.user));
+                    redirectToGame(response.user);
+                    return;
+                }
+            } catch (error) {
+                // If backend call fails, use cached data
+                console.warn('Could not verify user with backend, using cached data', error);
+            }
+            
+            // If backend verification failed but we have cached data, use it
+            redirectToGame(userData);
+            return;
+        } catch (error) {
+            console.error('Failed to parse user data:', error);
+            // Clear corrupted data
+            localStorage.removeItem('auth-token');
+            localStorage.removeItem('infernal-current-user');
+        }
+    }
+    
     // Sign In form handler
     const signinForm = document.getElementById('signin-form');
     if (signinForm) {
-        signinForm.addEventListener('submit', (e) => {
+        signinForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const phone = document.getElementById('signin-phone').value;
@@ -131,21 +170,27 @@ document.addEventListener('DOMContentLoaded', () => {
             
             state.signinData = { phone };
             
-            // Send OTP (simulated)
-            sendOTP(phone, 'signin');
+            // Send OTP
+            await sendOTP(phone, 'signin');
         });
     }
     
     // Registration form handler
     const registrationForm = document.getElementById('registration-form');
     if (registrationForm) {
-        registrationForm.addEventListener('submit', (e) => {
+        registrationForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Get birthday from dropdowns
+            const year = document.getElementById('birthday-year')?.value;
+            const month = document.getElementById('birthday-month')?.value;
+            const day = document.getElementById('birthday-day')?.value;
+            const birthday = year && month && day ? `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}` : '';
             
             // Collect form data
             const formData = {
                 name: document.getElementById('name').value,
-                birthday: document.getElementById('birthday').value,
+                birthday: birthday,
                 gender: document.querySelector('input[name="gender"]:checked')?.value,
                 educationLevel: document.getElementById('education-level').value,
                 fieldOfStudy: document.getElementById('field-of-study').value,
@@ -162,10 +207,45 @@ document.addEventListener('DOMContentLoaded', () => {
             state.registrationData = formData;
             
             // Send OTP
-            sendOTP(formData.phone, 'registration');
+            await sendOTP(formData.phone, 'registration');
         });
     }
 });
+
+// Helper function to redirect to game with welcome message
+function redirectToGame(userData) {
+    const welcomeHeading = document.createElement('h1');
+    welcomeHeading.style.cssText = 'font-size: 2rem; margin-bottom: 1rem;';
+    welcomeHeading.textContent = `خوش آمدید ${userData.name}!`;
+    
+    const welcomeMessage = document.createElement('p');
+    welcomeMessage.style.cssText = 'font-size: 1.2rem; color: var(--text-secondary);';
+    welcomeMessage.textContent = 'در حال انتقال به بازی...';
+    
+    const welcomeBackDiv = document.createElement('div');
+    welcomeBackDiv.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-dark);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 20000;
+        color: white;
+        text-align: center;
+    `;
+    welcomeBackDiv.appendChild(welcomeHeading);
+    welcomeBackDiv.appendChild(welcomeMessage);
+    document.body.appendChild(welcomeBackDiv);
+    
+    setTimeout(() => {
+        window.location.href = '/index.html';
+    }, 2000);
+}
 
 // Validate phone number
 function validatePhoneNumber(phone) {
@@ -241,36 +321,41 @@ function showError(fieldId, message) {
     }
 }
 
-// Send OTP (simulated)
-function sendOTP(phone, type) {
-    // Generate cryptographically secure random 6-digit OTP
-    const randomValues = new Uint32Array(1);
-    crypto.getRandomValues(randomValues);
-    state.otpCode = (100000 + (randomValues[0] % 900000)).toString();
-    
-    console.log(`OTP for ${phone}: ${state.otpCode}`); // For development/testing
-    
-    // In production, this would call a backend API to send SMS
-    // For now, we'll just simulate it
-    
-    // Show OTP screen
-    if (type === 'signin') {
-        document.getElementById('signin-phone-display').textContent = phone;
-        showScreen('otp-signin');
-    } else if (type === 'registration') {
-        document.getElementById('registration-phone-display').textContent = phone;
-        showScreen('otp-registration');
+// Send OTP via backend API
+async function sendOTP(phone, type) {
+    try {
+        // Show loading state
+        showNotification('در حال ارسال کد...', 'info');
+        
+        // Call backend API to send OTP
+        const response = await api.sendOTP(phone);
+        state.otpSession = response.session; // Store session for verification
+        
+        console.log(`OTP sent to ${phone}`); // For development
+        
+        // Show OTP screen
+        if (type === 'signin') {
+            document.getElementById('signin-phone-display').textContent = phone;
+            showScreen('otp-signin');
+        } else if (type === 'registration') {
+            document.getElementById('registration-phone-display').textContent = phone;
+            showScreen('otp-registration');
+        }
+        
+        // Setup OTP input handlers
+        setupOTPInputs(type === 'signin' ? 'otp-signin-screen' : 'otp-registration-screen');
+        
+        showNotification('کد تایید ارسال شد', 'success');
+    } catch (error) {
+        console.error('Error sending OTP:', error);
+        showNotification(error.message || 'خطا در ارسال کد تایید', 'error');
     }
-    
-    // Setup OTP input handlers
-    setupOTPInputs(type === 'signin' ? 'otp-signin-screen' : 'otp-registration-screen');
 }
 
 // Resend OTP
-window.resendOTP = (type) => {
+window.resendOTP = async (type) => {
     const phone = type === 'signin' ? state.signinData.phone : state.registrationData.phone;
-    sendOTP(phone, type);
-    showNotification('کد تایید مجدد ارسال شد');
+    await sendOTP(phone, type);
 };
 
 // Setup OTP input handlers
@@ -333,7 +418,7 @@ function setupOTPInputs(screenId) {
 }
 
 // Verify Sign In OTP
-window.verifySignInOTP = () => {
+window.verifySignInOTP = async () => {
     const screen = document.getElementById('otp-signin-screen');
     const inputs = screen.querySelectorAll('.otp-input');
     const enteredOTP = Array.from(inputs).map(input => input.value).join('');
@@ -343,20 +428,30 @@ window.verifySignInOTP = () => {
         return;
     }
     
-    // Verify OTP
-    if (enteredOTP === state.otpCode) {
-        // In production, this would verify with backend and get user data
-        // For now, we'll load from localStorage
-        const existingUser = loadUserData(state.signinData.phone);
+    try {
+        // Show loading state
+        showNotification('در حال تایید...', 'info');
         
-        if (existingUser) {
-            showSuccessScreen(existingUser);
+        // Verify OTP with backend
+        const response = await api.verifyOTP(state.signinData.phone, enteredOTP);
+        
+        if (response.success && response.user) {
+            // Store auth token
+            if (response.token) {
+                localStorage.setItem('auth-token', response.token);
+            }
+            
+            // Store user data in localStorage as cache (backend is source of truth)
+            localStorage.setItem('infernal-current-user', JSON.stringify(response.user));
+            
+            showSuccessScreen(response.user);
         } else {
             showNotification('حساب کاربری یافت نشد', 'error');
             setTimeout(() => showScreen('signin'), 2000);
         }
-    } else {
-        showNotification('کد تایید اشتباه است', 'error');
+    } catch (error) {
+        console.error('OTP verification error:', error);
+        showNotification(error.message || 'کد تایید اشتباه است', 'error');
         // Clear inputs
         inputs.forEach(input => input.value = '');
         inputs[0].focus();
@@ -364,7 +459,7 @@ window.verifySignInOTP = () => {
 };
 
 // Verify Registration OTP
-window.verifyRegistrationOTP = () => {
+window.verifyRegistrationOTP = async () => {
     const screen = document.getElementById('otp-registration-screen');
     const inputs = screen.querySelectorAll('.otp-input');
     const enteredOTP = Array.from(inputs).map(input => input.value).join('');
@@ -374,58 +469,47 @@ window.verifyRegistrationOTP = () => {
         return;
     }
     
-    // Verify OTP
-    if (enteredOTP === state.otpCode) {
-        // Generate player ID
-        const playerId = generatePlayerId();
+    try {
+        // Show loading state
+        showNotification('در حال ثبت نام...', 'info');
         
-        // Create user object
+        // First verify OTP
+        const verifyResponse = await api.verifyOTP(state.registrationData.phone, enteredOTP);
+        
+        if (!verifyResponse.success) {
+            throw new Error('کد تایید اشتباه است');
+        }
+        
+        // Then register the user
         const userData = {
             ...state.registrationData,
-            playerId,
-            createdAt: new Date().toISOString()
+            otp: enteredOTP,
+            session: state.otpSession
         };
         
-        // Save user data
-        saveUserData(userData);
+        const registerResponse = await api.register(userData);
         
-        // Show success screen
-        showSuccessScreen(userData);
-    } else {
-        showNotification('کد تایید اشتباه است', 'error');
+        if (registerResponse.success && registerResponse.user) {
+            // Store auth token
+            if (registerResponse.token) {
+                localStorage.setItem('auth-token', registerResponse.token);
+            }
+            
+            // Store user data in localStorage as cache (backend is source of truth)
+            localStorage.setItem('infernal-current-user', JSON.stringify(registerResponse.user));
+            
+            showSuccessScreen(registerResponse.user);
+        } else {
+            throw new Error('خطا در ثبت نام');
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        showNotification(error.message || 'خطا در ثبت نام', 'error');
         // Clear inputs
         inputs.forEach(input => input.value = '');
         inputs[0].focus();
     }
 };
-
-// Generate player ID
-function generatePlayerId() {
-    const prefix = 'INF';
-    const timestamp = Date.now().toString(36).toUpperCase();
-    // Use crypto-secure randomness for the random segment
-    const randomArray = new Uint32Array(1);
-    window.crypto.getRandomValues(randomArray);
-    const random = randomArray[0].toString(36).toUpperCase().padStart(4, '0').slice(0, 4);
-    return `${prefix}-${timestamp}-${random}`;
-}
-
-// Save user data
-function saveUserData(userData) {
-    // Save to localStorage (in production, this would be saved to backend)
-    const users = JSON.parse(localStorage.getItem('infernal-users') || '{}');
-    users[userData.phone] = userData;
-    localStorage.setItem('infernal-users', JSON.stringify(users));
-    
-    // Save current user session
-    localStorage.setItem('infernal-current-user', JSON.stringify(userData));
-}
-
-// Load user data
-function loadUserData(phone) {
-    const users = JSON.parse(localStorage.getItem('infernal-users') || '{}');
-    return users[phone] || null;
-}
 
 // Show success screen
 function showSuccessScreen(userData) {
@@ -504,44 +588,3 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-// Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is already logged in
-    const currentUser = localStorage.getItem('infernal-current-user');
-    if (currentUser) {
-        try {
-            const userData = JSON.parse(currentUser);
-            // Show a quick welcome back message and redirect
-            const welcomeBackDiv = document.createElement('div');
-            welcomeBackDiv.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: var(--bg-dark);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                z-index: 20000;
-                color: white;
-            text-align: center;
-        `;
-        welcomeBackDiv.innerHTML = `
-            <h1 style="font-size: 2rem; margin-bottom: 1rem;">خوش آمدید ${userData.name}!</h1>
-            <p style="font-size: 1.2rem; color: var(--text-secondary);">در حال انتقال به بازی...</p>
-        `;
-        document.body.appendChild(welcomeBackDiv);
-        
-        setTimeout(() => {
-            window.location.href = '/index.html';
-        }, 2000);
-        } catch (error) {
-            console.error('Failed to parse user data:', error);
-            // Clear corrupted data
-            localStorage.removeItem('infernal-current-user');
-        }
-    }
-});
