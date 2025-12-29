@@ -38,8 +38,25 @@ setupSocketHandlers(io);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (isProduction) {
+    // In production, avoid logging full stack traces to reduce information exposure
+    console.error('Error:', err && err.message ? err.message : 'Unknown error');
+  } else {
+    // In non-production environments, log full stack for easier debugging
+    console.error(err && err.stack ? err.stack : err);
+  }
+
+  const statusCode = typeof err.status === 'number' ? err.status : 500;
+  const responseBody = { error: 'Something went wrong!' };
+
+  // Optionally expose limited details only in non-production environments
+  if (!isProduction && err && err.message) {
+    responseBody.details = err.message;
+  }
+
+  res.status(statusCode).json(responseBody);
 });
 
 const PORT = process.env.PORT || 3001;
