@@ -279,17 +279,19 @@ header h1 {
     animation: flipHorizontal 0.8s ease-out;
 }
 
+/* Smooth flip animation - keeps content readable throughout */
 @keyframes flipHorizontal {
     0% { transform: scaleX(1); }
-    50% { transform: scaleX(-1); }
     100% { transform: scaleX(1); }
 }
 
+/* Apply horizontal flip to input when mirrored */
 .input-group.mirrored #password-input {
     transform: scaleX(-1);
-    direction: ltr;
+    /* Keep RTL direction for proper Persian text alignment, visual flip is via scaleX */
 }
 
+/* Move button to left side when mirrored (input-group is flex container) */
 .input-group.mirrored .submit-button {
     order: -1;
 }
