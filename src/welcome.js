@@ -33,19 +33,84 @@ window.showRegistration = () => showScreen('registration');
 
 // Profile picture upload handler
 window.handleProfileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            state.profilePicture = e.target.result;
-            const previewImg = document.getElementById('profile-preview-img');
-            const placeholder = document.getElementById('profile-placeholder');
+    const input = event && event.target ? event.target : null;
+    const file = input && input.files && input.files[0] ? input.files[0] : null;
+
+    if (!file) {
+        return;
+    }
+
+    // Maximum allowed file size: 500 KB
+    const MAX_SIZE_BYTES = 500 * 1024;
+
+    // Helper to handle invalid file cases: show error, reset input/state/preview.
+    const handleInvalidFile = (message) => {
+        if (typeof showError === 'function' && input && input.id) {
+            showError(input.id, message);
+        }
+        if (input) {
+            input.value = '';
+        }
+        state.profilePicture = null;
+        const previewImg = document.getElementById('profile-preview-img');
+        const placeholder = document.getElementById('profile-placeholder');
+        if (previewImg && placeholder) {
+            previewImg.style.display = 'none';
+            placeholder.style.display = 'block';
+        }
+    };
+
+    // Validate file size
+    if (typeof file.size === 'number' && file.size > MAX_SIZE_BYTES) {
+        handleInvalidFile('حجم تصویر پروفایل نباید بیشتر از ۵۰۰ کیلوبایت باشد');
+        return;
+    }
+
+    // Validate file type against the input's accept attribute (if present)
+    if (input && typeof input.accept === 'string' && input.accept.trim() !== '') {
+        const acceptedTypes = input.accept
+            .split(',')
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+
+        const mimeType = file.type || '';
+        const fileName = (file.name || '').toLowerCase();
+
+        const matchesAccept = acceptedTypes.some((accept) => {
+            const a = accept.toLowerCase();
+            // Extension pattern, e.g. ".png"
+            if (a.startsWith('.')) {
+                return fileName.endsWith(a);
+            }
+            // Wildcard MIME type, e.g. "image/*"
+            if (a.endsWith('/*')) {
+                const base = a.slice(0, a.indexOf('/'));
+                return mimeType.toLowerCase().startsWith(base + '/');
+            }
+            // Exact MIME type, e.g. "image/png"
+            return mimeType.toLowerCase() === a;
+        });
+
+        if (!matchesAccept) {
+            handleInvalidFile('نوع فایل انتخاب‌شده برای تصویر پروفایل مجاز نیست');
+            return;
+        }
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        state.profilePicture = e.target.result;
+        const previewImg = document.getElementById('profile-preview-img');
+        const placeholder = document.getElementById('profile-placeholder');
+        if (previewImg) {
             previewImg.src = e.target.result;
             previewImg.style.display = 'block';
+        }
+        if (placeholder) {
             placeholder.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
-    }
+        }
+    };
+    reader.readAsDataURL(file);
 };
 
 // Initialize on load
