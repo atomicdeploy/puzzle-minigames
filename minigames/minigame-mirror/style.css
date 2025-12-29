@@ -612,14 +612,6 @@ header h1 {
         font-size: 1.6rem;
     }
     
-    .mirror-icon {
-        font-size: 4.5rem;
-    }
-    
-    .instruction-text {
-        font-size: 1.2rem;
-    }
-    
     #password-input {
         font-size: 1.1rem;
         padding: 1rem 1.2rem;
@@ -660,14 +652,6 @@ header h1 {
         padding: 1rem;
     }
     
-    .mirror-icon {
-        font-size: 3.5rem;
-    }
-    
-    .instruction-text {
-        font-size: 1rem;
-    }
-    
     .input-group {
         flex-direction: column;
         gap: 0.8rem;
@@ -682,7 +666,6 @@ header h1 {
         font-size: 1rem;
         padding: 0.9rem 1.5rem;
         width: 100%;
-        justify-content: center;
     }
     
     .success-message {
@@ -703,10 +686,6 @@ header h1 {
     .feedback {
         font-size: 1.1rem;
         padding: 1rem 1.5rem;
-    }
-    
-    .hint-text {
-        font-size: 0.95rem;
     }
 }
 
