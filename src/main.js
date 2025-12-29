@@ -698,7 +698,7 @@ function toggleARMode() {
                     // Arrange chests in a 3x3 grid
                     const row = Math.floor((i - 1) / 3);
                     const col = (i - 1) % 3;
-                    chest.position.set((col - 1) * 0.8, 0, (row - 1) * 0.8);
+                    chest.position.set((col - 1) * 0.8, chest.position.y, (row - 1) * 0.8);
                     
                     // Add click interaction
                     chest.userData.chestNumber = i;
