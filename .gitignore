@@ -15,6 +15,7 @@ ios/
 # Environment
 .env
 .env.local
+.env.*.local
 
 # IDE
 .vscode/
@@ -43,3 +44,11 @@ coverage/
 # PWA
 sw.js
 workbox-*.js
+
+# SSL/TLS Certificates
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
