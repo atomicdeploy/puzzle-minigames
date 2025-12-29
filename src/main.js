@@ -707,7 +707,9 @@ function initUI() {
     }
     
     // Store the last focused element for focus management
+    // Use a stack to handle nested overlays (menu -> contact page or menu -> modal)
     let lastFocusedElement = null;
+    let focusBeforeMenu = null;
     
     // Delay for focus after DOM updates/animations (in milliseconds)
     const FOCUS_DELAY = 100;
@@ -732,9 +734,9 @@ function initUI() {
             else if (sideMenu.classList.contains('open')) {
                 sideMenu.classList.remove('open');
                 menuOverlay.classList.remove('active');
-                if (lastFocusedElement) {
-                    lastFocusedElement.focus();
-                    lastFocusedElement = null;
+                if (focusBeforeMenu) {
+                    focusBeforeMenu.focus();
+                    focusBeforeMenu = null;
                 }
             }
             // Close contact page if open
@@ -749,12 +751,14 @@ function initUI() {
         }
     };
     
+    // Remove existing escape key listener if it exists (prevent duplicates)
+    document.removeEventListener('keydown', handleEscapeKey);
     // Add global escape key listener
     document.addEventListener('keydown', handleEscapeKey);
     
     // Menu toggle
     menuBtn.addEventListener('click', () => {
-        lastFocusedElement = document.activeElement;
+        focusBeforeMenu = document.activeElement;
         sideMenu.classList.add('open');
         menuOverlay.classList.add('active');
         // Focus first menu item for keyboard navigation
@@ -764,18 +768,18 @@ function initUI() {
     menuCloseBtn.addEventListener('click', () => {
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
-        if (lastFocusedElement) {
-            lastFocusedElement.focus();
-            lastFocusedElement = null;
+        if (focusBeforeMenu) {
+            focusBeforeMenu.focus();
+            focusBeforeMenu = null;
         }
     });
     
     menuOverlay.addEventListener('click', () => {
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
-        if (lastFocusedElement) {
-            lastFocusedElement.focus();
-            lastFocusedElement = null;
+        if (focusBeforeMenu) {
+            focusBeforeMenu.focus();
+            focusBeforeMenu = null;
         }
     });
     
@@ -825,7 +829,8 @@ function initUI() {
     // Contact page
     contactLink.addEventListener('click', (e) => {
         e.preventDefault();
-        lastFocusedElement = document.activeElement;
+        // Store focus before menu was opened (not current menu link)
+        lastFocusedElement = focusBeforeMenu || document.activeElement;
         contactPage.style.display = 'block';
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
@@ -848,7 +853,8 @@ function initUI() {
     
     aboutLink.addEventListener('click', (e) => {
         e.preventDefault();
-        lastFocusedElement = document.activeElement;
+        // Store focus before menu was opened (not current menu link)
+        lastFocusedElement = focusBeforeMenu || document.activeElement;
         showAboutModal();
         sideMenu.classList.remove('open');
         menuOverlay.classList.remove('active');
