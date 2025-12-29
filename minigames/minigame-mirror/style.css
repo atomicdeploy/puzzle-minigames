@@ -112,8 +112,12 @@ header h1 {
 
 .stage-content {
     width: 100%;
-    max-width: 600px;
+    max-width: 700px;
     animation: fadeInUp 0.8s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
 }
 
 @keyframes fadeInUp {
@@ -129,142 +133,172 @@ header h1 {
 
 /* Stage 1: Password Input */
 
-/* Elegant HTML/CSS Mirror */
+/* Professional Dome-Shaped Mirror */
 .mirror-container {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 2rem;
+    justify-content: center;
+    margin-bottom: 3rem;
     cursor: pointer;
-    transition: transform 0.3s ease;
+    perspective: 1000px;
 }
 
-.mirror-container:hover {
-    transform: scale(1.05);
-}
-
-.mirror-frame {
+.mirror-dome {
     position: relative;
-    width: 200px;
+    width: 280px;
     height: 280px;
-    background: linear-gradient(145deg, #8b6f47, #6d5837);
-    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease;
+}
+
+.mirror-container:hover .mirror-dome {
+    transform: scale(1.05) rotateY(5deg);
+}
+
+/* Glass dome surface */
+.mirror-glass {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: 
+        radial-gradient(circle at 35% 35%, 
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(240, 245, 255, 0.9) 20%,
+            rgba(220, 230, 245, 0.85) 40%,
+            rgba(200, 215, 235, 0.8) 60%,
+            rgba(180, 200, 225, 0.75) 80%,
+            rgba(160, 185, 215, 0.7) 100%);
     box-shadow: 
-        0 10px 40px rgba(0, 0, 0, 0.5),
-        inset 0 2px 10px rgba(255, 215, 150, 0.3),
-        inset 0 -2px 10px rgba(0, 0, 0, 0.3);
-    animation: mirrorFloat 3s ease-in-out infinite;
+        /* Outer glow */
+        0 0 40px rgba(200, 220, 255, 0.4),
+        0 0 80px rgba(180, 200, 240, 0.3),
+        /* 3D depth */
+        inset -10px -10px 40px rgba(0, 0, 0, 0.15),
+        inset 10px 10px 40px rgba(255, 255, 255, 0.8),
+        /* Glass edge highlight */
+        inset 0 0 20px rgba(255, 255, 255, 0.6);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    animation: mirrorFloat 4s ease-in-out infinite;
 }
 
 @keyframes mirrorFloat {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-10px) rotate(2deg); }
+    0%, 100% { 
+        transform: translateY(0px) rotateX(0deg);
+        box-shadow: 
+            0 0 40px rgba(200, 220, 255, 0.4),
+            0 0 80px rgba(180, 200, 240, 0.3),
+            inset -10px -10px 40px rgba(0, 0, 0, 0.15),
+            inset 10px 10px 40px rgba(255, 255, 255, 0.8),
+            inset 0 0 20px rgba(255, 255, 255, 0.6);
+    }
+    50% { 
+        transform: translateY(-12px) rotateX(2deg);
+        box-shadow: 
+            0 15px 50px rgba(200, 220, 255, 0.5),
+            0 0 90px rgba(180, 200, 240, 0.4),
+            inset -10px -10px 40px rgba(0, 0, 0, 0.15),
+            inset 10px 10px 40px rgba(255, 255, 255, 0.8),
+            inset 0 0 20px rgba(255, 255, 255, 0.6);
+    }
 }
 
-/* Mirror ornaments at corners */
-.mirror-ornament {
+/* Animated glass shine effect */
+.glass-shine {
     position: absolute;
-    width: 30px;
-    height: 30px;
-    background: radial-gradient(circle, #d4af37, #8b6f47);
-    border-radius: 50%;
-    box-shadow: 
-        0 2px 5px rgba(0, 0, 0, 0.4),
-        inset 0 1px 3px rgba(255, 215, 150, 0.5);
-}
-
-.mirror-ornament.top-left {
-    top: -5px;
-    left: -5px;
-}
-
-.mirror-ornament.top-right {
-    top: -5px;
-    right: -5px;
-}
-
-.mirror-ornament.bottom-left {
-    bottom: -5px;
-    left: -5px;
-}
-
-.mirror-ornament.bottom-right {
-    bottom: -5px;
-    right: -5px;
-}
-
-/* Mirror surface */
-.mirror-surface {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, 
-        rgba(200, 220, 255, 0.9) 0%,
-        rgba(220, 240, 255, 0.95) 25%,
-        rgba(240, 250, 255, 1) 50%,
-        rgba(220, 240, 255, 0.95) 75%,
-        rgba(200, 220, 255, 0.9) 100%);
-    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-    overflow: hidden;
-    box-shadow: 
-        inset 0 0 30px rgba(255, 255, 255, 0.8),
-        inset 0 0 60px rgba(150, 200, 255, 0.5),
-        0 5px 20px rgba(0, 0, 0, 0.3);
-}
-
-/* Animated shine effect */
-.mirror-shine {
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
+    top: -30%;
+    left: -30%;
+    width: 160%;
+    height: 160%;
     background: linear-gradient(
-        45deg,
-        transparent 30%,
+        135deg,
+        transparent 0%,
+        transparent 35%,
+        rgba(255, 255, 255, 0.6) 45%,
         rgba(255, 255, 255, 0.8) 50%,
+        rgba(255, 255, 255, 0.6) 55%,
+        transparent 65%,
+        transparent 100%
+    );
+    animation: glassShine 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes glassShine {
+    0% { transform: translate(-50%, -50%) rotate(45deg); }
+    100% { transform: translate(50%, 50%) rotate(45deg); }
+}
+
+/* Top reflection highlight */
+.glass-reflection-top {
+    position: absolute;
+    top: 15%;
+    left: 15%;
+    width: 40%;
+    height: 30%;
+    border-radius: 50%;
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.5) 40%,
         transparent 70%
     );
-    animation: shine 3s ease-in-out infinite;
+    filter: blur(8px);
+    animation: reflectionPulse 3s ease-in-out infinite;
 }
 
-@keyframes shine {
-    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-}
-
-/* Reflection sparkles */
-.mirror-reflection {
+/* Bottom reflection */
+.glass-reflection-bottom {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6) 0%, transparent 15%),
-        radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.4) 0%, transparent 10%),
-        radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.5) 0%, transparent 12%);
-    animation: sparkle 2s ease-in-out infinite;
+    bottom: 20%;
+    right: 20%;
+    width: 30%;
+    height: 25%;
+    border-radius: 50%;
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        transparent 80%
+    );
+    filter: blur(6px);
+    animation: reflectionPulse 3s ease-in-out infinite 0.5s;
 }
 
-@keyframes sparkle {
-    0%, 100% { opacity: 0.6; }
+@keyframes reflectionPulse {
+    0%, 100% { opacity: 0.7; }
     50% { opacity: 1; }
 }
 
-/* Mirror label */
-.mirror-label {
-    margin-top: 1rem;
-    font-size: 1rem;
-    color: var(--accent-2);
-    font-weight: 600;
-    animation: pulse 2s ease-in-out infinite;
+/* Metallic base */
+.mirror-base {
+    position: absolute;
+    bottom: -20px;
+    width: 200px;
+    height: 35px;
+    background: linear-gradient(
+        180deg,
+        #8a9ba8 0%,
+        #6d7f8c 30%,
+        #4a5a67 60%,
+        #2c3843 100%
+    );
+    border-radius: 50%;
+    box-shadow: 
+        0 5px 15px rgba(0, 0, 0, 0.5),
+        inset 0 2px 5px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.5);
+    z-index: -1;
 }
 
 /* Mirror clicked state */
-.mirror-container.clicked .mirror-frame {
+.mirror-container.clicked .mirror-dome {
     animation: mirrorSpin 1s ease-out;
 }
 
@@ -296,86 +330,73 @@ header h1 {
     order: -1;
 }
 
-.instruction-text {
-    text-align: center;
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-    color: var(--text-primary);
-    line-height: 1.6;
-}
-
 .input-group {
     display: flex;
     gap: 1rem;
     margin-bottom: 1.5rem;
+    justify-content: center;
+    align-items: center;
 }
 
 #password-input {
     flex: 1;
+    max-width: 500px;
     padding: 1.2rem 1.5rem;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     text-align: center;
-    background: linear-gradient(145deg, rgba(15, 14, 23, 0.9), rgba(26, 26, 46, 0.9));
-    border: 2px solid rgba(253, 121, 168, 0.3);
-    border-radius: 1rem;
-    color: var(--text-primary);
+    background: #ffffff;
+    border: 3px dashed #d63031;
+    border-radius: 0.5rem;
+    color: #d63031;
     font-family: 'Vazirmatn', sans-serif;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 
-        inset 0 2px 10px rgba(0, 0, 0, 0.5),
-        0 0 0 1px rgba(253, 121, 168, 0.2),
-        0 5px 20px rgba(0, 0, 0, 0.3);
-    position: relative;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
 }
 
 #password-input:focus {
     outline: none;
-    border-color: var(--accent-2);
-    background: linear-gradient(145deg, rgba(20, 19, 30, 0.95), rgba(30, 30, 50, 0.95));
+    border-color: #c0392b;
+    background: #fff;
     box-shadow: 
-        inset 0 2px 15px rgba(0, 0, 0, 0.6),
-        0 0 0 2px var(--accent-2),
-        0 0 30px rgba(78, 205, 196, 0.6),
-        0 10px 30px rgba(0, 0, 0, 0.5);
+        0 0 0 3px rgba(214, 48, 49, 0.2),
+        0 5px 20px rgba(214, 48, 49, 0.3);
     transform: translateY(-2px);
 }
 
-/* Glow effect on type */
+/* Enhanced style when typing */
 #password-input:not(:placeholder-shown) {
-    border-color: rgba(253, 121, 168, 0.6);
+    border-color: #c0392b;
     box-shadow: 
-        inset 0 2px 10px rgba(0, 0, 0, 0.5),
-        0 0 0 2px rgba(253, 121, 168, 0.4),
-        0 0 20px rgba(253, 121, 168, 0.4),
-        0 5px 25px rgba(0, 0, 0, 0.4);
+        0 0 0 3px rgba(214, 48, 49, 0.15),
+        0 3px 15px rgba(214, 48, 49, 0.2);
 }
 
 #password-input::placeholder {
-    color: var(--text-secondary);
-    opacity: 0.6;
+    color: rgba(214, 48, 49, 0.4);
+    font-weight: 500;
 }
 
 .submit-button {
-    padding: 1.2rem 2.5rem;
-    font-size: 1.3rem;
+    padding: 1.2rem 3rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
     color: white;
     border: none;
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     cursor: pointer;
     font-family: 'Vazirmatn', sans-serif;
     transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    box-shadow: 0 5px 20px rgba(108, 92, 231, 0.4);
     white-space: nowrap;
+    min-width: 120px;
 }
 
-.submit-button:hover, .submit-button:active {
+.submit-button:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(108, 92, 231, 0.6);
+    box-shadow: 0 8px 25px rgba(108, 92, 231, 0.5);
+    background: linear-gradient(135deg, #5f4fd1, #9088e8);
 }
 
 .submit-button:active {
@@ -383,7 +404,7 @@ header h1 {
 }
 
 .submit-button:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
     transform: none;
 }
