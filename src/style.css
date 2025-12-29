@@ -747,6 +747,8 @@ header h1 {
     height: 1.5rem;
     min-width: 30px;
     color: var(--primary-color);
+    display: flex;
+    margin: 0 auto;
 }
 
 .menu-item:hover, .menu-item.active {
