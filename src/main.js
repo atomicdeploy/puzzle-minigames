@@ -711,6 +711,14 @@ function initUI() {
         localStorage.setItem('infernal-welcome-shown', 'true');
     });
     
+    // Close welcome modal when clicking on the backdrop (outside modal content)
+    welcomeModal.addEventListener('click', (event) => {
+        if (event.target === welcomeModal) {
+            welcomeModal.style.display = 'none';
+            localStorage.setItem('infernal-welcome-shown', 'true');
+        }
+    });
+    
     // Contact page
     contactLink.addEventListener('click', (e) => {
         e.preventDefault();
