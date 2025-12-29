@@ -6,6 +6,12 @@ const BALL_SPEED = 3;
 const GRAVITY = 0.5;
 const PITCH_SMOOTHING = 0.7; // Higher = smoother but slower response
 const MIN_VOLUME_THRESHOLD = 0.01; // Minimum volume to detect sound
+const GRID_SIZE = 50; // Size of grid cells for radar effect
+const AMPLITUDE_SPEED_MULTIPLIER = 15; // How much amplitude affects speed
+
+// Check for demo mode (for testing without microphone)
+const urlParams = new URLSearchParams(window.location.search);
+const DEMO_MODE = urlParams.has('demo');
 
 // Pitch ranges (in Hz) mapped to directions
 const PITCH_RANGES = {
@@ -15,10 +21,21 @@ const PITCH_RANGES = {
     RIGHT: { min: 400, max: 1000, name: 'راست ➡️' }  // High pitch
 };
 
+// Tutorial targets (positions on grid where ball needs to go)
+const TUTORIAL_STEPS = [
+    { direction: 'RIGHT', target: { x: 0.75, y: 0.5 }, name: 'راست', instruction: 'صدای بالا تولید کنید (مثل سوت)' },
+    { direction: 'LEFT', target: { x: 0.25, y: 0.5 }, name: 'چپ', instruction: 'صدای پایین تولید کنید (مثل همهمه)' },
+    { direction: 'UP', target: { x: 0.5, y: 0.25 }, name: 'بالا', instruction: 'صدای متوسط-بالا تولید کنید' },
+    { direction: 'DOWN', target: { x: 0.5, y: 0.75 }, name: 'پایین', instruction: 'صدای متوسط-پایین تولید کنید' }
+];
+
 // Game state
 let gameState = {
     isPlaying: false,
     isPaused: false,
+    isTutorialMode: true,
+    tutorialStep: 0,
+    tutorialComplete: false,
     score: 0,
     timeRemaining: GAME_DURATION,
     ball: {
@@ -28,7 +45,9 @@ let gameState = {
         vy: 0
     },
     currentDirection: null,
-    lastPitch: 0
+    lastPitch: 0,
+    currentAmplitude: 0,
+    targetReached: false
 };
 
 // Audio/Microphone state
@@ -44,7 +63,7 @@ let canvas, ctx;
 let canvasWidth, canvasHeight;
 
 // UI Elements
-let startBtn, micBtn, scoreDisplay, timerDisplay;
+let startBtn, micBtn, skipTutorialBtn, scoreDisplay, timerDisplay;
 let pitchLevel, currentDirectionDisplay;
 let feedbackDiv;
 
@@ -66,6 +85,7 @@ function init() {
     // Get UI elements
     startBtn = document.getElementById('start-btn');
     micBtn = document.getElementById('mic-btn');
+    skipTutorialBtn = document.getElementById('skip-tutorial-btn');
     scoreDisplay = document.getElementById('score');
     timerDisplay = document.getElementById('timer');
     pitchLevel = document.getElementById('pitch-level');
@@ -75,6 +95,7 @@ function init() {
     // Setup event listeners
     startBtn.addEventListener('click', handleStart);
     micBtn.addEventListener('click', handleMicToggle);
+    skipTutorialBtn.addEventListener('click', handleSkipTutorial);
     
     // Initialize ball position (center)
     resetBall();
@@ -106,6 +127,14 @@ function resetBall() {
 async function handleStart() {
     console.log('Start button clicked');
     startBtn.disabled = true;
+    
+    // In demo mode, skip microphone
+    if (DEMO_MODE) {
+        console.log('Demo mode: skipping microphone');
+        startGame();
+        startDemoSimulation();
+        return;
+    }
     
     // Request microphone access
     try {
@@ -163,32 +192,44 @@ function handleMicToggle() {
     console.log('Mic button clicked (display only)');
 }
 
+function handleSkipTutorial() {
+    gameState.isTutorialMode = false;
+    gameState.tutorialComplete = true;
+    startActualGame();
+}
+
 function startGame() {
     console.log('Starting game...');
     
     gameState.isPlaying = true;
     gameState.isPaused = false;
-    gameState.score = 0;
-    gameState.timeRemaining = GAME_DURATION;
     
     resetBall();
     updateUI();
     
-    // Hide start button, show mic button
+    // Hide start button, show skip tutorial button (if in tutorial mode)
     startBtn.classList.add('hidden');
+    if (gameState.isTutorialMode) {
+        skipTutorialBtn.classList.remove('hidden');
+    }
     
     // Start pitch detection
     startPitchDetection();
     
-    // Start game timer
-    gameTimer = setInterval(() => {
-        gameState.timeRemaining--;
-        updateUI();
+    // If not in tutorial mode, start the timer immediately
+    if (!gameState.isTutorialMode) {
+        gameState.score = 0;
+        gameState.timeRemaining = GAME_DURATION;
         
-        if (gameState.timeRemaining <= 0) {
-            endGame(true);
-        }
-    }, 1000);
+        gameTimer = setInterval(() => {
+            gameState.timeRemaining--;
+            updateUI();
+            
+            if (gameState.timeRemaining <= 0) {
+                endGame(true);
+            }
+        }, 1000);
+    }
     
     // Start game loop
     gameLoop();
@@ -206,9 +247,13 @@ function startPitchDetection() {
         // Check volume level
         const volume = getVolume(audioDataArray);
         
+        // Store amplitude for speed control
+        gameState.currentAmplitude = volume;
+        
         if (volume < MIN_VOLUME_THRESHOLD) {
             // No sound detected
             gameState.currentDirection = null;
+            gameState.currentAmplitude = 0;
             currentDirectionDisplay.textContent = '---';
             pitchLevel.style.width = '0%';
             return;
@@ -327,20 +372,23 @@ function gameLoop() {
 }
 
 function updateBall() {
-    // Apply control based on voice direction
+    // Apply control based on voice direction with amplitude-based speed
     if (gameState.currentDirection) {
+        // Calculate speed multiplier based on amplitude (louder = faster)
+        const speedMultiplier = Math.min(gameState.currentAmplitude * AMPLITUDE_SPEED_MULTIPLIER, 2);
+        
         switch (gameState.currentDirection) {
             case 'LEFT':
-                gameState.ball.vx -= 0.5;
+                gameState.ball.vx -= 0.5 * speedMultiplier;
                 break;
             case 'RIGHT':
-                gameState.ball.vx += 0.5;
+                gameState.ball.vx += 0.5 * speedMultiplier;
                 break;
             case 'UP':
-                gameState.ball.vy -= 0.5;
+                gameState.ball.vy -= 0.5 * speedMultiplier;
                 break;
             case 'DOWN':
-                gameState.ball.vy += 0.5;
+                gameState.ball.vy += 0.5 * speedMultiplier;
                 break;
         }
     }
@@ -361,40 +409,142 @@ function updateBall() {
     gameState.ball.x += gameState.ball.vx;
     gameState.ball.y += gameState.ball.vy;
     
-    // Check boundaries - if ball goes out, game over
-    if (gameState.ball.x - BALL_RADIUS < 0 || 
-        gameState.ball.x + BALL_RADIUS > canvasWidth ||
-        gameState.ball.y - BALL_RADIUS < 0 || 
-        gameState.ball.y + BALL_RADIUS > canvasHeight) {
-        
-        endGame(false);
-        return;
+    // In tutorial mode, check if target is reached
+    if (gameState.isTutorialMode && !gameState.tutorialComplete) {
+        checkTutorialTarget();
     }
     
-    // Award points for staying in bounds
-    if (Date.now() % 100 < 16) { // Roughly every 100ms
+    // Check boundaries - if ball goes out, game over (only in normal mode)
+    if (!gameState.isTutorialMode) {
+        if (gameState.ball.x - BALL_RADIUS < 0 || 
+            gameState.ball.x + BALL_RADIUS > canvasWidth ||
+            gameState.ball.y - BALL_RADIUS < 0 || 
+            gameState.ball.y + BALL_RADIUS > canvasHeight) {
+            
+            endGame(false);
+            return;
+        }
+    } else {
+        // In tutorial mode, keep ball within bounds
+        if (gameState.ball.x - BALL_RADIUS < 0) {
+            gameState.ball.x = BALL_RADIUS;
+            gameState.ball.vx = 0;
+        }
+        if (gameState.ball.x + BALL_RADIUS > canvasWidth) {
+            gameState.ball.x = canvasWidth - BALL_RADIUS;
+            gameState.ball.vx = 0;
+        }
+        if (gameState.ball.y - BALL_RADIUS < 0) {
+            gameState.ball.y = BALL_RADIUS;
+            gameState.ball.vy = 0;
+        }
+        if (gameState.ball.y + BALL_RADIUS > canvasHeight) {
+            gameState.ball.y = canvasHeight - BALL_RADIUS;
+            gameState.ball.vy = 0;
+        }
+    }
+    
+    // Award points for staying in bounds (only in normal mode)
+    if (!gameState.isTutorialMode && Date.now() % 100 < 16) { // Roughly every 100ms
         gameState.score++;
         updateUI();
     }
 }
 
+function checkTutorialTarget() {
+    const currentStep = TUTORIAL_STEPS[gameState.tutorialStep];
+    if (!currentStep) return;
+    
+    const targetX = currentStep.target.x * canvasWidth;
+    const targetY = currentStep.target.y * canvasHeight;
+    
+    const distance = Math.sqrt(
+        Math.pow(gameState.ball.x - targetX, 2) + 
+        Math.pow(gameState.ball.y - targetY, 2)
+    );
+    
+    // Target reached if ball is within 40 pixels
+    if (distance < 40 && !gameState.targetReached) {
+        gameState.targetReached = true;
+        
+        // Wait a moment then move to next step
+        setTimeout(() => {
+            gameState.tutorialStep++;
+            gameState.targetReached = false;
+            
+            if (gameState.tutorialStep >= TUTORIAL_STEPS.length) {
+                // Tutorial complete!
+                completeTutorial();
+            } else {
+                // Reset ball to center for next target
+                resetBall();
+            }
+        }, 1000);
+    }
+}
+
+function completeTutorial() {
+    gameState.isTutorialMode = false;
+    gameState.tutorialComplete = true;
+    
+    // Show success message
+    showFeedback('🎉 آموزش کامل شد! حالا بازی واقعی شروع می‌شود!', 'success');
+    
+    // Start the actual game after a delay
+    setTimeout(() => {
+        feedbackDiv.classList.add('hidden');
+        startActualGame();
+    }, 2000);
+}
+
+function startActualGame() {
+    gameState.score = 0;
+    gameState.timeRemaining = GAME_DURATION;
+    resetBall();
+    
+    // Hide skip button
+    skipTutorialBtn.classList.add('hidden');
+    
+    // Start game timer
+    gameTimer = setInterval(() => {
+        gameState.timeRemaining--;
+        updateUI();
+        
+        if (gameState.timeRemaining <= 0) {
+            endGame(true);
+        }
+    }, 1000);
+}
+
 function drawGame() {
-    // Clear canvas
-    ctx.fillStyle = 'rgba(15, 14, 23, 0.3)';
+    // Clear canvas with black background
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     
-    // Draw danger zones (red borders)
-    ctx.strokeStyle = '#d63031';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(0, 0, canvasWidth, canvasHeight);
+    // Draw grid lines
+    drawGrid();
     
-    // Draw safe zone (inner border)
-    const margin = 30;
-    ctx.strokeStyle = '#00b894';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
-    ctx.strokeRect(margin, margin, canvasWidth - margin * 2, canvasHeight - margin * 2);
-    ctx.setLineDash([]);
+    // Draw radar effect
+    drawRadarEffect();
+    
+    // In tutorial mode, draw tutorial elements
+    if (gameState.isTutorialMode && !gameState.tutorialComplete) {
+        drawTutorialTarget();
+        drawTutorialInstructions();
+    } else {
+        // Draw danger zones (red borders) in normal mode
+        ctx.strokeStyle = '#d63031';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(0, 0, canvasWidth, canvasHeight);
+        
+        // Draw safe zone (inner border)
+        const margin = 30;
+        ctx.strokeStyle = '#00b894';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(margin, margin, canvasWidth - margin * 2, canvasHeight - margin * 2);
+        ctx.setLineDash([]);
+    }
     
     // Draw ball
     ctx.beginPath();
@@ -419,6 +569,205 @@ function drawGame() {
     if (gameState.currentDirection) {
         drawDirectionArrow();
     }
+}
+
+function drawGrid() {
+    ctx.strokeStyle = 'rgba(100, 255, 218, 0.15)'; // Cyan grid lines
+    ctx.lineWidth = 1;
+    
+    // Vertical lines
+    for (let x = 0; x < canvasWidth; x += GRID_SIZE) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvasHeight);
+        ctx.stroke();
+    }
+    
+    // Horizontal lines
+    for (let y = 0; y < canvasHeight; y += GRID_SIZE) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvasWidth, y);
+        ctx.stroke();
+    }
+}
+
+function drawRadarEffect() {
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
+    const maxRadius = Math.max(canvasWidth, canvasHeight) / 2;
+    const time = Date.now() / 1000;
+    
+    // Draw pulsing radar circles
+    for (let i = 0; i < 3; i++) {
+        const radius = (maxRadius * ((time + i * 0.5) % 1.5) / 1.5);
+        const alpha = 1 - ((time + i * 0.5) % 1.5) / 1.5;
+        
+        ctx.strokeStyle = `rgba(0, 255, 170, ${alpha * 0.3})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    
+    // Draw sweeping radar line
+    const angle = (time % 4) / 4 * Math.PI * 2;
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(angle);
+    
+    const radarGradient = ctx.createLinearGradient(0, 0, maxRadius, 0);
+    radarGradient.addColorStop(0, 'rgba(0, 255, 170, 0.6)');
+    radarGradient.addColorStop(0.5, 'rgba(0, 255, 170, 0.3)');
+    radarGradient.addColorStop(1, 'rgba(0, 255, 170, 0)');
+    
+    ctx.fillStyle = radarGradient;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, maxRadius, 0, Math.PI / 6);
+    ctx.closePath();
+    ctx.fill();
+    
+    ctx.restore();
+}
+
+function drawTutorialTarget() {
+    const currentStep = TUTORIAL_STEPS[gameState.tutorialStep];
+    if (!currentStep) return;
+    
+    const targetX = currentStep.target.x * canvasWidth;
+    const targetY = currentStep.target.y * canvasHeight;
+    const targetRadius = 35;
+    
+    // Calculate distance to target
+    const distance = Math.sqrt(
+        Math.pow(gameState.ball.x - targetX, 2) + 
+        Math.pow(gameState.ball.y - targetY, 2)
+    );
+    
+    const isNear = distance < 40;
+    const targetColor = gameState.targetReached ? '#00b894' : (isNear ? '#fdcb6e' : '#d63031');
+    
+    // Draw pulsing target
+    const pulseScale = 1 + Math.sin(Date.now() / 300) * 0.1;
+    
+    // Outer circle (pulsing)
+    ctx.strokeStyle = targetColor;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY, targetRadius * pulseScale, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Inner circle
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY, targetRadius * 0.6, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Center dot
+    ctx.fillStyle = targetColor;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY, 5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw crosshair
+    ctx.beginPath();
+    ctx.moveTo(targetX - targetRadius * 0.4, targetY);
+    ctx.lineTo(targetX + targetRadius * 0.4, targetY);
+    ctx.moveTo(targetX, targetY - targetRadius * 0.4);
+    ctx.lineTo(targetX, targetY + targetRadius * 0.4);
+    ctx.stroke();
+    
+    // Draw arrow from ball to target
+    drawArrowToTarget(targetX, targetY, targetColor);
+    
+    // Success/failure indicator
+    if (gameState.targetReached) {
+        ctx.fillStyle = '#00b894';
+        ctx.font = 'bold 24px Vazirmatn';
+        ctx.textAlign = 'center';
+        ctx.fillText('✓', targetX, targetY - 50);
+    } else if (isNear) {
+        ctx.fillStyle = '#fdcb6e';
+        ctx.font = 'bold 20px Vazirmatn';
+        ctx.textAlign = 'center';
+        ctx.fillText('نزدیک!', targetX, targetY - 50);
+    }
+}
+
+function drawArrowToTarget(targetX, targetY, color) {
+    const ballX = gameState.ball.x;
+    const ballY = gameState.ball.y;
+    
+    // Don't draw if too close
+    const distance = Math.sqrt(Math.pow(targetX - ballX, 2) + Math.pow(targetY - ballY, 2));
+    if (distance < 60) return;
+    
+    // Calculate arrow start and end points
+    const angle = Math.atan2(targetY - ballY, targetX - ballX);
+    const startX = ballX + Math.cos(angle) * 30;
+    const startY = ballY + Math.sin(angle) * 30;
+    const endX = targetX - Math.cos(angle) * 50;
+    const endY = targetY - Math.sin(angle) * 50;
+    
+    // Draw arrow line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([10, 5]);
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Draw arrow head
+    const headLength = 15;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(endX, endY);
+    ctx.lineTo(
+        endX - headLength * Math.cos(angle - Math.PI / 6),
+        endY - headLength * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.lineTo(
+        endX - headLength * Math.cos(angle + Math.PI / 6),
+        endY - headLength * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawTutorialInstructions() {
+    const currentStep = TUTORIAL_STEPS[gameState.tutorialStep];
+    if (!currentStep) return;
+    
+    // Draw instruction box
+    const boxWidth = canvasWidth * 0.9;
+    const boxHeight = 80;
+    const boxX = (canvasWidth - boxWidth) / 2;
+    const boxY = 10;
+    
+    // Background
+    ctx.fillStyle = 'rgba(26, 26, 46, 0.9)';
+    ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+    
+    // Border
+    ctx.strokeStyle = '#6c5ce7';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+    
+    // Text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px Vazirmatn';
+    ctx.textAlign = 'center';
+    ctx.fillText(`مرحله ${gameState.tutorialStep + 1} از ${TUTORIAL_STEPS.length}`, canvasWidth / 2, boxY + 25);
+    
+    ctx.font = '14px Vazirmatn';
+    ctx.fillStyle = '#fdcb6e';
+    ctx.fillText(`جهت: ${currentStep.name}`, canvasWidth / 2, boxY + 45);
+    
+    ctx.fillStyle = '#00ffaa';
+    ctx.fillText(currentStep.instruction, canvasWidth / 2, boxY + 65);
 }
 
 function drawDirectionArrow() {
@@ -509,13 +858,22 @@ function endGame(timeUp) {
     } else {
         showFeedback('❌ باختید! توپ از صفحه خارج شد. دوباره تلاش کنید!', 'error');
         
-        // Allow restart
+        // Allow restart - reset to tutorial mode
         setTimeout(() => {
             feedbackDiv.classList.add('hidden');
             startBtn.classList.remove('hidden');
+            startBtn.textContent = 'شروع آموزش';
             startBtn.disabled = false;
             micBtn.classList.add('hidden');
             micBtn.classList.remove('active');
+            skipTutorialBtn.classList.add('hidden');
+            
+            // Reset game state to tutorial mode
+            gameState.isTutorialMode = true;
+            gameState.tutorialStep = 0;
+            gameState.tutorialComplete = false;
+            gameState.score = 0;
+            gameState.timeRemaining = GAME_DURATION;
         }, 3000);
     }
 }
@@ -524,6 +882,48 @@ function showFeedback(message, type) {
     feedbackDiv.textContent = message;
     feedbackDiv.className = `feedback ${type}`;
     feedbackDiv.classList.remove('hidden');
+}
+
+// Demo mode simulation (for testing without microphone)
+function startDemoSimulation() {
+    if (!DEMO_MODE) return;
+    
+    console.log('Starting demo simulation');
+    
+    // Simulate pitch changes for tutorial
+    let demoInterval = setInterval(() => {
+        if (!gameState.isPlaying) {
+            clearInterval(demoInterval);
+            return;
+        }
+        
+        // Simulate amplitude
+        gameState.currentAmplitude = 0.3 + Math.random() * 0.3;
+        
+        // In tutorial mode, guide toward the target
+        if (gameState.isTutorialMode && !gameState.tutorialComplete) {
+            const currentStep = TUTORIAL_STEPS[gameState.tutorialStep];
+            if (currentStep) {
+                gameState.currentDirection = currentStep.direction;
+                
+                // Simulate pitch for the direction
+                let demoPitch = 0;
+                switch (currentStep.direction) {
+                    case 'LEFT': demoPitch = 100; break;
+                    case 'DOWN': demoPitch = 200; break;
+                    case 'UP': demoPitch = 300; break;
+                    case 'RIGHT': demoPitch = 500; break;
+                }
+                gameState.lastPitch = demoPitch;
+                updatePitchDisplay(demoPitch);
+            }
+        } else {
+            // Random direction in normal mode
+            const directions = ['LEFT', 'RIGHT', 'UP', 'DOWN'];
+            gameState.currentDirection = directions[Math.floor(Math.random() * directions.length)];
+            gameState.lastPitch = 100 + Math.random() * 400;
+        }
+    }, 100);
 }
 
 // Initialize on load
