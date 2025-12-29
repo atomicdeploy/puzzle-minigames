@@ -749,7 +749,7 @@ function initUI() {
                 }
             }
             // Close contact page if open
-            else if (contactPage.style.display !== 'none') {
+            else if (window.getComputedStyle(contactPage).display !== 'none') {
                 contactPage.style.display = 'none';
                 updateMenuActive('home-link');
                 if (lastFocusedElement) {
