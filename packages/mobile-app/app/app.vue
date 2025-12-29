@@ -6,9 +6,6 @@
 </template>
 
 <script setup>
-// Import global styles
-import '~/assets/scss/main.scss';
-
 // Set up app metadata
 useHead({
   titleTemplate: '%s - اینفرنال',
@@ -19,6 +16,6 @@ useHead({
 </script>
 
 <style lang="scss">
-// Global app styles are loaded from assets/scss/main.scss
+// Global app styles are loaded from nuxt.config.ts
 </style>
 

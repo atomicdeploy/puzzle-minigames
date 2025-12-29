@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   
   // CSS configuration
   css: [
-    '~/assets/scss/main.scss'
+    '@/assets/scss/main.scss'
   ],
   
   // Vite configuration for Capacitor compatibility
@@ -13,6 +13,13 @@ export default defineNuxtConfig({
     define: {
       'process.env.DEBUG': false,
     },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: ''
+        }
+      }
+    }
   },
   
   // App configuration
