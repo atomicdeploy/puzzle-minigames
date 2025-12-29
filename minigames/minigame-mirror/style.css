@@ -275,6 +275,27 @@ header h1 {
     50% { opacity: 1; }
 }
 
+/* Mirror text inside the glass */
+.mirror-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: rgba(100, 100, 100, 0.4);
+    font-family: 'Vazirmatn', sans-serif;
+    text-align: center;
+    z-index: 1;
+    animation: fadeInOut 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.5; }
+}
+
 /* Metallic base */
 .mirror-base {
     position: absolute;
@@ -413,6 +434,23 @@ header h1 {
     font-weight: bold;
 }
 
+.helper-text {
+    text-align: center;
+    color: rgba(160, 160, 160, 0.6);
+    font-size: 0.9rem;
+    margin-top: -1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.helper-text.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 .hint-text {
     text-align: center;
     color: var(--text-secondary);
@@ -509,6 +547,10 @@ header h1 {
     border: 2px solid var(--primary-color);
 }
 
+.words-pool.empty {
+    display: none;
+}
+
 .word-card {
     padding: 1rem 2rem;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -541,6 +583,12 @@ header h1 {
 
 .word-card.hidden {
     display: none;
+}
+
+.word-card.selected {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 0 30px rgba(108, 92, 231, 0.8), 0 0 60px rgba(253, 121, 168, 0.6);
+    border: 3px solid var(--accent-3);
 }
 
 #order-submit {
@@ -603,6 +651,31 @@ header h1 {
     height: 100%;
     pointer-events: none;
     z-index: 9999;
+}
+
+/* Toast Notification */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(214, 48, 49, 0.95);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+    z-index: 10001;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+.toast-notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
 }
 
 /* Responsive Design */
