@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS game_sessions (
   started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   completed_at TIMESTAMP NULL,
   score INT DEFAULT 0,
-  FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE SET NULL
+  FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE SET NULL,
+  FOREIGN KEY (player_id) REFERENCES player_progress(player_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Indexes for performance

@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref } from 'vue';
 import { io } from 'socket.io-client';
 
 // Socket.io connection composable
@@ -60,15 +60,19 @@ export function useSocket(serverUrl = 'http://localhost:3001') {
   
   // Listen to server events
   function on(event, callback) {
-    if (socket.value) {
+    if (socket.value && connected.value) {
       socket.value.on(event, callback);
+    } else {
+      console.warn('Socket not connected, cannot register listener for:', event);
     }
   }
   
   // Remove event listener
   function off(event, callback) {
-    if (socket.value) {
+    if (socket.value && connected.value) {
       socket.value.off(event, callback);
+    } else {
+      console.warn('Socket not connected, cannot remove listener for:', event);
     }
   }
   
@@ -96,16 +100,6 @@ export function useSocket(serverUrl = 'http://localhost:3001') {
   function sendChatMessage(message) {
     emit('chat:message', { message });
   }
-  
-  // Auto-connect on mount, disconnect on unmount
-  onMounted(() => {
-    // Optional: auto-connect
-    // connect();
-  });
-  
-  onUnmounted(() => {
-    disconnect();
-  });
   
   return {
     // State

@@ -1,7 +1,17 @@
 import express from 'express';
+import { body, param, query, validationResult } from 'express-validator';
 import { dbPromise } from '../config/database.js';
 
 const router = express.Router();
+
+// Validation middleware
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+  next();
+};
 
 // Get all games
 router.get('/games', async (req, res) => {
@@ -15,7 +25,9 @@ router.get('/games', async (req, res) => {
 });
 
 // Get player progress
-router.get('/players/:playerId/progress', async (req, res) => {
+router.get('/players/:playerId/progress', [
+  param('playerId').isString().trim().isLength({ min: 1, max: 255 }).escape()
+], validate, async (req, res) => {
   try {
     const { playerId } = req.params;
     const [rows] = await dbPromise.query(
@@ -30,12 +42,17 @@ router.get('/players/:playerId/progress', async (req, res) => {
 });
 
 // Save player progress
-router.post('/players/:playerId/progress', async (req, res) => {
+router.post('/players/:playerId/progress', [
+  param('playerId').isString().trim().isLength({ min: 1, max: 255 }).escape(),
+  body('discoveredPuzzles').isArray(),
+  body('puzzleBoard').isArray().isLength({ min: 9, max: 9 }),
+  body('score').isInt({ min: 0 })
+], validate, async (req, res) => {
   try {
     const { playerId } = req.params;
     const { discoveredPuzzles, puzzleBoard, score } = req.body;
     
-    const [result] = await dbPromise.query(
+    await dbPromise.query(
       `INSERT INTO player_progress (player_id, discovered_puzzles, puzzle_board, score, updated_at) 
        VALUES (?, ?, ?, ?, NOW()) 
        ON DUPLICATE KEY UPDATE 
@@ -54,9 +71,19 @@ router.post('/players/:playerId/progress', async (req, res) => {
 });
 
 // Get leaderboard
-router.get('/leaderboard', async (req, res) => {
+router.get('/leaderboard', [
+  query('limit').optional().isInt({ min: 1, max: 100 })
+], validate, async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
+    let limit = parseInt(req.query.limit, 10);
+    if (Number.isNaN(limit)) {
+      limit = 10;
+    } else if (limit < 1) {
+      limit = 1;
+    } else if (limit > 100) {
+      limit = 100;
+    }
+    
     const [rows] = await dbPromise.query(
       'SELECT player_id, score, updated_at FROM player_progress ORDER BY score DESC LIMIT ?',
       [limit]

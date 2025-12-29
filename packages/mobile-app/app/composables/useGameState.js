@@ -56,7 +56,11 @@ export function useGameState() {
         discoveredPuzzles: Array.from(discoveredPuzzles.value),
         puzzleBoard: puzzleBoard.value,
       };
-      localStorage.setItem('infernal-puzzle-game', JSON.stringify(state));
+      try {
+        localStorage.setItem('infernal-puzzle-game', JSON.stringify(state));
+      } catch (error) {
+        console.error('Error saving game state:', error);
+      }
     }
   }
   
