@@ -187,9 +187,20 @@ header h1 {
 .footstep {
     position: absolute;
     font-size: 2rem;
-    animation: footstep-appear 0.5s ease-out;
     filter: drop-shadow(0 0 5px rgba(255, 140, 66, 0.6));
     transform-origin: center;
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    opacity: 1;
+}
+
+.footstep.draggable {
+    cursor: grab;
+}
+
+.footstep.draggable:active {
+    cursor: grabbing;
 }
 
 @keyframes footstep-appear {

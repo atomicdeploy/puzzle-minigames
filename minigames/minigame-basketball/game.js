@@ -1,6 +1,6 @@
 // Constants
 const CORRECT_ANSWER = 15; // The actual answer based on the puzzle sequence
-const PUZZLE_NUMBER = 3;
+const PUZZLE_NUMBER = 'basketball';
 const MAX_SCORE = 99;
 const MIN_SCORE = 0;
 
@@ -22,20 +22,15 @@ const SEGMENT_PATTERNS = {
 let currentScore = 0;
 let isGameComplete = false;
 let audioContext = null; // Reusable AudioContext instance
+let draggedFootstep = null;
 
-// Footstep sequence (positions will be calculated based on court size)
-// Each entry: { x: percentage, y: percentage, line: line number from center }
-// Orange line (center) is line 0, negative is left, positive is right
-const footstepSequence = [
-    { line: 0, order: 1 },   // Start at center (0 points)
-    { line: 3, order: 2 },   // 3 steps right (3 points)
-    { line: 5, order: 3 },   // 2 more steps right (5 points total)
-    { line: 2, order: 4 },   // 3 steps back left (2 points)
-    { line: 7, order: 5 },   // 5 steps right (7 points)
-    { line: 8, order: 6 },   // 1 step right (8 points)
-    { line: 3, order: 7 },   // 5 steps back left (3 points)
-    { line: 8, order: 8 },   // 5 steps right (8 points)
-    { line: 15, order: 9 }   // 7 steps right - FINAL SCORE: 15 points!
+// User-draggable footsteps - 5 total, can be placed on decimal and negative lines
+let userFootsteps = [
+    { line: 0, order: 1, id: 'footstep-1' },
+    { line: 1, order: 2, id: 'footstep-2' },
+    { line: 2, order: 3, id: 'footstep-3' },
+    { line: 3, order: 4, id: 'footstep-4' },
+    { line: 4, order: 5, id: 'footstep-5' }
 ];
 
 // Initialize the game
@@ -48,9 +43,6 @@ function init() {
     
     // Initialize AudioContext once
     initAudioContext();
-    
-    // Animate footsteps appearing one by one
-    animateFootstepsSequence();
 }
 
 // Draw basketball court on canvas
@@ -130,12 +122,13 @@ function drawBasketballCourt() {
     ctx.lineTo(centerX + 40, height - 30);
     ctx.stroke();
     
-    // Add line numbers for some reference lines
+    // Add line numbers including negative and decimal values
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.font = 'bold 12px Vazirmatn';
     ctx.textAlign = 'center';
     
-    for (let i of [0, 3, 5, 7, 10, 15]) {
+    // Show more line numbers including negative and decimals
+    for (let i of [-10, -5, -1.5, -1, 0, 1, 1.5, 3, 5, 7, 10, 15]) {
         const x = centerX + (i * lineSpacing);
         if (x >= 0 && x <= width) {
             ctx.fillText(i.toString(), x, 20);
@@ -156,7 +149,7 @@ function setupResizeHandler() {
     }
 }
 
-// Create footsteps on the court
+// Create footsteps on the court - draggable by user (5 total)
 function createFootsteps() {
     const container = document.getElementById('footsteps-layer');
     const courtContainer = document.getElementById('court-container');
@@ -165,12 +158,15 @@ function createFootsteps() {
     const centerX = width / 2;
     const lineSpacing = width / 20;
     
-    footstepSequence.forEach((step, index) => {
+    userFootsteps.forEach((step, index) => {
         const footstep = document.createElement('div');
-        footstep.className = 'footstep';
+        footstep.className = 'footstep draggable';
         footstep.textContent = '👣';
         footstep.dataset.order = step.order;
         footstep.dataset.line = step.line;
+        footstep.dataset.id = step.id;
+        footstep.id = step.id;
+        footstep.draggable = true;
         
         // Calculate position
         const x = centerX + (step.line * lineSpacing);
@@ -179,12 +175,140 @@ function createFootsteps() {
         footstep.style.left = `${x}px`;
         footstep.style.top = `${y}px`;
         footstep.style.transform = 'translate(-50%, -50%)';
+        footstep.style.cursor = 'move';
         
-        // Initially hidden for animation
-        footstep.style.opacity = '0';
+        // Add drag event listeners
+        footstep.addEventListener('dragstart', handleDragStart);
+        footstep.addEventListener('dragend', handleDragEnd);
+        
+        // Touch support
+        footstep.addEventListener('touchstart', handleTouchStart, { passive: false });
+        footstep.addEventListener('touchmove', handleTouchMove, { passive: false });
+        footstep.addEventListener('touchend', handleTouchEnd);
         
         container.appendChild(footstep);
     });
+    
+    // Make court container a drop zone
+    const court = document.getElementById('basketball-court');
+    court.addEventListener('dragover', handleDragOver);
+    court.addEventListener('drop', handleDrop);
+}
+
+// Drag and drop handlers
+function handleDragStart(e) {
+    draggedFootstep = e.target;
+    e.target.style.opacity = '0.5';
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.innerHTML);
+}
+
+function handleDragEnd(e) {
+    e.target.style.opacity = '1';
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+    e.preventDefault();
+    
+    if (draggedFootstep) {
+        const courtContainer = document.getElementById('court-container');
+        const rect = courtContainer.getBoundingClientRect();
+        const width = courtContainer.clientWidth;
+        const centerX = width / 2;
+        const lineSpacing = width / 20;
+        
+        // Calculate which line the drop position corresponds to
+        const dropX = e.clientX - rect.left;
+        const relativeX = dropX - centerX;
+        const newLine = Math.round((relativeX / lineSpacing) * 2) / 2; // Round to nearest 0.5
+        
+        // Update footstep position
+        draggedFootstep.dataset.line = newLine;
+        const x = centerX + (newLine * lineSpacing);
+        const y = e.clientY - rect.top;
+        
+        draggedFootstep.style.left = `${x}px`;
+        draggedFootstep.style.top = `${y}px`;
+        
+        // Update userFootsteps array
+        const id = draggedFootstep.dataset.id;
+        const footstep = userFootsteps.find(f => f.id === id);
+        if (footstep) {
+            footstep.line = newLine;
+        }
+        
+        playClickSound();
+    }
+    
+    return false;
+}
+
+// Touch handlers for mobile
+let touchStartX, touchStartY;
+
+function handleTouchStart(e) {
+    draggedFootstep = e.target;
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    e.target.style.opacity = '0.7';
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!draggedFootstep) return;
+    
+    const touch = e.touches[0];
+    const courtContainer = document.getElementById('court-container');
+    const rect = courtContainer.getBoundingClientRect();
+    
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    draggedFootstep.style.left = `${x}px`;
+    draggedFootstep.style.top = `${y}px`;
+}
+
+function handleTouchEnd(e) {
+    if (!draggedFootstep) return;
+    
+    const courtContainer = document.getElementById('court-container');
+    const rect = courtContainer.getBoundingClientRect();
+    const width = courtContainer.clientWidth;
+    const centerX = width / 2;
+    const lineSpacing = width / 20;
+    
+    const currentLeft = parseFloat(draggedFootstep.style.left);
+    const relativeX = currentLeft - centerX;
+    const newLine = Math.round((relativeX / lineSpacing) * 2) / 2; // Round to nearest 0.5
+    
+    // Snap to line
+    const x = centerX + (newLine * lineSpacing);
+    draggedFootstep.style.left = `${x}px`;
+    draggedFootstep.dataset.line = newLine;
+    
+    // Update userFootsteps array
+    const id = draggedFootstep.dataset.id;
+    const footstep = userFootsteps.find(f => f.id === id);
+    if (footstep) {
+        footstep.line = newLine;
+    }
+    
+    draggedFootstep.style.opacity = '1';
+    draggedFootstep = null;
+    
+    playClickSound();
 }
 
 // Update footstep positions on resize
@@ -197,31 +321,12 @@ function updateFootstepPositions() {
     
     const footsteps = document.querySelectorAll('.footstep');
     footsteps.forEach((footstep, index) => {
-        const line = parseInt(footstep.dataset.line);
+        const line = parseFloat(footstep.dataset.line);
         const x = centerX + (line * lineSpacing);
-        const y = height * 0.3 + (index * (height * 0.05));
+        const currentTop = parseFloat(footstep.style.top) || (height * 0.3 + (index * (height * 0.05)));
         
         footstep.style.left = `${x}px`;
-        footstep.style.top = `${y}px`;
-    });
-}
-
-// Animate footsteps appearing one by one
-function animateFootstepsSequence() {
-    const footsteps = document.querySelectorAll('.footstep');
-    
-    footsteps.forEach((footstep, index) => {
-        setTimeout(() => {
-            footstep.style.opacity = '1';
-            footstep.style.animation = 'footstep-appear 0.5s ease-out';
-            
-            // Highlight the last footstep
-            if (index === footsteps.length - 1) {
-                setTimeout(() => {
-                    footstep.classList.add('highlight');
-                }, 500);
-            }
-        }, index * 300);
+        footstep.style.top = `${currentTop}px`;
     });
 }
 
