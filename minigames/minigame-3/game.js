@@ -220,6 +220,9 @@ function animateFootstepsSequence() {
 function animateRadar() {
     const radar = document.getElementById('radar-effect');
     // The animation is handled by CSS, just ensure it's visible
+    if (radar) {
+        radar.style.visibility = 'visible';
+    }
 }
 
 // Setup event listeners
