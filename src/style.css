@@ -423,7 +423,7 @@ header h1 {
 .ar-toggle-btn {
     position: absolute;
     top: 1rem;
-    left: 1rem;
+    inset-inline-start: 1rem;
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
     border: none;
