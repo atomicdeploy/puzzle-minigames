@@ -1,0 +1,701 @@
+/* Import Persian/Arabic font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #fd79a8;
+    --success-color: #00b894;
+    --error-color: #d63031;
+    --warning-color: #fdcb6e;
+    --bg-dark: #0f0e17;
+    --bg-medium: #1a1a2e;
+    --bg-light: #16213e;
+    --text-primary: #fffffe;
+    --text-secondary: #a7a9be;
+    --accent-1: #ff6b6b;
+    --accent-2: #4ecdc4;
+    --accent-3: #ffe66d;
+    --mirror-glow: 0 0 30px rgba(253, 121, 168, 0.5);
+    --shadow-glow: 0 0 20px rgba(108, 92, 231, 0.3);
+}
+
+body {
+    font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-medium) 50%, var(--bg-light) 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    direction: rtl;
+    position: relative;
+    touch-action: pan-y;
+}
+
+/* Animated background particles */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(108, 92, 231, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(253, 121, 168, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(78, 205, 196, 0.15) 0%, transparent 50%);
+    animation: float 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+/* Shimmer effect for mirror theme */
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+#game-container {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    padding: 1.5rem;
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid var(--secondary-color);
+    box-shadow: var(--mirror-glow);
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.02); }
+}
+
+/* Stage Container */
+.stage {
+    flex: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.stage.active {
+    display: flex;
+}
+
+.stage-content {
+    width: 100%;
+    max-width: 700px;
+    animation: fadeInUp 0.8s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stage 1: Password Input */
+
+/* Professional Dome-Shaped Mirror */
+.mirror-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 3rem;
+    cursor: pointer;
+    perspective: 1000px;
+}
+
+.mirror-dome {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease;
+}
+
+.mirror-container:hover .mirror-dome {
+    transform: scale(1.05) rotateY(5deg);
+}
+
+/* Glass dome surface */
+.mirror-glass {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: 
+        radial-gradient(circle at 35% 35%, 
+            rgba(255, 255, 255, 0.95) 0%,
+            rgba(240, 245, 255, 0.9) 20%,
+            rgba(220, 230, 245, 0.85) 40%,
+            rgba(200, 215, 235, 0.8) 60%,
+            rgba(180, 200, 225, 0.75) 80%,
+            rgba(160, 185, 215, 0.7) 100%);
+    box-shadow: 
+        /* Outer glow */
+        0 0 40px rgba(200, 220, 255, 0.4),
+        0 0 80px rgba(180, 200, 240, 0.3),
+        /* 3D depth */
+        inset -10px -10px 40px rgba(0, 0, 0, 0.15),
+        inset 10px 10px 40px rgba(255, 255, 255, 0.8),
+        /* Glass edge highlight */
+        inset 0 0 20px rgba(255, 255, 255, 0.6);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    animation: mirrorFloat 4s ease-in-out infinite;
+}
+
+@keyframes mirrorFloat {
+    0%, 100% { 
+        transform: translateY(0px) rotateX(0deg);
+        box-shadow: 
+            0 0 40px rgba(200, 220, 255, 0.4),
+            0 0 80px rgba(180, 200, 240, 0.3),
+            inset -10px -10px 40px rgba(0, 0, 0, 0.15),
+            inset 10px 10px 40px rgba(255, 255, 255, 0.8),
+            inset 0 0 20px rgba(255, 255, 255, 0.6);
+    }
+    50% { 
+        transform: translateY(-12px) rotateX(2deg);
+        box-shadow: 
+            0 15px 50px rgba(200, 220, 255, 0.5),
+            0 0 90px rgba(180, 200, 240, 0.4),
+            inset -10px -10px 40px rgba(0, 0, 0, 0.15),
+            inset 10px 10px 40px rgba(255, 255, 255, 0.8),
+            inset 0 0 20px rgba(255, 255, 255, 0.6);
+    }
+}
+
+/* Animated glass shine effect */
+.glass-shine {
+    position: absolute;
+    top: -30%;
+    left: -30%;
+    width: 160%;
+    height: 160%;
+    background: linear-gradient(
+        135deg,
+        transparent 0%,
+        transparent 35%,
+        rgba(255, 255, 255, 0.6) 45%,
+        rgba(255, 255, 255, 0.8) 50%,
+        rgba(255, 255, 255, 0.6) 55%,
+        transparent 65%,
+        transparent 100%
+    );
+    animation: glassShine 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes glassShine {
+    0% { transform: translate(-50%, -50%) rotate(45deg); }
+    100% { transform: translate(50%, 50%) rotate(45deg); }
+}
+
+/* Top reflection highlight */
+.glass-reflection-top {
+    position: absolute;
+    top: 15%;
+    left: 15%;
+    width: 40%;
+    height: 30%;
+    border-radius: 50%;
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.5) 40%,
+        transparent 70%
+    );
+    filter: blur(8px);
+    animation: reflectionPulse 3s ease-in-out infinite;
+}
+
+/* Bottom reflection */
+.glass-reflection-bottom {
+    position: absolute;
+    bottom: 20%;
+    right: 20%;
+    width: 30%;
+    height: 25%;
+    border-radius: 50%;
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        transparent 80%
+    );
+    filter: blur(6px);
+    animation: reflectionPulse 3s ease-in-out infinite 0.5s;
+}
+
+@keyframes reflectionPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* Metallic base */
+.mirror-base {
+    position: absolute;
+    bottom: -20px;
+    width: 200px;
+    height: 35px;
+    background: linear-gradient(
+        180deg,
+        #8a9ba8 0%,
+        #6d7f8c 30%,
+        #4a5a67 60%,
+        #2c3843 100%
+    );
+    border-radius: 50%;
+    box-shadow: 
+        0 5px 15px rgba(0, 0, 0, 0.5),
+        inset 0 2px 5px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.5);
+    z-index: -1;
+}
+
+/* Mirror clicked state */
+.mirror-container.clicked .mirror-dome {
+    animation: mirrorSpin 1s ease-out;
+}
+
+@keyframes mirrorSpin {
+    0% { transform: rotateY(0deg); }
+    50% { transform: rotateY(180deg); }
+    100% { transform: rotateY(360deg); }
+}
+
+/* Mirrored state for input */
+.input-group.mirrored {
+    animation: flipHorizontal 0.8s ease-out;
+}
+
+/* Smooth flip animation - keeps content readable throughout */
+@keyframes flipHorizontal {
+    0% { transform: scaleX(1); }
+    100% { transform: scaleX(1); }
+}
+
+/* Apply horizontal flip to input when mirrored */
+.input-group.mirrored #password-input {
+    transform: scaleX(-1);
+    /* Keep RTL direction for proper Persian text alignment, visual flip is via scaleX */
+}
+
+/* Move button to left side when mirrored (input-group is flex container) */
+.input-group.mirrored .submit-button {
+    order: -1;
+}
+
+.input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    justify-content: center;
+    align-items: center;
+}
+
+#password-input {
+    flex: 1;
+    max-width: 500px;
+    padding: 1.2rem 1.5rem;
+    font-size: 1.5rem;
+    text-align: center;
+    background: #ffffff;
+    border: 3px dashed #d63031;
+    border-radius: 0.5rem;
+    color: #d63031;
+    font-family: 'Vazirmatn', sans-serif;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+#password-input:focus {
+    outline: none;
+    border-color: #c0392b;
+    background: #fff;
+    box-shadow: 
+        0 0 0 3px rgba(214, 48, 49, 0.2),
+        0 5px 20px rgba(214, 48, 49, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Enhanced style when typing */
+#password-input:not(:placeholder-shown) {
+    border-color: #c0392b;
+    box-shadow: 
+        0 0 0 3px rgba(214, 48, 49, 0.15),
+        0 3px 15px rgba(214, 48, 49, 0.2);
+}
+
+#password-input::placeholder {
+    color: rgba(214, 48, 49, 0.4);
+    font-weight: 500;
+}
+
+.submit-button {
+    padding: 1.2rem 3rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(108, 92, 231, 0.4);
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+.submit-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(108, 92, 231, 0.5);
+    background: linear-gradient(135deg, #5f4fd1, #9088e8);
+}
+
+.submit-button:active {
+    transform: translateY(-1px);
+}
+
+.submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.button-icon {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.hint-text {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-style: italic;
+    animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* Stage 2: Word Ordering */
+.success-message {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 2.5rem;
+    color: var(--success-color);
+    padding: 1.5rem;
+    background: rgba(0, 184, 148, 0.15);
+    border-radius: 1rem;
+    border: 2px solid var(--success-color);
+    animation: successPulse 1s ease;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(0.9); opacity: 0; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.ordering-container {
+    margin-bottom: 2rem;
+}
+
+.drop-zones {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.drop-zone {
+    background: rgba(255, 255, 255, 0.05);
+    border: 3px dashed var(--text-secondary);
+    border-radius: 1rem;
+    padding: 1rem;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.drop-zone.drag-over {
+    border-color: var(--accent-2);
+    background: rgba(78, 205, 196, 0.15);
+    border-style: solid;
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(78, 205, 196, 0.4);
+}
+
+.drop-zone.filled {
+    border-color: var(--success-color);
+    border-style: solid;
+    background: rgba(0, 184, 148, 0.1);
+}
+
+.zone-label {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 60px;
+    text-align: center;
+}
+
+.zone-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.words-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 1rem;
+    border: 2px solid var(--primary-color);
+}
+
+.word-card {
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: grab;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    user-select: none;
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 1px;
+}
+
+.word-card:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(108, 92, 231, 0.6);
+}
+
+.word-card:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.word-card.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.word-card.hidden {
+    display: none;
+}
+
+#order-submit {
+    width: 100%;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+/* Feedback Messages */
+.feedback {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 2rem 3rem;
+    border-radius: 1.5rem;
+    font-size: 1.8rem;
+    font-weight: 700;
+    z-index: 10000;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    pointer-events: none;
+    max-width: 90%;
+}
+
+.feedback.hidden {
+    display: none;
+}
+
+.feedback.success {
+    background: linear-gradient(135deg, var(--success-color), var(--accent-2));
+    color: white;
+    animation: success-pulse 0.6s ease;
+}
+
+.feedback.error {
+    background: linear-gradient(135deg, var(--error-color), var(--accent-1));
+    color: white;
+    animation: shake 0.5s ease;
+}
+
+@keyframes success-pulse {
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+    25% { transform: translate(-50%, -50%) translateX(-20px); }
+    75% { transform: translate(-50%, -50%) translateX(20px); }
+}
+
+/* Confetti Canvas */
+#confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.6rem;
+    }
+    
+    #password-input {
+        font-size: 1.1rem;
+        padding: 1rem 1.2rem;
+    }
+    
+    .submit-button {
+        font-size: 1.1rem;
+        padding: 1rem 2rem;
+    }
+    
+    .success-message {
+        font-size: 1.2rem;
+        padding: 1rem;
+    }
+    
+    .word-card {
+        font-size: 1.2rem;
+        padding: 0.8rem 1.5rem;
+    }
+    
+    .zone-label {
+        font-size: 1rem;
+        min-width: 50px;
+    }
+    
+    .feedback {
+        font-size: 1.4rem;
+        padding: 1.5rem 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.3rem;
+    }
+    
+    .stage {
+        padding: 1rem;
+    }
+    
+    .input-group {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    
+    #password-input {
+        font-size: 1rem;
+        padding: 0.9rem 1rem;
+    }
+    
+    .submit-button {
+        font-size: 1rem;
+        padding: 0.9rem 1.5rem;
+        width: 100%;
+    }
+    
+    .success-message {
+        font-size: 1rem;
+        padding: 0.8rem;
+    }
+    
+    .word-card {
+        font-size: 1rem;
+        padding: 0.7rem 1.2rem;
+    }
+    
+    .zone-label {
+        font-size: 0.9rem;
+        min-width: 45px;
+    }
+    
+    .feedback {
+        font-size: 1.1rem;
+        padding: 1rem 1.5rem;
+    }
+}
+
+/* Accessibility */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}

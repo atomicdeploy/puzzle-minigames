@@ -202,11 +202,16 @@ function initTreasureChests() {
     const container = document.getElementById('treasure-chests');
     container.innerHTML = '';
     
+    // Icon mapping for special puzzles
+    const iconMap = {
+        3: '🪞' // Mirror icon for puzzle 3
+    };
+    
     for (let i = 1; i <= PUZZLE_SIZE; i++) {
         const chest = document.createElement('div');
         chest.className = 'treasure-chest';
         chest.dataset.number = i;
-        chest.innerHTML = '🎁';
+        chest.innerHTML = iconMap[i] || '🎁';
         chest.setAttribute('data-number', i);
         
         chest.addEventListener('click', () => openTreasureChest(i));
@@ -246,7 +251,8 @@ function openTreasureChest(number) {
     
     // Check if this puzzle has a minigame
     const minigames = {
-        2: '/minigames/minigame-2/index.html'
+        2: '/minigames/minigame-2/index.html',
+        3: '/minigames/minigame-mirror/index.html'
         // Add more minigames here
     };
     
