@@ -12,18 +12,19 @@ Keep the ball from falling out of the screen boundaries for 30 seconds using onl
 ### Voice Controls
 The game uses pitch detection to map different vocal frequencies to directional controls:
 
-- **🎵 Low Pitch (0-150 Hz)**: Move LEFT ⬅️
+- **🎵 Low Pitch (Pitch Levels 1–5, very low frequencies)**: Move LEFT ⬅️
   - Make a deep, low humming sound
   
-- **🎵 Medium-Low Pitch (150-250 Hz)**: Move DOWN ⬇️
+- **🎵 Medium-Low Pitch (Pitch Levels 6–10, low–mid frequencies)**: Move DOWN ⬇️
   - Make a slightly higher, but still low sound
   
-- **🎵 Medium-High Pitch (250-400 Hz)**: Move UP ⬆️
+- **🎵 Medium-High Pitch (Pitch Levels 11–15, mid–high frequencies)**: Move UP ⬆️
   - Make a medium-pitched sound (normal speaking voice)
   
-- **🎵 High Pitch (400-1000 Hz)**: Move RIGHT ➡️
+- **🎵 High Pitch (Pitch Levels 16–20, very high frequencies)**: Move RIGHT ➡️
   - Make a high-pitched sound (like a whistle or high note)
 
+> ℹ️ **Note:** Internally, the game converts detected frequency (Hz) to a normalized pitch scale from 1 to 20 using a logarithmic algorithm, then maps these pitch levels to directions using fixed ranges (1–5, 6–10, 11–15, 16–20). The descriptions above are approximate examples; the exact frequency values that trigger each direction can vary by voice, microphone, and environment.
 ### Scoring
 - You earn points continuously for every moment the ball stays within the boundaries
 - Final score is based on time survived and points accumulated
