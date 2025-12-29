@@ -593,54 +593,60 @@ function startPitchDetection() {
     console.log('Starting pitch detection with FFT + HPS algorithm...');
     
     pitchDetectionInterval = setInterval(() => {
-        // Always update spectrogram and bars, even when paused or not playing
-        if (analyser) {
-            // Get frequency data for FFT analysis
-            analyser.getFloatFrequencyData(frequencyDataArray);
-            analyser.getFloatTimeDomainData(audioDataArray);
-            
-            // Check volume level
-            const volume = getVolume(audioDataArray);
-            
-            // Detect pitch using FFT + HPS algorithm
-            const result = detectPitchFFT_HPS(frequencyDataArray, audioContext.sampleRate);
-            
-            if (result && result.frequency > 0 && volume > MIN_VOLUME_THRESHOLD) {
-                // Smooth pitch value
-                gameState.lastPitch = gameState.lastPitch * PITCH_SMOOTHING + result.frequency * (1 - PITCH_SMOOTHING);
-                gameState.currentAmplitude = volume;
-                gameState.fftPeaks = result.peaks || [];
-                gameState.harmonics = result.harmonics || [];
-                
-                // Convert frequency to musical note
-                const note = frequencyToNote(gameState.lastPitch);
-                gameState.currentNote = note;
-                
-                // Determine direction from note
-                const direction = getDirectionFromNote(note);
-                
-                if (gameState.isPlaying && !gameState.isPaused) {
-                    gameState.currentDirection = direction;
-                }
-                
-                // Update UI
-                updatePitchDisplay(gameState.lastPitch);
-                
-                // Update spectrogram (always)
-                updateSpectrogram(gameState.lastPitch, volume);
-            } else {
-                // Still update spectrogram even with no pitch
-                if (volume > MIN_VOLUME_THRESHOLD / 2) {
-                    updateSpectrogram(gameState.lastPitch || 0, volume);
-                }
-                
-                if (gameState.isPlaying && !gameState.isPaused) {
-                    gameState.currentDirection = null;
-                    gameState.currentAmplitude = 0;
-                    currentDirectionDisplay.textContent = '---';
-                    pitchLevel.style.width = '0%';
-                }
+        if (!analyser) return;
+        
+        // Get frequency data for FFT analysis
+        analyser.getFloatFrequencyData(frequencyDataArray);
+        analyser.getFloatTimeDomainData(audioDataArray);
+        
+        // Check volume level
+        const volume = getVolume(audioDataArray);
+        
+        // Store amplitude for speed control
+        gameState.currentAmplitude = volume;
+        
+        if (volume < MIN_VOLUME_THRESHOLD) {
+            // No sound detected
+            if (gameState.isPlaying && !gameState.isPaused) {
+                gameState.currentDirection = null;
+                gameState.currentAmplitude = 0;
+                currentDirectionDisplay.textContent = '---';
+                pitchLevel.style.width = '0%';
             }
+            return;
+        }
+        
+        // Detect pitch using FFT + HPS algorithm
+        const result = detectPitchFFT_HPS(frequencyDataArray, audioContext.sampleRate);
+        
+        if (result && result.frequency > 0) {
+            // Smooth pitch value
+            gameState.lastPitch = gameState.lastPitch * PITCH_SMOOTHING + result.frequency * (1 - PITCH_SMOOTHING);
+            gameState.fftPeaks = result.peaks || [];
+            gameState.harmonics = result.harmonics || [];
+            
+            // Convert frequency to musical note
+            const note = frequencyToNote(gameState.lastPitch);
+            gameState.currentNote = note;
+            
+            // Determine direction from note
+            const direction = getDirectionFromNote(note);
+            
+            // Log detected frequency and note for debugging
+            console.log(`Frequency: ${gameState.lastPitch.toFixed(2)} Hz, Note: ${note}, Direction: ${direction}`);
+            
+            if (gameState.isPlaying && !gameState.isPaused) {
+                gameState.currentDirection = direction;
+            }
+            
+            // Update UI
+            updatePitchDisplay(gameState.lastPitch);
+            
+            // Update spectrogram (always)
+            updateSpectrogram(gameState.lastPitch, volume);
+            
+            // Update direction bars (always)
+            updateDirectionBars(gameState.lastPitch);
         }
     }, 50); // Check every 50ms
 }
@@ -677,13 +683,21 @@ function detectPitchFFT_HPS(frequencyData, sampleRate) {
     
     // Apply Harmonic Product Spectrum algorithm
     // HPS: Multiply downsampled versions of the spectrum to emphasize fundamental
-    const hpsSpectrum = new Float32Array(spectrum);
+    // FIXED: Use fresh values from original spectrum for each harmonic multiplication
+    const maxDownsampledLength = Math.floor(spectrumLength / HPS_HARMONIC_LEVELS);
+    const hpsSpectrum = new Float32Array(maxDownsampledLength);
     
+    // Initialize HPS spectrum with original spectrum values
+    for (let i = 0; i < maxDownsampledLength; i++) {
+        hpsSpectrum[i] = spectrum[i];
+    }
+    
+    // Multiply by each harmonic's downsampled spectrum
     for (let harmonic = 2; harmonic <= HPS_HARMONIC_LEVELS; harmonic++) {
         const downsampledLength = Math.floor(spectrumLength / harmonic);
-        for (let i = 0; i < downsampledLength; i++) {
+        for (let i = 0; i < downsampledLength && i < maxDownsampledLength; i++) {
             const harmonicIndex = i * harmonic;
-            // Ensure we don't exceed spectrum array bounds
+            // Multiply using fresh values from the original spectrum
             if (harmonicIndex < spectrumLength) {
                 hpsSpectrum[i] *= spectrum[harmonicIndex];
             }
