@@ -79,7 +79,7 @@ export function initARToolkit(rendererInstance, cameraInstance, sceneInstance) {
         onResize();
     });
     
-    // Handle resize
+    // Listen for window resize events
     window.addEventListener('resize', function() {
         onResize();
     });

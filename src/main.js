@@ -786,7 +786,7 @@ function setupARInteraction() {
     }
     
     arContainer.addEventListener('click', onARClick);
-    arContainer.addEventListener('touchstart', onARClick);
+    arContainer.addEventListener('touchend', onARClick);
 }
 
 // Initialize game
