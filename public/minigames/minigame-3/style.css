@@ -154,12 +154,75 @@ header h1 {
     overflow: hidden;
     position: relative;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
 }
 
-#game-canvas {
+.tabs {
+    display: flex;
+    background: rgba(26, 26, 46, 0.8);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 0.8rem;
+    background: transparent;
+    color: var(--text-light);
+    border: none;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-btn:hover {
+    background: rgba(108, 92, 231, 0.2);
+}
+
+.tab-btn.active {
+    background: rgba(108, 92, 231, 0.3);
+    border-bottom-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.tab-content {
+    display: none;
+    flex: 1;
+    position: relative;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+#game-canvas, #spectrogram-canvas {
     width: 100%;
     height: 100%;
     display: block;
+}
+
+#spectrogram-tab {
+    display: flex;
+    flex-direction: column;
+    background: #000;
+}
+
+#frequency-display {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(108, 92, 231, 0.9);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 1.1rem;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.5);
+    z-index: 10;
 }
 
 #controls {

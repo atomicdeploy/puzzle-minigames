@@ -71,14 +71,20 @@ let pitchDetectionInterval = null;
 // Canvas
 let canvas, ctx;
 let canvasWidth, canvasHeight;
+let spectrogramCanvas, spectrogramCtx;
+let spectrogramWidth, spectrogramHeight;
 
 // UI Elements
 let startBtn, micBtn, skipTutorialBtn, scoreDisplay, timerDisplay;
 let pitchLevel, currentDirectionDisplay;
-let feedbackDiv, pitchPreviewDiv;
+let feedbackDiv, pitchPreviewDiv, frequencyDisplay;
 
 // Audio context for pitch preview
 let previewAudioContext = null;
+
+// Spectrogram data
+let spectrogramData = [];
+const SPECTROGRAM_HISTORY = 200; // Number of columns to keep
 
 // Timer
 let gameTimer = null;
@@ -90,6 +96,9 @@ function init() {
     // Get canvas and context
     canvas = document.getElementById('game-canvas');
     ctx = canvas.getContext('2d');
+    
+    spectrogramCanvas = document.getElementById('spectrogram-canvas');
+    spectrogramCtx = spectrogramCanvas.getContext('2d');
     
     // Set canvas size
     resizeCanvas();
@@ -105,11 +114,15 @@ function init() {
     currentDirectionDisplay = document.getElementById('current-direction');
     feedbackDiv = document.getElementById('feedback');
     pitchPreviewDiv = document.getElementById('pitch-preview');
+    frequencyDisplay = document.getElementById('frequency-display');
     
     // Setup event listeners
     startBtn.addEventListener('click', handleStart);
     micBtn.addEventListener('click', handleMicToggle);
     skipTutorialBtn.addEventListener('click', handleSkipTutorial);
+    
+    // Setup tabs
+    setupTabs();
     
     // Setup pitch preview buttons
     setupPitchPreview();
@@ -124,12 +137,45 @@ function init() {
     drawGame();
 }
 
+function setupTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active class from all
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            btn.classList.add('active');
+            const tabName = btn.dataset.tab;
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Resize canvases when switching
+            resizeCanvas();
+        });
+    });
+}
+
 function resizeCanvas() {
-    const container = document.getElementById('canvas-container');
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
-    canvasWidth = canvas.width;
-    canvasHeight = canvas.height;
+    const gameTab = document.getElementById('game-tab');
+    const spectrogramTab = document.getElementById('spectrogram-tab');
+    
+    if (gameTab.classList.contains('active')) {
+        canvas.width = gameTab.clientWidth;
+        canvas.height = gameTab.clientHeight;
+        canvasWidth = canvas.width;
+        canvasHeight = canvas.height;
+    }
+    
+    if (spectrogramTab.classList.contains('active') || spectrogramCanvas) {
+        spectrogramCanvas.width = spectrogramTab.clientWidth;
+        spectrogramCanvas.height = spectrogramTab.clientHeight;
+        spectrogramWidth = spectrogramCanvas.width;
+        spectrogramHeight = spectrogramCanvas.height;
+    }
+
     
     // Reposition ball if needed
     if (gameState.ball.x === 0 && gameState.ball.y === 0) {
@@ -364,6 +410,9 @@ function startPitchDetection() {
             
             // Update UI
             updatePitchDisplay(gameState.lastPitch);
+            
+            // Update spectrogram
+            updateSpectrogram(gameState.lastPitch, volume);
         }
     }, 50); // Check every 50ms
 }
@@ -377,11 +426,8 @@ function getVolume(buffer) {
 }
 
 function autoCorrelate(buffer, sampleRate) {
-    // Enhanced autocorrelation algorithm to detect fundamental frequency (most prominent pitch)
+    // Simplified and more robust autocorrelation for pitch detection
     const SIZE = buffer.length;
-    const MAX_SAMPLES = Math.floor(SIZE / 2);
-    let best_offset = -1;
-    let best_correlation = 0;
     let rms = 0;
     
     // Calculate RMS (root mean square) for volume detection
@@ -394,47 +440,43 @@ function autoCorrelate(buffer, sampleRate) {
     // Not enough volume
     if (rms < 0.01) return -1;
     
-    // Normalize the buffer
-    const normalizedBuffer = new Float32Array(SIZE);
-    for (let i = 0; i < SIZE; i++) {
-        normalizedBuffer[i] = buffer[i] / rms;
-    }
+    // Define reasonable pitch range for human voice (80-1000 Hz)
+    const MIN_FREQUENCY = 80;  // Lowest expected frequency
+    const MAX_FREQUENCY = 1000; // Highest expected frequency
+    const MIN_SAMPLES = Math.ceil(sampleRate / MAX_FREQUENCY);
+    const MAX_SAMPLES = Math.floor(sampleRate / MIN_FREQUENCY);
     
-    // Find the best offset (fundamental frequency) using improved autocorrelation
-    // This helps detect the most prominent pitch even with harmonics present
-    const correlations = [];
-    for (let offset = 1; offset < MAX_SAMPLES; offset++) {
-        let correlation = 0;
+    // Autocorrelation using AMDF (Average Magnitude Difference Function)
+    let best_offset = -1;
+    let best_score = Infinity;
+    
+    for (let offset = MIN_SAMPLES; offset <= MAX_SAMPLES && offset < SIZE / 2; offset++) {
+        let sum = 0;
         
-        // Calculate autocorrelation for this offset
-        for (let i = 0; i < MAX_SAMPLES; i++) {
-            correlation += normalizedBuffer[i] * normalizedBuffer[i + offset];
+        // Calculate average magnitude difference
+        for (let i = 0; i < SIZE / 2; i++) {
+            sum += Math.abs(buffer[i] - buffer[i + offset]);
         }
         
-        correlation = correlation / MAX_SAMPLES;
-        correlations.push({ offset, correlation });
+        const score = sum / (SIZE / 2);
         
-        // Track the best correlation (most prominent pitch)
-        if (correlation > best_correlation && correlation > 0.5) {
-            best_correlation = correlation;
+        // Find minimum (best match)
+        if (score < best_score) {
+            best_score = score;
             best_offset = offset;
         }
     }
     
     if (best_offset === -1) return -1;
     
-    // Refine the pitch using parabolic interpolation for better accuracy
-    if (best_offset > 0 && best_offset < correlations.length - 1) {
-        const y1 = correlations[best_offset - 1].correlation;
-        const y2 = correlations[best_offset].correlation;
-        const y3 = correlations[best_offset + 1].correlation;
-        
-        const delta = (y3 - y1) / (2 * (2 * y2 - y1 - y3));
-        best_offset += delta;
-    }
-    
     // Calculate frequency from offset
     const frequency = sampleRate / best_offset;
+    
+    // Sanity check - ensure frequency is in expected range
+    if (frequency < MIN_FREQUENCY || frequency > MAX_FREQUENCY) {
+        return -1;
+    }
+    
     return frequency;
 }
 
@@ -1045,6 +1087,7 @@ function startDemoSimulation() {
                 }
                 gameState.lastPitch = demoPitch;
                 updatePitchDisplay(demoPitch);
+                updateSpectrogram(demoPitch, gameState.currentAmplitude);
             }
         } else {
             // Random direction in normal mode
@@ -1060,8 +1103,89 @@ function startDemoSimulation() {
                 'RIGHT': 500
             };
             gameState.lastPitch = freqExamples[randomDir];
+            updateSpectrogram(gameState.lastPitch, gameState.currentAmplitude);
         }
     }, 100);
+}
+
+// Update spectrogram with new frequency data
+function updateSpectrogram(frequency, amplitude) {
+    if (!spectrogramCanvas || !spectrogramCtx) return;
+    
+    // Add new data point
+    spectrogramData.push({ frequency, amplitude });
+    
+    // Keep only recent history
+    if (spectrogramData.length > SPECTROGRAM_HISTORY) {
+        spectrogramData.shift();
+    }
+    
+    // Update frequency display
+    if (frequencyDisplay) {
+        frequencyDisplay.textContent = `فرکانس: ${frequency.toFixed(2)} Hz`;
+    }
+    
+    // Draw spectrogram
+    drawSpectrogram();
+}
+
+function drawSpectrogram() {
+    if (!spectrogramCanvas || !spectrogramCtx || spectrogramData.length === 0) return;
+    
+    const width = spectrogramCanvas.width;
+    const height = spectrogramCanvas.height;
+    
+    // Clear canvas
+    spectrogramCtx.fillStyle = '#000';
+    spectrogramCtx.fillRect(0, 0, width, height);
+    
+    // Draw frequency grid lines
+    spectrogramCtx.strokeStyle = 'rgba(100, 255, 218, 0.1)';
+    spectrogramCtx.lineWidth = 1;
+    
+    const freqSteps = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+    freqSteps.forEach(freq => {
+        const y = height - (freq / 1000) * height;
+        spectrogramCtx.beginPath();
+        spectrogramCtx.moveTo(0, y);
+        spectrogramCtx.lineTo(width, y);
+        spectrogramCtx.stroke();
+        
+        // Label
+        spectrogramCtx.fillStyle = 'rgba(100, 255, 218, 0.5)';
+        spectrogramCtx.font = '10px Vazirmatn';
+        spectrogramCtx.fillText(`${freq}Hz`, 5, y - 2);
+    });
+    
+    // Draw data points
+    const columnWidth = width / SPECTROGRAM_HISTORY;
+    
+    spectrogramData.forEach((data, index) => {
+        const x = index * columnWidth;
+        const normalizedFreq = Math.min(data.frequency / 1000, 1);
+        const y = height - (normalizedFreq * height);
+        
+        // Color based on amplitude (brightness)
+        const intensity = Math.min(data.amplitude * 3, 1);
+        const hue = 180 + (normalizedFreq * 180); // Cyan to purple gradient
+        spectrogramCtx.fillStyle = `hsla(${hue}, 80%, ${intensity * 60}%, ${intensity})`;
+        
+        spectrogramCtx.fillRect(x, y - 5, columnWidth + 1, 10);
+    });
+    
+    // Draw current frequency line
+    if (spectrogramData.length > 0) {
+        const lastData = spectrogramData[spectrogramData.length - 1];
+        const normalizedFreq = Math.min(lastData.frequency / 1000, 1);
+        const y = height - (normalizedFreq * height);
+        
+        spectrogramCtx.strokeStyle = '#00ffaa';
+        spectrogramCtx.lineWidth = 2;
+        spectrogramCtx.beginPath();
+        spectrogramCtx.moveTo(0, y);
+        spectrogramCtx.lineTo(width, y);
+        spectrogramCtx.stroke();
+    }
 }
 
 // Initialize on load
