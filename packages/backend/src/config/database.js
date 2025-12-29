@@ -28,13 +28,26 @@ export const dbPool = mysql.createPool({
 // Promise-based pool for async/await
 export const dbPromise = dbPool.promise();
 
-// Test database connection
-dbPool.getConnection((err, connection) => {
-  if (err) {
-    console.error('❌ Database connection error:', err.message);
-    console.log('⚠️  Server will continue but database operations will fail');
-  } else {
-    console.log('✅ Database connected successfully');
-    connection.release();
-  }
-});
+// Test database connection with retries to improve resilience during startup
+function testDbConnection(retries = 5, delayMs = 2000) {
+  dbPool.getConnection((err, connection) => {
+    if (err) {
+      if (retries > 0) {
+        console.warn(
+          `⚠️  Database connection failed (${err.message}). ` +
+          `Retrying in ${delayMs}ms... (${retries} retries left)`
+        );
+        setTimeout(() => testDbConnection(retries - 1, delayMs), delayMs);
+      } else {
+        console.error('❌ Database connection error:', err.message);
+        console.log('⚠️  Server will continue but database operations may fail');
+      }
+    } else {
+      console.log('✅ Database connected successfully');
+      connection.release();
+    }
+  });
+}
+
+// Initiate initial database connectivity test
+testDbConnection();
