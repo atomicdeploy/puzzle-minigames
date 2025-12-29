@@ -394,7 +394,6 @@ export default defineConfig({
     headers: {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'SAMEORIGIN',
-      'X-XSS-Protection': '1; mode=block',
     }
   }
 })
