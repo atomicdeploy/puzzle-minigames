@@ -11,6 +11,7 @@ const CORRECT_ORDER = {
 let currentStage = 1;
 let isGameComplete = false;
 let isMirrored = false; // Track mirror state
+let confettiAnimationId = null; // Track confetti animation frame ID
 let currentOrder = {
     top: null,
     middle: null,
@@ -329,8 +330,9 @@ function handleCorrectOrder() {
     // Disable order submit button
     document.getElementById('order-submit').disabled = true;
     
-    // Notify parent window
+    // Notify parent window and stop confetti
     setTimeout(() => {
+        stopConfetti(); // Cancel confetti animation before notifying parent
         window.parent.postMessage({
             type: 'minigame-complete',
             success: true,
@@ -438,13 +440,25 @@ function playConfetti() {
         }
         
         if (stillActive) {
-            requestAnimationFrame(drawConfetti);
+            confettiAnimationId = requestAnimationFrame(drawConfetti);
         } else {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            confettiAnimationId = null;
         }
     }
     
     drawConfetti();
+}
+
+// Stop confetti animation
+function stopConfetti() {
+    if (confettiAnimationId) {
+        cancelAnimationFrame(confettiAnimationId);
+        confettiAnimationId = null;
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
 }
 
 // Initialize game when DOM is loaded
