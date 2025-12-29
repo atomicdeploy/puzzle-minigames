@@ -1,7 +1,7 @@
-# رد بسکتبال نهان (Basketball Hidden Puzzle)
+# رد نهان (Basketball Hidden Puzzle)
 
 ## نام بازی
-Mini Game 3 - Basketball Footstep Tracking Puzzle
+Mini Game Basketball - Basketball Footstep Tracking Puzzle
 
 ## توضیحات
 <div dir="rtl">
@@ -12,8 +12,7 @@ Mini Game 3 - Basketball Footstep Tracking Puzzle
 - 🔍 **بازی نهان:** باید رد پاها را دنبال کنید تا امتیاز درست را تشخیص دهید
 - 📏 **قانون اول:** به ازای هر یک قدم، یک متر
 - ⭐ **قانون دوم:** به اندازهٔ هر ۱ متر، یک امتیاز
-- 🧡 **نقطهٔ شروع:** خط نارنجی که زیر نور قرار دارد، نقطهٔ صفر است
-- 🎯 **مثال:** اگر از ۵ متری توپ را به سبد انداخت، ۵ امتیاز می‌گیرد
+- 🟠 **نقطهٔ شروع:** خط نارنجی که زیر تور قرار دارد، نقطهٔ صفر است
 - 🧩 **هدف:** ترتیب حرکت را پیدا کنید و امتیاز نهایی را محاسبه کنید
 
 </div>
@@ -23,14 +22,20 @@ Mini Game 3 - Basketball Footstep Tracking Puzzle
 ### Visual Elements
 - **Seven-Segment Display**: Authentic digital scoreboard with red LED segments
 - **Basketball Court**: Canvas-rendered mini-map with:
-  - Parallel vertical lines numbered (0, 3, 5, 7, 10, 15)
+  - Parallel vertical lines numbered (including decimals and negatives: -10, -5, -1.5, -1, 0, 1, 1.5, 3, 5, 7, 10, 15)
   - Orange center line (starting point) with spotlight effect
   - Three-point arc decoration
   - Basketball hoop and backboard
-- **Animated Footsteps**: 9 footsteps (👣) that appear sequentially
+- **Draggable Footsteps**: 5 footsteps (👣) that users can drag and position on any line (including decimal and negative values)
 - **Radar Effect**: Pulsing shimmer/spotlight on the orange center line
 
 ### Interactive Elements
+- **Draggable Footsteps**: 
+  - 5 footsteps that can be dragged and positioned
+  - Supports drag & drop on desktop
+  - Touch support for mobile devices
+  - Snaps to nearest 0.5 line increment
+  - Supports decimal (1.5) and negative (-1.5) line positions
 - **Score Controls**: 
   - Plus (+) button to increase score
   - Minus (−) button to decrease score
@@ -57,35 +62,36 @@ Mini Game 3 - Basketball Footstep Tracking Puzzle
 
 **Correct Answer: 15**
 
-### Footstep Sequence
-The footsteps follow this path from the orange center line (line 0):
+### User Configuration
+Players can drag 5 footsteps to different line positions (including decimals and negatives) to solve the puzzle. The final score is calculated based on the footstep positions they choose.
 
-1. Line 0 → Start (0 points)
-2. Line 3 → +3 (3 points)
-3. Line 5 → +2 (5 points total)
-4. Line 2 → -3 (2 points)
-5. Line 7 → +5 (7 points)
-6. Line 8 → +1 (8 points)
-7. Line 3 → -5 (3 points)
-8. Line 8 → +5 (8 points)
-9. Line 15 → +7 (**15 points - FINAL**)
+Example solution path:
+1. Footstep 1 at line 0 → Start (0 points)
+2. Footstep 2 at line 3 → 3 points
+3. Footstep 3 at line 5 → 5 points
+4. Footstep 4 at line 8 → 8 points
+5. Footstep 5 at line 15 → **15 points (FINAL)**
 
 ## Technical Details
 
 ### Files
 - `index.html` - HTML structure with Persian RTL support
-- `style.css` - Responsive CSS with animations
-- `game.js` - Game logic and Canvas rendering
+- `style.css` - Responsive CSS with animations and draggable styles
+- `game.js` - Game logic with Canvas rendering and drag & drop
 
 ### Dependencies
 - No external libraries required
 - Uses native Canvas API
 - Uses Web Audio API for sounds
+- Uses HTML5 Drag and Drop API
+- Touch events for mobile support
 
 ### Browser Support
 - Modern browsers (Chrome, Firefox, Safari, Edge)
 - Mobile responsive (320px+)
 - Touch and mouse input supported
+- Drag and drop on desktop
+- Touch drag on mobile
 
 ### Integration
 Posts message on completion:
@@ -93,7 +99,7 @@ Posts message on completion:
 {
   type: 'minigame-complete',
   success: true,
-  puzzleNumber: 3,
+  puzzleNumber: 'basketball',
   answer: 15
 }
 ```
@@ -133,7 +139,7 @@ Posts message on completion:
 
 ### Running Locally
 ```bash
-cd minigames/minigame-3
+cd minigames/minigame-basketball
 # Open index.html in browser
 # Or serve via development server
 ```
