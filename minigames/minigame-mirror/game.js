@@ -101,18 +101,15 @@ function handlePasswordInput(e) {
     for (let i = 0; i < value.length; i++) {
         const char = value[i];
         
-        // Check if it's an English character
-        if (/[a-zA-Z]/.test(char)) {
-            hasEnglishChar = true;
-            hasInvalidChar = true;
-            continue; // Skip this character
-        }
-        
         // Check if it's a valid Farsi character or space
         if (isFarsiCharacter(char)) {
             newValue += char;
         } else {
             hasInvalidChar = true;
+            // Check if it's an English character
+            if (/[a-zA-Z]/.test(char)) {
+                hasEnglishChar = true;
+            }
         }
     }
     
@@ -121,10 +118,8 @@ function handlePasswordInput(e) {
     
     // Update input value if it changed
     if (input.value !== newValue) {
-        const cursorPos = input.selectionStart;
         input.value = newValue;
-        // Try to maintain cursor position
-        input.setSelectionRange(cursorPos, cursorPos);
+        // Cursor will naturally adjust to end, which is acceptable for this use case
     }
     
     // Show helper text if English characters detected
@@ -149,7 +144,7 @@ function handlePasswordBlur(e) {
     value = value.replace(/^\s+/, '');
     
     // Allow only one trailing space, remove the rest
-    value = value.replace(/\s+$/, (match) => match.length > 0 ? ' ' : '');
+    value = value.replace(/\s+$/, ' ');
     
     input.value = value;
 }
