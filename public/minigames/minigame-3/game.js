@@ -345,7 +345,15 @@ function startSpeechRecognition() {
             isListening = true;
             console.log('Speech recognition started');
         } catch (error) {
-            console.error('Failed to start speech recognition:', error);
+            // Handle the case where recognition is already running
+            if (error && (error.name === 'InvalidStateError' || error.code === 'InvalidStateError')) {
+                console.warn('Speech recognition was already started; syncing isListening state.');
+                // If start() failed because it was already running, reflect that in our flag
+                isListening = true;
+            } else {
+                console.error('Failed to start speech recognition:', error);
+                isListening = false;
+            }
         }
     }
 }
