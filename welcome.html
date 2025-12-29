@@ -236,16 +236,16 @@
         <!-- OTP Verification Screen (for registration) -->
         <div id="otp-registration-screen" class="screen">
             <div class="otp-content">
-                <h2>تایید شماره موبایل</h2>
+                <h2 id="otp-registration-heading">تایید شماره موبایل</h2>
                 <p class="subtitle">کد 6 رقمی ارسال شده به شماره <span id="registration-phone-display"></span> را وارد کنید</p>
                 
-                <div class="otp-inputs">
-                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric">
-                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric">
-                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric">
-                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric">
-                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric">
-                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric">
+                <div class="otp-inputs" role="group" aria-labelledby="otp-registration-heading">
+                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric" aria-label="OTP digit 1">
+                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric" aria-label="OTP digit 2">
+                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric" aria-label="OTP digit 3">
+                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric" aria-label="OTP digit 4">
+                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric" aria-label="OTP digit 5">
+                    <input type="text" class="otp-input" maxlength="1" pattern="\d" inputmode="numeric" aria-label="OTP digit 6">
                 </div>
 
                 <button class="btn btn-primary btn-large" onclick="verifyRegistrationOTP()">تایید و ثبت نام</button>
