@@ -31,7 +31,6 @@ body {
     background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-medium) 50%, var(--bg-light) 100%);
     color: var(--text-primary);
     min-height: 100vh;
-    overflow: hidden;
     direction: rtl;
     position: relative;
     touch-action: pan-y;
