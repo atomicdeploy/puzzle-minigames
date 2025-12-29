@@ -1125,8 +1125,55 @@ function updateSpectrogram(frequency, amplitude) {
         frequencyDisplay.textContent = `فرکانس: ${frequency.toFixed(2)} Hz`;
     }
     
+    // Update direction bars
+    updateDirectionBars(frequency);
+    
     // Draw spectrogram
     drawSpectrogram();
+}
+
+// Helper function to convert frequency to logarithmic position
+function frequencyToLogY(frequency, minFreq, maxFreq, height) {
+    if (frequency <= 0) return height;
+    const minLog = Math.log10(minFreq);
+    const maxLog = Math.log10(maxFreq);
+    const freqLog = Math.log10(Math.max(minFreq, Math.min(maxFreq, frequency)));
+    const normalized = (freqLog - minLog) / (maxLog - minLog);
+    return height - (normalized * height);
+}
+
+// Update direction bar meters based on current frequency
+function updateDirectionBars(frequency) {
+    const pitchNumber = frequencyToPitchNumber(frequency);
+    if (pitchNumber === null) return;
+    
+    // Calculate how much the current pitch matches each direction range
+    const bars = document.querySelectorAll('.direction-bar');
+    bars.forEach(bar => {
+        const direction = bar.dataset.direction;
+        const range = PITCH_RANGES[direction];
+        const fill = bar.querySelector('.direction-bar-fill');
+        
+        // Calculate overlap/proximity to this range
+        let fillPercent = 0;
+        if (pitchNumber >= range.min && pitchNumber <= range.max) {
+            // Inside range - fill based on position in range
+            const rangeSize = range.max - range.min;
+            const positionInRange = pitchNumber - range.min;
+            fillPercent = 100; // Full when in range
+            bar.classList.add('active');
+        } else {
+            bar.classList.remove('active');
+            // Outside range - show proximity
+            const distanceToRange = Math.min(
+                Math.abs(pitchNumber - range.min),
+                Math.abs(pitchNumber - range.max)
+            );
+            fillPercent = Math.max(0, 100 - (distanceToRange * 20));
+        }
+        
+        fill.style.width = `${fillPercent}%`;
+    });
 }
 
 function drawSpectrogram() {
@@ -1134,18 +1181,21 @@ function drawSpectrogram() {
     
     const width = spectrogramCanvas.width;
     const height = spectrogramCanvas.height;
+    const minFreq = 80;
+    const maxFreq = 1000;
     
     // Clear canvas
     spectrogramCtx.fillStyle = '#000';
     spectrogramCtx.fillRect(0, 0, width, height);
     
-    // Draw frequency grid lines
+    // Draw logarithmic frequency grid lines
     spectrogramCtx.strokeStyle = 'rgba(100, 255, 218, 0.1)';
     spectrogramCtx.lineWidth = 1;
     
-    const freqSteps = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+    // Use logarithmic spacing for grid lines
+    const freqSteps = [80, 100, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
     freqSteps.forEach(freq => {
-        const y = height - (freq / 1000) * height;
+        const y = frequencyToLogY(freq, minFreq, maxFreq, height);
         spectrogramCtx.beginPath();
         spectrogramCtx.moveTo(0, y);
         spectrogramCtx.lineTo(width, y);
@@ -1157,7 +1207,7 @@ function drawSpectrogram() {
         spectrogramCtx.fillText(`${freq}Hz`, 5, y - 2);
     });
     
-    // Draw frequency curve as a connected line
+    // Draw frequency curve as a connected line (logarithmic scale)
     if (spectrogramData.length > 1) {
         const columnWidth = width / SPECTROGRAM_HISTORY;
         
@@ -1170,8 +1220,7 @@ function drawSpectrogram() {
         
         // Start from first point
         const firstData = spectrogramData[0];
-        const firstNormalizedFreq = Math.min(firstData.frequency / 1000, 1);
-        const firstY = height - (firstNormalizedFreq * height);
+        const firstY = frequencyToLogY(firstData.frequency, minFreq, maxFreq, height);
         const firstX = 0;
         spectrogramCtx.moveTo(firstX, firstY);
         
@@ -1180,8 +1229,7 @@ function drawSpectrogram() {
             if (index === 0) return;
             
             const x = index * columnWidth;
-            const normalizedFreq = Math.min(data.frequency / 1000, 1);
-            const y = height - (normalizedFreq * height);
+            const y = frequencyToLogY(data.frequency, minFreq, maxFreq, height);
             
             spectrogramCtx.lineTo(x, y);
         });
@@ -1200,11 +1248,15 @@ function drawSpectrogram() {
         // Draw dots at each data point with color based on amplitude
         spectrogramData.forEach((data, index) => {
             const x = index * columnWidth;
-            const normalizedFreq = Math.min(data.frequency / 1000, 1);
-            const y = height - (normalizedFreq * height);
+            const y = frequencyToLogY(data.frequency, minFreq, maxFreq, height);
             
-            // Color based on amplitude (brightness)
+            // Color based on amplitude (brightness) and frequency (hue)
             const intensity = Math.min(data.amplitude * 3, 1);
+            // Map frequency logarithmically to hue
+            const freqLog = Math.log10(Math.max(minFreq, Math.min(maxFreq, data.frequency)));
+            const minLog = Math.log10(minFreq);
+            const maxLog = Math.log10(maxFreq);
+            const normalizedFreq = (freqLog - minLog) / (maxLog - minLog);
             const hue = 180 + (normalizedFreq * 180); // Cyan to purple gradient
             
             spectrogramCtx.fillStyle = `hsla(${hue}, 80%, ${intensity * 60}%, ${intensity})`;
@@ -1217,8 +1269,7 @@ function drawSpectrogram() {
     // Draw current frequency indicator line
     if (spectrogramData.length > 0) {
         const lastData = spectrogramData[spectrogramData.length - 1];
-        const normalizedFreq = Math.min(lastData.frequency / 1000, 1);
-        const y = height - (normalizedFreq * height);
+        const y = frequencyToLogY(lastData.frequency, minFreq, maxFreq, height);
         
         spectrogramCtx.setLineDash([5, 5]);
         spectrogramCtx.strokeStyle = 'rgba(255, 255, 0, 0.6)';

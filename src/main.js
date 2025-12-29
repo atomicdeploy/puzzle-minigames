@@ -238,7 +238,7 @@ function openTreasureChest(number) {
     // Check if this puzzle has a minigame
     const minigames = {
         2: '/minigames/minigame-2/index.html',
-        3: '/minigames/minigame-3/index.html'
+        3: '/minigames/minigame-3/index.html',
         4: '/minigames/minigame-mirror/index.html'
         // Add more minigames here
     };
