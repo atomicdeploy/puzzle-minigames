@@ -741,19 +741,26 @@ function initUI() {
     });
 }
 
+// Show/hide welcome modal
+function setWelcomeModalVisibility(visible) {
+    const welcomeModal = document.getElementById('welcome-modal');
+    if (!welcomeModal) {
+        return;
+    }
+    welcomeModal.style.display = visible ? 'flex' : 'none';
+}
+
 // Show welcome modal on first visit
 function showWelcomeModal() {
     const hasShown = localStorage.getItem('infernal-welcome-shown');
     if (hasShown !== 'true') {
-        const welcomeModal = document.getElementById('welcome-modal');
-        welcomeModal.style.display = 'flex';
+        setWelcomeModalVisibility(true);
     }
 }
 
 // Show about modal (same as welcome but can be triggered from menu)
 function showAboutModal() {
-    const welcomeModal = document.getElementById('welcome-modal');
-    welcomeModal.style.display = 'flex';
+    setWelcomeModalVisibility(true);
 }
 
 // Update active menu item
