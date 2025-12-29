@@ -21,6 +21,7 @@ const SEGMENT_PATTERNS = {
 // Game state
 let currentScore = 0;
 let isGameComplete = false;
+let audioContext = null; // Reusable AudioContext instance
 
 // Footstep sequence (positions will be calculated based on court size)
 // Each entry: { x: percentage, y: percentage, line: line number from center }
@@ -42,10 +43,11 @@ function init() {
     drawBasketballCourt();
     createFootsteps();
     setupEventListeners();
+    setupResizeHandler();
     updateSevenSegmentDisplay(currentScore);
     
-    // Start the radar effect animation
-    animateRadar();
+    // Initialize AudioContext once
+    initAudioContext();
     
     // Animate footsteps appearing one by one
     animateFootstepsSequence();
@@ -139,12 +141,19 @@ function drawBasketballCourt() {
             ctx.fillText(i.toString(), x, 20);
         }
     }
-    
-    // Handle window resize
-    window.addEventListener('resize', () => {
-        drawBasketballCourt();
-        updateFootstepPositions();
-    });
+}
+
+// Setup resize handler (called once during initialization)
+let resizeHandlerAttached = false;
+
+function setupResizeHandler() {
+    if (!resizeHandlerAttached) {
+        window.addEventListener('resize', () => {
+            drawBasketballCourt();
+            updateFootstepPositions();
+        });
+        resizeHandlerAttached = true;
+    }
 }
 
 // Create footsteps on the court
@@ -216,12 +225,12 @@ function animateFootstepsSequence() {
     });
 }
 
-// Animate radar effect
-function animateRadar() {
-    const radar = document.getElementById('radar-effect');
-    // The animation is handled by CSS, just ensure it's visible
-    if (radar) {
-        radar.style.visibility = 'visible';
+// Initialize AudioContext (called once during initialization)
+function initAudioContext() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+        console.warn('Web Audio API not supported');
     }
 }
 
@@ -429,8 +438,9 @@ function playConfetti() {
 
 // Play click sound using Web Audio API
 function playClickSound() {
+    if (!audioContext) return;
+    
     try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         
@@ -446,7 +456,7 @@ function playClickSound() {
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.1);
     } catch (e) {
-        // Silent fail if audio context is not available
+        // Silent fail if audio playback fails
     }
 }
 
