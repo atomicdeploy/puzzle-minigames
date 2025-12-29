@@ -235,8 +235,11 @@ function handleTouchEnd(e) {
 
 function updateTouchClonePosition(touch) {
     if (!touchClone) return;
-    touchClone.style.left = `${touch.clientX - 50}px`;
-    touchClone.style.top = `${touch.clientY - 25}px`;
+    const rect = touchClone.getBoundingClientRect();
+    const left = touch.clientX - rect.width / 2;
+    const top = touch.clientY - rect.height / 2;
+    touchClone.style.left = `${left}px`;
+    touchClone.style.top = `${top}px`;
 }
 
 // Place word in drop zone
