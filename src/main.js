@@ -723,30 +723,47 @@ function initUI() {
     // Delay for focus after DOM updates/animations (in milliseconds)
     const FOCUS_DELAY = 100;
     
+    // Helper function to close welcome modal (reduces code duplication)
+    const closeWelcomeModal = () => {
+        welcomeModal.style.display = 'none';
+        try {
+            localStorage.setItem('infernal-welcome-shown', 'true');
+        } catch (e) {
+            console.warn('localStorage not available:', e);
+        }
+        // Restore focus - check stored element first, then fallback to dataset
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        } else if (welcomeModal.dataset.focusReturn) {
+            const elementToFocus = document.getElementById(welcomeModal.dataset.focusReturn);
+            if (elementToFocus) {
+                elementToFocus.focus();
+            }
+            delete welcomeModal.dataset.focusReturn;
+        }
+    };
+    
+    // Helper function to close side menu (reduces code duplication)
+    const closeSideMenu = () => {
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+        if (focusBeforeMenu) {
+            focusBeforeMenu.focus();
+            focusBeforeMenu = null;
+        }
+    };
+    
     // Keyboard accessibility - Escape key handler
     const handleEscapeKey = (event) => {
         if (event.key === 'Escape' || event.key === 'Esc') {
             // Close modal if open
             if (window.getComputedStyle(welcomeModal).display !== 'none') {
-                welcomeModal.style.display = 'none';
-                try {
-                    localStorage.setItem('infernal-welcome-shown', 'true');
-                } catch (e) {
-                    console.warn('localStorage not available:', e);
-                }
-                if (lastFocusedElement) {
-                    lastFocusedElement.focus();
-                    lastFocusedElement = null;
-                }
+                closeWelcomeModal();
             }
             // Close side menu if open
             else if (sideMenu.classList.contains('open')) {
-                sideMenu.classList.remove('open');
-                menuOverlay.classList.remove('active');
-                if (focusBeforeMenu) {
-                    focusBeforeMenu.focus();
-                    focusBeforeMenu = null;
-                }
+                closeSideMenu();
             }
             // Close contact page if open
             else if (window.getComputedStyle(contactPage).display !== 'none') {
@@ -773,63 +790,26 @@ function initUI() {
     });
     
     menuCloseBtn.addEventListener('click', () => {
-        sideMenu.classList.remove('open');
-        menuOverlay.classList.remove('active');
-        if (focusBeforeMenu) {
-            focusBeforeMenu.focus();
-            focusBeforeMenu = null;
-        }
+        closeSideMenu();
     });
     
     menuOverlay.addEventListener('click', () => {
-        sideMenu.classList.remove('open');
-        menuOverlay.classList.remove('active');
-        if (focusBeforeMenu) {
-            focusBeforeMenu.focus();
-            focusBeforeMenu = null;
-        }
+        closeSideMenu();
     });
     
     // Welcome modal
     startGameBtn.addEventListener('click', () => {
-        welcomeModal.style.display = 'none';
-        try {
-            localStorage.setItem('infernal-welcome-shown', 'true');
-        } catch (e) {
-            console.warn('localStorage not available:', e);
-        }
-        if (lastFocusedElement) {
-            lastFocusedElement.focus();
-            lastFocusedElement = null;
-        }
+        closeWelcomeModal();
     });
     
     modalClose.addEventListener('click', () => {
-        welcomeModal.style.display = 'none';
-        try {
-            localStorage.setItem('infernal-welcome-shown', 'true');
-        } catch (e) {
-            console.warn('localStorage not available:', e);
-        }
-        if (lastFocusedElement) {
-            lastFocusedElement.focus();
-            lastFocusedElement = null;
-        }
+        closeWelcomeModal();
     });
     
     // Close welcome modal when clicking on the backdrop (outside modal content)
     welcomeModal.addEventListener('click', (event) => {
         if (event.target === welcomeModal) {
-            welcomeModal.style.display = 'none';
-            try {
-                localStorage.setItem('infernal-welcome-shown', 'true');
-            } catch (e) {
-                console.warn('localStorage not available:', e);
-            }
-            if (lastFocusedElement) {
-                lastFocusedElement.focus();
-                lastFocusedElement = null;
-            }
+            closeWelcomeModal();
         }
     });
     
@@ -895,6 +875,17 @@ function showWelcomeModal() {
     try {
         const hasShown = localStorage.getItem('infernal-welcome-shown');
         if (hasShown !== 'true') {
+            const welcomeModal = document.getElementById('welcome-modal');
+            const menuBtn = document.getElementById('menu-btn');
+            
+            // Store focus target in the modal's dataset for later restoration
+            if (document.activeElement && document.activeElement !== document.body) {
+                welcomeModal.dataset.focusReturn = document.activeElement.id || '';
+            } else if (menuBtn) {
+                // Fallback to menu button as a meaningful focus target
+                welcomeModal.dataset.focusReturn = 'menu-btn';
+            }
+            
             setWelcomeModalVisibility(true);
         }
     } catch (e) {
