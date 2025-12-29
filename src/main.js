@@ -727,7 +727,7 @@ function initUI() {
     const handleEscapeKey = (event) => {
         if (event.key === 'Escape' || event.key === 'Esc') {
             // Close modal if open
-            if (welcomeModal.style.display !== 'none') {
+            if (window.getComputedStyle(welcomeModal).display !== 'none') {
                 welcomeModal.style.display = 'none';
                 try {
                     localStorage.setItem('infernal-welcome-shown', 'true');
