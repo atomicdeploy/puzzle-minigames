@@ -665,7 +665,7 @@ function detectPitchFFT_HPS(frequencyData, sampleRate) {
     
     // Find the peak in HPS spectrum
     let maxMagnitude = -Infinity;
-    let maxBin = -1;
+    let peakBin = -1;
     
     // Look for peak in HPS spectrum (with some smoothing)
     const smoothWindow = 3;
@@ -679,14 +679,14 @@ function detectPitchFFT_HPS(frequencyData, sampleRate) {
         
         if (smoothed > maxMagnitude) {
             maxMagnitude = smoothed;
-            maxBin = i;
+            peakBin = i;
         }
     }
     
-    if (maxBin === -1 || maxMagnitude < 0.01) return null;
+    if (peakBin === -1 || maxMagnitude < 0.01) return null;
     
     // Calculate frequency from bin index
-    const frequency = (minBin + maxBin) * binSize;
+    const frequency = (minBin + peakBin) * binSize;
     
     // Validate frequency range
     if (frequency < FREQUENCY_MIN || frequency > FREQUENCY_MAX) {
