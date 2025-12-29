@@ -332,6 +332,14 @@ function handleIncorrectOrder() {
     submitButton.style.animation = 'none';
     setTimeout(() => {
         submitButton.style.animation = 'shake 0.5s ease';
+        
+        const onAnimationEnd = () => {
+            // Clear the inline animation style after the shake finishes
+            submitButton.style.animation = '';
+            submitButton.removeEventListener('animationend', onAnimationEnd);
+        };
+        
+        submitButton.addEventListener('animationend', onAnimationEnd);
     }, 10);
 }
 
