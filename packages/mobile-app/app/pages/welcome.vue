@@ -163,6 +163,18 @@
               
               <input v-model="formData.color" type="radio" name="color" value="#6c5ce7" id="color4" required>
               <label for="color4" class="color-option" style="background: #6c5ce7;" aria-label="Purple"></label>
+              
+              <input v-model="formData.color" type="radio" name="color" value="#fd79a8" id="color5" required>
+              <label for="color5" class="color-option" style="background: #fd79a8;" aria-label="Pink"></label>
+              
+              <input v-model="formData.color" type="radio" name="color" value="#00b894" id="color6" required>
+              <label for="color6" class="color-option" style="background: #00b894;" aria-label="Green"></label>
+              
+              <input v-model="formData.color" type="radio" name="color" value="#fdcb6e" id="color7" required>
+              <label for="color7" class="color-option" style="background: #fdcb6e;" aria-label="Light Yellow"></label>
+              
+              <input v-model="formData.color" type="radio" name="color" value="#e17055" id="color8" required>
+              <label for="color8" class="color-option" style="background: #e17055;" aria-label="Orange"></label>
             </div>
           </div>
 
