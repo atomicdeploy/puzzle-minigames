@@ -151,12 +151,16 @@ export default class AuthController {
     // Generate 6-digit OTP
     const code = Math.floor(100000 + Math.random() * 900000).toString()
 
+    // Generate session ID for tracking
+    const sessionId = randomBytes(16).toString('hex')
+
     // Create OTP record
     await Otp.create({
       phoneNumber: normalizedPhone,
       code,
+      sessionId,
       isUsed: false,
-      expiresAt: DateTime.now().plus({ minutes: 5 }),
+      expiresAt: DateTime.now().plus({ minutes: 10 }), // 10 minutes as per requirement
     })
 
     // Send SMS
@@ -165,13 +169,14 @@ export default class AuthController {
     if (result.success) {
       return response.ok({
         success: true,
-        message: 'OTP sent successfully',
-        expiresIn: 300, // 5 minutes in seconds
+        session: sessionId,
+        message: 'کد تایید با موفقیت ارسال شد',
+        expiresIn: 600, // 10 minutes in seconds
       })
     } else {
       return response.badRequest({
         success: false,
-        error: 'Failed to send OTP',
+        error: 'خطا در ارسال پیامک. لطفاً دوباره تلاش کنید',
         details: result.error,
       })
     }
@@ -222,35 +227,106 @@ export default class AuthController {
     // Clear rate limit on successful verification
     rateLimiter.clear(rateLimitKey)
 
-    // Find or create user with this phone number
-    let user = await User.findBy('phone_number', normalizedPhone)
+    // Find user with this phone number
+    const user = await User.findBy('phone_number', normalizedPhone)
     
     if (!user) {
-      // Create a new user with phone number
-      // Use phone number as username part in email for uniqueness
-      const emailUsername = normalizedPhone.replace(/\D/g, '')
-      user = await User.create({
-        email: `${emailUsername}@phone.user`,
-        phoneNumber: normalizedPhone,
-        password: randomBytes(32).toString('hex'), // Random password
-        isPhoneVerified: true,
+      // New user - return success with newUser flag
+      return response.ok({
+        success: true,
+        message: 'کد تایید با موفقیت تایید شد',
+        newUser: true,
       })
     } else {
-      // Mark phone as verified
+      // Existing user - mark phone as verified and log them in
       user.isPhoneVerified = true
       await user.save()
+
+      // Log the user in
+      await auth.use('web').login(user)
+
+      return response.ok({
+        success: true,
+        message: 'ورود با موفقیت انجام شد',
+        token: 'session-token', // Will be in session cookie
+        user: {
+          id: user.id,
+          phone: user.phoneNumber,
+          name: user.fullName,
+          playerId: user.playerId,
+          isPhoneVerified: user.isPhoneVerified,
+        },
+      })
     }
+  }
+
+  /**
+   * Complete user registration with profile information
+   * This is called after OTP verification for new users
+   */
+  async completeRegistration({ request, response, auth }: HttpContext) {
+    const registrationSchema = vine.object({
+      phone: vine.string().regex(/^(\+98|0)?9\d{9}$/),
+      name: vine.string(),
+      birthday: vine.string().optional(),
+      gender: vine.enum(['male', 'female', 'other']).optional(),
+      educationLevel: vine.string().optional(),
+      fieldOfStudy: vine.string().optional(),
+      color: vine.string().optional(),
+      profilePicture: vine.string().optional(),
+    })
+
+    const data = await vine.validate({ schema: registrationSchema, data: request.all() })
+
+    // Normalize phone number
+    const normalizedPhone = data.phone.replace(/^(\+98|0)/, '0')
+
+    // Check if user already exists
+    const existingUser = await User.findBy('phone_number', normalizedPhone)
+    if (existingUser) {
+      return response.conflict({
+        success: false,
+        message: 'این شماره قبلاً ثبت نام شده است',
+      })
+    }
+
+    // Generate unique player ID
+    const playerId = `INF-${Date.now().toString(36).toUpperCase()}-${randomBytes(2).toString('hex').toUpperCase()}`
+
+    // Create user with profile information
+    const user = await User.create({
+      phoneNumber: normalizedPhone,
+      fullName: data.name,
+      email: `${normalizedPhone.replace(/\D/g, '')}@phone.user`, // Temporary email
+      password: randomBytes(32).toString('hex'), // Random password
+      birthday: data.birthday || null,
+      gender: data.gender || null,
+      educationLevel: data.educationLevel || null,
+      fieldOfStudy: data.fieldOfStudy || null,
+      color: data.color || null,
+      profilePicture: data.profilePicture || null,
+      playerId,
+      isPhoneVerified: true,
+    })
 
     // Log the user in
     await auth.use('web').login(user)
 
-    return response.ok({
+    return response.created({
       success: true,
-      message: 'OTP verified successfully',
+      message: 'ثبت نام با موفقیت انجام شد',
+      token: 'session-token', // Will be in session cookie
       user: {
         id: user.id,
-        phoneNumber: user.phoneNumber,
-        isPhoneVerified: user.isPhoneVerified,
+        phone: user.phoneNumber,
+        name: user.fullName,
+        birthday: user.birthday,
+        gender: user.gender,
+        educationLevel: user.educationLevel,
+        fieldOfStudy: user.fieldOfStudy,
+        color: user.color,
+        playerId: user.playerId,
+        profilePicture: user.profilePicture,
       },
     })
   }

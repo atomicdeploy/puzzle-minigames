@@ -67,6 +67,7 @@
     "@adonisjs/lucid": "^21.6.1",
     "@adonisjs/session": "^7.6.1",
     "@vinejs/vine": "^3.0.1",
+    "https-proxy-agent": "^7.0.6",
     "luxon": "^3.5.0",
     "melipayamak": "^1.0.5",
     "mysql2": "^3.11.5",

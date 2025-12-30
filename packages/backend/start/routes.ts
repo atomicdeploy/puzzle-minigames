@@ -26,8 +26,9 @@ router.group(() => {
     router.post('/register', [AuthController, 'register'])
     router.post('/login', [AuthController, 'login'])
     router.post('/logout', [AuthController, 'logout'])
-    router.post('/otp/send', [AuthController, 'sendOtp'])
-    router.post('/otp/verify', [AuthController, 'verifyOtp'])
+    router.post('/send-otp', [AuthController, 'sendOtp'])
+    router.post('/verify-otp', [AuthController, 'verifyOtp'])
+    router.post('/complete-registration', [AuthController, 'completeRegistration'])
   }).prefix('/auth')
 
   // User routes

@@ -17,6 +17,9 @@ export default class Otp extends BaseModel {
   declare code: string
 
   @column()
+  declare sessionId: string | null
+
+  @column()
   declare isUsed: boolean
 
   @column.dateTime()
