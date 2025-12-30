@@ -123,6 +123,43 @@ npm run dev
 
 Open http://localhost:3000 in your browser.
 
+#### Development with HTTPS
+
+To enable HTTPS during development:
+
+1. Edit `vite.config.js`:
+```javascript
+server: {
+  https: true, // Vite will auto-generate self-signed certificate
+}
+```
+
+2. Start dev server:
+```bash
+npm run dev
+```
+
+3. Open https://localhost:3000 (accept certificate warning)
+
+For trusted certificates, see [VITE_CONFIG_GUIDE.md](./VITE_CONFIG_GUIDE.md#creating-local-certificates-with-mkcert).
+
+#### Development Behind Reverse Proxy
+
+When developing behind nginx, Apache, or Cloudflare Tunnel, configure HMR:
+
+```javascript
+// vite.config.js
+server: {
+  hmr: {
+    protocol: 'wss', // Use 'wss' for HTTPS
+    host: 'dev.example.com',
+    clientPort: 443,
+  }
+}
+```
+
+See [VITE_CONFIG_GUIDE.md](./VITE_CONFIG_GUIDE.md#reverse-proxy-setup) for complete reverse proxy examples.
+
 ### Production Preview
 
 ```bash
