@@ -197,7 +197,7 @@ onUnmounted(() => {
 });
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @import '@/assets/scss/minigame-weight.scss';
 
 .minigame-weight {

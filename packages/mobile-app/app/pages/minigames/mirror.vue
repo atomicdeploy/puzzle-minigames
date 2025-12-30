@@ -244,7 +244,7 @@ function submitOrder() {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @import '@/assets/scss/minigame-mirror.scss';
 
 .minigame-mirror {

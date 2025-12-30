@@ -231,11 +231,6 @@ onUnmounted(() => {
 });
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @import '@/assets/scss/minigame-basketball.scss';
-
-.minigame-basketball {
-  width: 100%;
-  height: 100vh;
-}
 </style>
