@@ -244,6 +244,17 @@ CORS_ORIGIN=*
 - Safari (iOS 12+)
 - Chrome Mobile (Android 5+)
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`/docs`](./docs) directory:
+
+- **[📖 Documentation Index](./docs/README.md)** - Complete guide to all documentation
+- **[🎮 Guides](./docs/guides)** - User guides and tutorials
+- **[🔌 API & Integration](./docs/api)** - API endpoints and Socket.io
+- **[💻 Development](./docs/development)** - Testing and configuration guides
+- **[🚀 Deployment](./docs/deployment)** - Deployment instructions
+- **[📋 Project Summary](./docs/project-summary.md)** - Complete project overview
+
 ## 📄 License
 
 MIT License - Feel free to use and modify
@@ -367,7 +378,7 @@ The Vite configuration supports:
 - **API Proxy**: Forward API requests to backend servers
 - **Custom Headers**: Security headers and more
 
-See [VITE_CONFIG_GUIDE.md](./VITE_CONFIG_GUIDE.md) for detailed configuration options.
+See [docs/development/vite-config-guide.md](./docs/development/vite-config-guide.md) for detailed configuration options.
 
 ### Build for Production
 
@@ -498,7 +509,7 @@ The game includes a comprehensive QR code system for Game Masters:
 - Seamless integration with main game
 
 **Documentation:**
-- See [QR-SYSTEM-DOCS.md](./QR-SYSTEM-DOCS.md) for complete documentation
+- See [docs/guides/qr-system.md](./docs/guides/qr-system.md) for complete documentation
 - Includes security considerations and customization guide
 
 ## Customization 🎨
