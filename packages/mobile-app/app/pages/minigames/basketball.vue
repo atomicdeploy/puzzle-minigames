@@ -67,6 +67,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useConfetti } from '~/composables/useConfetti';
 
 // Set page metadata
 useHead({
@@ -83,6 +84,9 @@ const digits = ref([0, 0, 0, 0, 0]);
 const selectedDigitIndex = ref(0);
 const feedbackMessage = ref('');
 const feedbackClass = ref('');
+
+// Confetti composable
+const { playConfetti, stopConfetti } = useConfetti();
 
 // Game logic - simplified version
 // In production, this would include the full canvas drawing logic from game.js
@@ -199,17 +203,31 @@ function submitAnswer() {
   console.log('Submitted answer:', answer);
   
   // In production, this would check against the correct answer
-  // For now, show success message
+  // For now, show success message and play confetti
   feedbackMessage.value = 'پاسخ شما ثبت شد!';
   feedbackClass.value = 'success';
+  
+  // Play confetti animation on success
+  if (confettiCanvas.value) {
+    playConfetti(confettiCanvas.value);
+  }
   
   setTimeout(() => {
     feedbackMessage.value = '';
   }, 3000);
 }
+}
 
 onUnmounted(() => {
   // Cleanup
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler);
+    resizeHandler = null;
+  }
+  
+  // Stop confetti animation
+  stopConfetti();
+  
   ctx = null;
 });
 </script>
