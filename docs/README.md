@@ -9,6 +9,9 @@ User-facing guides and tutorials for game features:
 - **[Assets Guide](guides/assets.md)** - How to create and manage game assets (icons, audio, 3D models)
 - **[QR System Guide](guides/qr-system.md)** - QR code generation and validation system
 - **[Welcome Page](guides/welcome-page.md)** - User onboarding and authentication flow
+- **[CAPTCHA System](guides/captcha-system.md)** - Beautiful offline CAPTCHA with character aliasing
+- **[CAPTCHA Quick Start](guides/captcha-quick-start.md)** - Quick integration guide for CAPTCHA
+- **[CAPTCHA Implementation](guides/captcha-implementation-summary.md)** - Complete implementation details
 
 ### 🔌 API & Integration
 Technical documentation for APIs and integrations:

@@ -19,6 +19,7 @@ const AdminUsersController = () => import('#controllers/admin_users_controller')
 const AdminGamesController = () => import('#controllers/admin_games_controller')
 const AdminAnalyticsController = () => import('#controllers/admin_analytics_controller')
 const SettingsController = () => import('#controllers/settings_controller')
+const CaptchaController = () => import('#controllers/captcha_controller')
 
 // Health check
 router.get('/health', async () => {
@@ -67,6 +68,7 @@ router.group(() => {
     router.get('/current', [SessionsController, 'current'])
   }).prefix('/sessions')
 
+<<<<<<< HEAD
   // Connected clients routes
   router.group(() => {
     router.get('/', [ConnectedClientsController, 'index'])
@@ -135,6 +137,14 @@ router.group(() => {
       router.get('/export', [AdminAnalyticsController, 'exportData'])
     }).prefix('/analytics')
   }).prefix('/admin').use(middleware.auth())
+=======
+  // CAPTCHA routes
+  router.group(() => {
+    router.get('/generate', [CaptchaController, 'generate'])
+    router.post('/verify', [CaptchaController, 'verify'])
+    router.get('/refresh', [CaptchaController, 'refresh'])
+  }).prefix('/captcha')
+>>>>>>> 4cfcdaf9b1a4c31c3548389bc7869888521e2da5
 
   // Leaderboard
   router.get('/leaderboard', [PlayerProgressController, 'leaderboard'])
