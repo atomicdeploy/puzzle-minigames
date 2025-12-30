@@ -135,14 +135,14 @@ async function verifyToken(gameNum, tokenValue) {
     const apiBaseUrl = config.public.apiBaseUrl || 'http://localhost:3001/api'
     
     // Get session token if available
-    const sessionToken = process.client ? localStorage.getItem('sessionToken') : null;
+    const sessionToken = process.client ? localStorage.getItem('sessionToken') : null
     
     const headers = {
       'Content-Type': 'application/json'
-    } as Record<string, string>;
+    }
     
     if (sessionToken) {
-      headers['x-session-token'] = sessionToken;
+      headers['x-session-token'] = sessionToken
     }
     
     // Call the new backend QR validation endpoint
