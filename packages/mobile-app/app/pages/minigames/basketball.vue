@@ -127,13 +127,6 @@ onMounted(() => {
   setupDigitSelection();
 });
 
-onUnmounted(() => {
-  if (!process.client) return;
-  if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler);
-    resizeHandler = null;
-  }
-});
 function drawCourt() {
   if (!ctx) return;
   

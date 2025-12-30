@@ -664,7 +664,19 @@ function startGame() {
 }
 </script>
 
-<style lang="scss">
-/* Welcome page styles - imported from welcome.scss */
+<style lang="scss" scoped>
 @import '@/assets/scss/welcome.scss';
+
+.welcome-page {
+  width: 100%;
+  min-height: 100vh;
+  
+  .screen {
+    display: none;
+    
+    &.active {
+      display: flex;
+    }
+  }
+}
 </style>
