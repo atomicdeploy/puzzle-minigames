@@ -16,7 +16,9 @@ const gameState = {
         error: null,
         success: null,
         discover: null
-    }
+    },
+    // UI state for event listener management
+    uiInitialized: false
 };
 
 // Initialize Audio
@@ -202,11 +204,16 @@ function initTreasureChests() {
     const container = document.getElementById('treasure-chests');
     container.innerHTML = '';
     
+    // Icon mapping for special puzzles
+    const iconMap = {
+        3: '🪞' // Mirror icon for puzzle 3
+    };
+    
     for (let i = 1; i <= PUZZLE_SIZE; i++) {
         const chest = document.createElement('div');
         chest.className = 'treasure-chest';
         chest.dataset.number = i;
-        chest.innerHTML = '🎁';
+        chest.innerHTML = iconMap[i] || '🎁';
         chest.setAttribute('data-number', i);
         
         chest.addEventListener('click', () => openTreasureChest(i));
@@ -222,6 +229,121 @@ function openTreasureChest(number) {
         return; // Already discovered
     }
     
+    // Haptic feedback
+    try {
+        Haptics.impact({ style: ImpactStyle.Medium });
+    } catch (e) {
+        // Haptics not available in web browsers
+        console.debug('Haptics not available:', e.message);
+    }
+    
+    // Check if this puzzle has a minigame
+    const minigames = {
+        2: '/minigames/minigame-2/index.html',
+        3: '/minigames/minigame-mirror/index.html'
+        // Add more minigames here
+    };
+    
+    if (minigames[number]) {
+        // Open minigame
+        openMinigame(number, minigames[number]);
+    } else {
+        // Directly unlock puzzle piece (for puzzles without minigames)
+        unlockPuzzlePiece(number);
+    }
+}
+
+// Open a minigame
+function openMinigame(puzzleNumber, minigameUrl) {
+    // Create minigame modal
+    const modal = document.createElement('div');
+    modal.id = 'minigame-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+    `;
+    
+    // Create close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕';
+    closeBtn.setAttribute('aria-label', 'Close minigame');
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        width: 50px;
+        height: 50px;
+        background: rgba(214, 48, 49, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 2rem;
+        cursor: pointer;
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    `;
+    // Listen for minigame completion
+    function handleMinigameMessage(event) {
+        // Validate message origin for security
+        // Minigames are served from same origin, so this prevents external malicious messages
+        if (event.origin !== window.location.origin) {
+            return;
+        }
+        
+        if (event.data.type === 'minigame-complete') {
+            if (event.data.success && event.data.puzzleNumber === puzzleNumber) {
+                // Close modal
+                modal.remove();
+                
+                // Unlock puzzle piece
+                unlockPuzzlePiece(puzzleNumber);
+                
+                // Remove this listener
+                window.removeEventListener('message', handleMinigameMessage);
+            }
+        } else if (event.data.type === 'minigame-exit') {
+            modal.remove();
+            window.removeEventListener('message', handleMinigameMessage);
+        }
+    }
+    
+    closeBtn.addEventListener('click', () => {
+        modal.remove();
+        // Clean up message event listener when modal is manually closed
+        window.removeEventListener('message', handleMinigameMessage);
+    });
+    
+    // Create iframe for minigame
+    const iframe = document.createElement('iframe');
+    iframe.src = minigameUrl;
+    iframe.setAttribute('title', 'بازی کوچک وزن توپ سفید');
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+    iframe.style.cssText = `
+        width: 100%;
+        height: 100%;
+        border: none;
+    `;
+    
+    modal.appendChild(closeBtn);
+    modal.appendChild(iframe);
+    document.body.appendChild(modal);
+    
+    // Add message event listener
+    window.addEventListener('message', handleMinigameMessage);
+}
+
+// Unlock a puzzle piece (separated from treasure chest opening)
+function unlockPuzzlePiece(number) {
     // Mark as discovered
     gameState.discoveredPuzzles.add(number);
     
@@ -235,21 +357,13 @@ function openTreasureChest(number) {
         gameState.audio.discover();
     }
     
-    // Haptic feedback
-    try {
-        Haptics.impact({ style: ImpactStyle.Medium });
-    } catch (e) {
-        // Haptics not available in web browsers
-        console.debug('Haptics not available:', e.message);
-    }
-    
     // Create draggable puzzle piece
     createPuzzlePiece(number);
     
     // Update stats
     updateStats();
     
-    // Show mini-game link notification (placeholder for now)
+    // Show notification
     showNotification(`پازل ${number} کشف شد! 🎉`);
 }
 
@@ -569,12 +683,257 @@ function initGame() {
     initTreasureChests();
     loadGameState();
     checkQRUnlock();
+    initUI();
     
     // Hide loading screen
     setTimeout(() => {
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'flex';
+        
+        // Show welcome modal on first visit
+        showWelcomeModal();
     }, 1500);
+}
+
+// UI Initialization
+function initUI() {
+    // Prevent duplicate initialization
+    if (gameState.uiInitialized) {
+        console.debug('UI already initialized, skipping duplicate initialization');
+        return;
+    }
+    gameState.uiInitialized = true;
+    
+    const menuBtn = document.getElementById('menu-btn');
+    const menuCloseBtn = document.getElementById('menu-close-btn');
+    const sideMenu = document.getElementById('side-menu');
+    const welcomeModal = document.getElementById('welcome-modal');
+    const startGameBtn = document.getElementById('start-game-btn');
+    const contactLink = document.getElementById('contact-link');
+    const homeLink = document.getElementById('home-link');
+    const aboutLink = document.getElementById('about-link');
+    const contactPage = document.getElementById('contact-page');
+    
+    // Null checks for required elements
+    if (!menuBtn || !menuCloseBtn || !sideMenu || !welcomeModal || !startGameBtn || 
+        !contactLink || !homeLink || !aboutLink || !contactPage) {
+        console.error('Required UI elements not found');
+        return;
+    }
+    
+    const modalClose = welcomeModal.querySelector('.modal-close');
+    const pageClose = contactPage.querySelector('.page-close');
+    
+    if (!modalClose || !pageClose) {
+        console.error('Required close buttons not found');
+        return;
+    }
+    
+    // Create or get menu overlay (prevent duplicate creation)
+    let menuOverlay = document.querySelector('.menu-overlay');
+    if (!menuOverlay) {
+        menuOverlay = document.createElement('div');
+        menuOverlay.className = 'menu-overlay';
+        document.body.appendChild(menuOverlay);
+    }
+    
+    // Store the last focused element for focus management
+    // Use a stack to handle nested overlays (menu -> contact page or menu -> modal)
+    let lastFocusedElement = null;
+    let focusBeforeMenu = null;
+    
+    // Delay for focus after DOM updates/animations (in milliseconds)
+    const FOCUS_DELAY = 100;
+    
+    // Helper function to close welcome modal (reduces code duplication)
+    const closeWelcomeModal = () => {
+        welcomeModal.style.display = 'none';
+        try {
+            localStorage.setItem('infernal-welcome-shown', 'true');
+        } catch (e) {
+            console.warn('localStorage not available:', e);
+        }
+        // Restore focus - check stored element first, then fallback to dataset
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        } else if (welcomeModal.dataset.focusReturn) {
+            const elementToFocus = document.getElementById(welcomeModal.dataset.focusReturn);
+            if (elementToFocus) {
+                elementToFocus.focus();
+            }
+            delete welcomeModal.dataset.focusReturn;
+        }
+    };
+    
+    // Helper function to close side menu (reduces code duplication)
+    const closeSideMenu = () => {
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+        if (focusBeforeMenu) {
+            focusBeforeMenu.focus();
+            focusBeforeMenu = null;
+        }
+    };
+    
+    // Keyboard accessibility - Escape key handler
+    const handleEscapeKey = (event) => {
+        if (event.key === 'Escape' || event.key === 'Esc') {
+            // Close modal if open
+            if (window.getComputedStyle(welcomeModal).display !== 'none') {
+                closeWelcomeModal();
+            }
+            // Close side menu if open
+            else if (sideMenu.classList.contains('open')) {
+                closeSideMenu();
+            }
+            // Close contact page if open
+            else if (window.getComputedStyle(contactPage).display !== 'none') {
+                contactPage.style.display = 'none';
+                updateMenuActive('home-link');
+                if (lastFocusedElement) {
+                    lastFocusedElement.focus();
+                    lastFocusedElement = null;
+                }
+            }
+        }
+    };
+    
+    // Add global escape key listener (only once due to initialization guard)
+    document.addEventListener('keydown', handleEscapeKey);
+    
+    // Menu toggle
+    menuBtn.addEventListener('click', () => {
+        focusBeforeMenu = document.activeElement;
+        sideMenu.classList.add('open');
+        menuOverlay.classList.add('active');
+        // Focus first menu item for keyboard navigation
+        setTimeout(() => homeLink.focus(), FOCUS_DELAY);
+    });
+    
+    menuCloseBtn.addEventListener('click', () => {
+        closeSideMenu();
+    });
+    
+    menuOverlay.addEventListener('click', () => {
+        closeSideMenu();
+    });
+    
+    // Welcome modal
+    startGameBtn.addEventListener('click', () => {
+        closeWelcomeModal();
+    });
+    
+    modalClose.addEventListener('click', () => {
+        closeWelcomeModal();
+    });
+    
+    // Close welcome modal when clicking on the backdrop (outside modal content)
+    welcomeModal.addEventListener('click', (event) => {
+        if (event.target === welcomeModal) {
+            closeWelcomeModal();
+        }
+    });
+    
+    // Contact page
+    contactLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Store focus before menu was opened. If menu wasn't used (focusBeforeMenu is null),
+        // fallback to menuBtn to ensure focus returns to a visible, meaningful element
+        lastFocusedElement = focusBeforeMenu || menuBtn;
+        contactPage.style.display = 'block';
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+        updateMenuActive('contact-link');
+        // Focus close button for keyboard navigation
+        setTimeout(() => pageClose.focus(), FOCUS_DELAY);
+    });
+    
+    homeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        contactPage.style.display = 'none';
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+        updateMenuActive('home-link');
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
+    });
+    
+    aboutLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Store focus before menu was opened. If menu wasn't used (focusBeforeMenu is null),
+        // fallback to menuBtn to ensure focus returns to a visible, meaningful element
+        lastFocusedElement = focusBeforeMenu || menuBtn;
+        showAboutModal();
+        sideMenu.classList.remove('open');
+        menuOverlay.classList.remove('active');
+        // Focus primary action button for keyboard navigation
+        setTimeout(() => startGameBtn.focus(), FOCUS_DELAY);
+    });
+    
+    pageClose.addEventListener('click', () => {
+        contactPage.style.display = 'none';
+        updateMenuActive('home-link');
+        if (lastFocusedElement) {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }
+    });
+}
+
+// Show/hide welcome modal
+function setWelcomeModalVisibility(visible) {
+    const welcomeModal = document.getElementById('welcome-modal');
+    if (!welcomeModal) {
+        return;
+    }
+    welcomeModal.style.display = visible ? 'flex' : 'none';
+}
+
+// Show welcome modal on first visit
+function showWelcomeModal() {
+    try {
+        const hasShown = localStorage.getItem('infernal-welcome-shown');
+        if (hasShown !== 'true') {
+            const welcomeModal = document.getElementById('welcome-modal');
+            if (!welcomeModal) return;
+            
+            const menuBtn = document.getElementById('menu-btn');
+            
+            // Store focus target in the modal's dataset for later restoration
+            // Only store if element has an ID, otherwise fallback to menu button
+            if (document.activeElement && document.activeElement !== document.body && document.activeElement.id) {
+                welcomeModal.dataset.focusReturn = document.activeElement.id;
+            } else if (menuBtn) {
+                // Fallback to menu button as a meaningful focus target
+                welcomeModal.dataset.focusReturn = 'menu-btn';
+            }
+            
+            setWelcomeModalVisibility(true);
+        }
+    } catch (e) {
+        console.warn('localStorage not available:', e);
+        // Show modal by default if localStorage is not available
+        setWelcomeModalVisibility(true);
+    }
+}
+
+// Show about modal (same as welcome but can be triggered from menu)
+function showAboutModal() {
+    setWelcomeModalVisibility(true);
+}
+
+// Update active menu item
+function updateMenuActive(activeId) {
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    const activeElement = document.getElementById(activeId);
+    if (activeElement) {
+        activeElement.classList.add('active');
+    }
 }
 
 // Start game when DOM is loaded
