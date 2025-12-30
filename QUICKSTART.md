@@ -124,3 +124,55 @@ For issues or questions:
 **Test Coverage:** 100%  
 **Demo Users:** 4 Active  
 **Settings:** 6 Configured
+
+## Building for Production
+
+### Create Deployment Package
+
+To build the project and create a compressed deployment package:
+
+```bash
+./build.sh
+```
+
+Or using npm:
+
+```bash
+npm run build:deploy
+```
+
+This will:
+- ✅ Validate environment configuration
+- ✅ Clean previous builds
+- ✅ Install dependencies
+- ✅ Build backend and frontend
+- ✅ Create a compressed tar.gz package with highest compression
+- ✅ Generate SHA256 and MD5 checksums
+
+The deployment package will be named: `puzzle-minigames-YYYYMMDD_HHMMSS.tar.gz`
+
+### Deployment Package Contents
+
+- `backend/` - Built backend application
+- `mobile-app/` - Built frontend static files
+- `DEPLOY.md` - Deployment instructions
+- `.env.example` - Environment template
+- Documentation files
+
+### Deploy to Server
+
+```bash
+# Upload and extract
+scp puzzle-minigames-*.tar.gz user@server:/var/www/
+ssh user@server
+cd /var/www
+tar -xzf puzzle-minigames-*.tar.gz
+
+# Configure and start
+cp .env.example .env
+nano .env  # Edit configuration
+cd backend && npm install --production
+node scripts/migrate.mjs
+npm start
+```
+
