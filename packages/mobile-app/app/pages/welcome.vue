@@ -89,7 +89,20 @@
             >
           </div>
 
-          <button type="submit" class="btn btn-primary btn-large">بفرست برام کد بیاد</button>
+          <!-- CAPTCHA Component -->
+          <div class="form-group">
+            <CaptchaInput 
+              ref="signinCaptchaRef"
+              :api-base-url="captchaApiUrl"
+              :auto-load="true"
+              placeholder="کد تصویر"
+              @verify="handleSignIn"
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-large" :disabled="signinLoading">
+            {{ signinLoading ? 'در حال ارسال...' : 'بفرست برام کد بیاد' }}
+          </button>
         </form>
 
         <button class="btn-back" @click="currentScreen = 'auth-choice'">← برگردیم</button>
@@ -250,7 +263,20 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-large">بریم به مرحله بعد!</button>
+          <!-- CAPTCHA Component -->
+          <div class="form-group">
+            <CaptchaInput 
+              ref="registrationCaptchaRef"
+              :api-base-url="captchaApiUrl"
+              :auto-load="true"
+              placeholder="کد تصویر"
+              @verify="handleRegistration"
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-large" :disabled="registrationLoading">
+            {{ registrationLoading ? 'در حال ارسال...' : 'بریم به مرحله بعد!' }}
+          </button>
         </form>
 
         <button class="btn-back" @click="currentScreen = 'auth-choice'">← برگردیم</button>
@@ -327,6 +353,8 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useApi } from '~/composables/useApi';
+import { useCaptcha } from '~/composables/useCaptcha';
+import CaptchaInput from '~/components/CaptchaInput.vue';
 
 // Set page metadata
 useHead({
@@ -338,6 +366,12 @@ useHead({
 
 const router = useRouter();
 const api = useApi();
+const captchaApiUrl = '/api/captcha';
+const { verifyCaptcha } = useCaptcha(captchaApiUrl);
+
+// Component refs
+const signinCaptchaRef = ref(null);
+const registrationCaptchaRef = ref(null);
 
 // State
 const currentScreen = ref('welcome');
@@ -345,6 +379,8 @@ const signinPhone = ref('');
 const playerId = ref('');
 const profilePicturePreview = ref(null);
 const otpDigits = ref(['', '', '', '', '', '']);
+const signinLoading = ref(false);
+const registrationLoading = ref(false);
 
 const formData = ref({
   name: '',
@@ -432,7 +468,29 @@ async function handleSignIn() {
     return;
   }
 
+  // Get CAPTCHA value and verify
+  const captchaCode = signinCaptchaRef.value?.getValue();
+  if (!captchaCode) {
+    alert('لطفاً کد کپچا را وارد کنید');
+    return;
+  }
+
+  signinLoading.value = true;
+
   try {
+    // Verify CAPTCHA first
+    const isCaptchaValid = await verifyCaptcha(captchaCode);
+    
+    if (!isCaptchaValid) {
+      signinCaptchaRef.value?.setVerified(false, 'کد کپچا اشتباه است');
+      signinLoading.value = false;
+      return;
+    }
+
+    // CAPTCHA verified, mark as success
+    signinCaptchaRef.value?.setVerified(true, 'کپچا تأیید شد ✓');
+
+    // Send OTP
     const response = await api.sendOTP(signinPhone.value);
     if (response.success) {
       // Clear OTP digits and transition to OTP screen
@@ -442,6 +500,8 @@ async function handleSignIn() {
   } catch (error) {
     console.error('Error sending OTP:', error);
     alert('خطا در ارسال کد تایید');
+  } finally {
+    signinLoading.value = false;
   }
 }
 
@@ -563,7 +623,29 @@ async function handleRegistration() {
     return;
   }
 
+  // Get CAPTCHA value and verify
+  const captchaCode = registrationCaptchaRef.value?.getValue();
+  if (!captchaCode) {
+    alert('لطفاً کد کپچا را وارد کنید');
+    return;
+  }
+
+  registrationLoading.value = true;
+
   try {
+    // Verify CAPTCHA first
+    const isCaptchaValid = await verifyCaptcha(captchaCode);
+    
+    if (!isCaptchaValid) {
+      registrationCaptchaRef.value?.setVerified(false, 'کد کپچا اشتباه است');
+      registrationLoading.value = false;
+      return;
+    }
+
+    // CAPTCHA verified, mark as success
+    registrationCaptchaRef.value?.setVerified(true, 'کپچا تأیید شد ✓');
+
+    // Send OTP
     const response = await api.sendOTP(formData.value.phone);
     if (response.success) {
       // Clear OTP digits and transition to OTP screen
@@ -573,6 +655,8 @@ async function handleRegistration() {
   } catch (error) {
     console.error('Error sending OTP:', error);
     alert('خطا در ارسال کد تایید');
+  } finally {
+    registrationLoading.value = false;
   }
 }
 

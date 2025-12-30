@@ -13,6 +13,7 @@ const GamesController = () => import('#controllers/games_controller')
 const PlayerProgressController = () => import('#controllers/player_progress_controller')
 const MinigameAnswersController = () => import('#controllers/minigame_answers_controller')
 const SessionsController = () => import('#controllers/sessions_controller')
+const CaptchaController = () => import('#controllers/captcha_controller')
 
 // Health check
 router.get('/health', async () => {
@@ -59,6 +60,13 @@ router.group(() => {
     router.post('/track', [SessionsController, 'track'])
     router.get('/current', [SessionsController, 'current'])
   }).prefix('/sessions')
+
+  // CAPTCHA routes
+  router.group(() => {
+    router.get('/generate', [CaptchaController, 'generate'])
+    router.post('/verify', [CaptchaController, 'verify'])
+    router.get('/refresh', [CaptchaController, 'refresh'])
+  }).prefix('/captcha')
 
   // Leaderboard
   router.get('/leaderboard', [PlayerProgressController, 'leaderboard'])
