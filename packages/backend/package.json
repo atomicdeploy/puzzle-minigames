@@ -1,36 +1,92 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Backend server for Puzzle Minigames - Node.js with Express, Socket.io, and MySQL",
-  "main": "src/server.js",
+  "description": "Backend server for Puzzle Minigames - AdonisJS with Socket.io and MySQL",
   "type": "module",
+  "license": "MIT",
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
-    "build": "echo 'No build step required for pure Node.js'"
+    "start": "node --import tsx/esm bin/server.ts",
+    "build": "node --import tsx/esm ace.js build",
+    "dev": "node --import tsx/esm ace.js serve --hmr",
+    "test": "node --import tsx/esm ace.js test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "node --import tsx/esm ace.js migration:run",
+    "db:seed": "node --import tsx/esm ace.js db:seed",
+    "db:fresh": "node --import tsx/esm ace.js migration:fresh",
+    "db:rollback": "node --import tsx/esm ace.js migration:rollback",
+    "make:controller": "node --import tsx/esm ace.js make:controller",
+    "make:model": "node --import tsx/esm ace.js make:model",
+    "make:migration": "node --import tsx/esm ace.js make:migration",
+    "monitor:clients": "node --import tsx/esm commands/monitor_clients.ts"
+  },
+  "imports": {
+    "#controllers/*": "./app/controllers/*.js",
+    "#exceptions/*": "./app/exceptions/*.js",
+    "#models/*": "./app/models/*.js",
+    "#services/*": "./app/services/*.js",
+    "#middleware/*": "./app/middleware/*.js",
+    "#validators/*": "./app/validators/*.js",
+    "#providers/*": "./providers/*.js",
+    "#config/*": "./config/*.js",
+    "#database/*": "./database/*.js",
+    "#start/*": "./start/*.js",
+    "#tests/*": "./tests/*.js"
   },
   "keywords": [
     "backend",
     "nodejs",
-    "express",
+    "adonisjs",
     "socket.io",
     "mysql"
   ],
   "author": "",
-  "license": "MIT",
+  "devDependencies": {
+    "@adonisjs/assembler": "^7.8.2",
+    "@adonisjs/eslint-config": "^2.0.0",
+    "@adonisjs/prettier-config": "^1.4.4",
+    "@adonisjs/tsconfig": "^1.4.0",
+    "@japa/api-client": "^3.1.0",
+    "@japa/assert": "^4.0.1",
+    "@japa/plugin-adonisjs": "^4.0.0",
+    "@japa/runner": "^4.2.0",
+    "@swc/core": "^1.11.24",
+    "@types/node": "^22.15.18",
+    "eslint": "^9.26.0",
+    "hot-hook": "^0.4.0",
+    "pino-pretty": "^13.0.0",
+    "prettier": "^3.5.3",
+    "socket.io-client": "^4.8.3",
+    "ts-node-maintained": "^10.9.5",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8"
+  },
   "dependencies": {
-    "body-parser": "^1.20.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "express-validator": "^7.3.1",
-    "morgan": "^1.10.1",
+    "@adonisjs/auth": "^9.4.0",
+    "@adonisjs/core": "^6.18.0",
+    "@adonisjs/cors": "^2.2.1",
+    "@adonisjs/lucid": "^21.6.1",
+    "@adonisjs/session": "^7.6.1",
+    "@types/blessed": "^0.1.27",
+    "@types/node-notifier": "^8.0.5",
+    "@types/uuid": "^10.0.0",
+    "@vinejs/vine": "^3.0.1",
+    "blessed": "^0.1.81",
+    "luxon": "^3.5.0",
+    "melipayamak": "^1.0.5",
     "mysql2": "^3.11.5",
+    "node-notifier": "^10.0.1",
+    "reflect-metadata": "^0.2.2",
     "socket.io": "^4.8.1",
     "useragent": "^2.3.0",
-    "useragent-parser": "^0.1.1"
+    "uuid": "^13.0.0"
   },
-  "devDependencies": {
-    "nodemon": "^3.1.9"
-  }
+  "hotHook": {
+    "boundaries": [
+      "./app/controllers/**/*.ts",
+      "./app/middleware/*.ts"
+    ]
+  },
+  "prettier": "@adonisjs/prettier-config"
 }
