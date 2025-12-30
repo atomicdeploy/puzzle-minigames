@@ -226,16 +226,31 @@ See `packages/backend/README.md` for complete documentation.
 
 ## 🔐 Environment Configuration
 
-### Backend (.env)
+This project uses a **unified `.env` file** at the root level for both backend and frontend.
+
+### Quick Setup
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit with your configuration
+nano .env
+```
+
+### Key Variables
 ```env
+# Backend
 PORT=3001
 DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=your_password
 DB_NAME=puzzle_minigames
 CORS_ORIGIN=*
+
+# Frontend
+VITE_API_BASE_URL=http://localhost:3001/api
+VITE_SOCKET_URL=http://localhost:3001
 ```
+
+**📖 See [ENV_CONFIG.md](./ENV_CONFIG.md) for complete configuration guide.**
 
 ## 🌐 Browser Support
 
@@ -243,6 +258,27 @@ CORS_ORIGIN=*
 - Firefox (latest)
 - Safari (iOS 12+)
 - Chrome Mobile (Android 5+)
+
+## 📚 Documentation
+
+Comprehensive documentation is organized by package:
+
+### Mobile App Documentation
+- **[📖 Mobile App Docs Index](./packages/mobile-app/docs/README.md)** - Complete mobile app documentation
+- **[🎮 Assets Guide](./packages/mobile-app/docs/assets.md)** - Asset creation guide
+- **[🔐 QR System Guide](./packages/mobile-app/docs/qr-system.md)** - QR code system documentation
+- **[👋 Welcome Page Guide](./packages/mobile-app/docs/welcome-page.md)** - User onboarding flow
+- **[🚀 Deployment Guide](./packages/mobile-app/docs/deployment-guide.md)** - Deployment instructions
+- **[🧪 Testing Guide](./packages/mobile-app/docs/testing.md)** - Testing procedures
+- **[📋 Project Summary](./packages/mobile-app/docs/project-summary.md)** - Project overview
+
+### Backend Documentation
+- **[📖 Backend Docs Index](./packages/backend/docs/README.md)** - Complete backend documentation
+- **[🔌 API Integration Guide](./packages/backend/docs/api-integration.md)** - REST API documentation
+- **[⚡ Socket.io Guide](./packages/backend/docs/socket-io-guide.md)** - Real-time communication
+
+### Project History
+- **[🔄 Monorepo Migration](./packages/mobile-app/docs/monorepo-migration.md)** - Migration history
 
 ## 📄 License
 
