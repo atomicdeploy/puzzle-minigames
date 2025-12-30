@@ -15,6 +15,9 @@ const MinigameAnswersController = () => import('#controllers/minigame_answers_co
 const SessionsController = () => import('#controllers/sessions_controller')
 const ConnectedClientsController = () => import('#controllers/connected_clients_controller')
 const QrController = () => import('#controllers/qr_controller')
+const AdminUsersController = () => import('#controllers/admin_users_controller')
+const AdminGamesController = () => import('#controllers/admin_games_controller')
+const AdminAnalyticsController = () => import('#controllers/admin_analytics_controller')
 
 // Health check
 router.get('/health', async () => {
@@ -87,6 +90,49 @@ router.group(() => {
       router.get('/logs/all', [QrController, 'allLogs'])
     }).use(middleware.auth())
   }).prefix('/qr')
+
+  // Admin routes (all protected with auth)
+  router.group(() => {
+    // User management
+    router.group(() => {
+      router.get('/', [AdminUsersController, 'index'])
+      router.post('/', [AdminUsersController, 'store'])
+      router.get('/:id', [AdminUsersController, 'show'])
+      router.put('/:id', [AdminUsersController, 'update'])
+      router.delete('/:id', [AdminUsersController, 'destroy'])
+      router.post('/:id/approve', [AdminUsersController, 'approve'])
+      router.post('/:id/block', [AdminUsersController, 'block'])
+      router.post('/:id/unblock', [AdminUsersController, 'unblock'])
+      router.get('/:id/minigames', [AdminUsersController, 'minigameProgress'])
+      router.get('/:id/sessions', [AdminUsersController, 'sessions'])
+      router.get('/:id/visits', [AdminUsersController, 'visits'])
+      router.get('/:id/qr-access', [AdminUsersController, 'qrAccess'])
+      router.post('/bulk', [AdminUsersController, 'bulk'])
+    }).prefix('/users')
+
+    // Game management
+    router.group(() => {
+      router.get('/', [AdminGamesController, 'index'])
+      router.post('/', [AdminGamesController, 'store'])
+      router.get('/:id', [AdminGamesController, 'show'])
+      router.put('/:id', [AdminGamesController, 'update'])
+      router.delete('/:id', [AdminGamesController, 'destroy'])
+      router.get('/:id/answers', [AdminGamesController, 'answers'])
+      router.get('/:id/solvers', [AdminGamesController, 'solvers'])
+      router.get('/:id/leaderboard', [AdminGamesController, 'leaderboard'])
+    }).prefix('/games')
+
+    // Analytics and reporting
+    router.group(() => {
+      router.get('/dashboard', [AdminAnalyticsController, 'dashboard'])
+      router.get('/user-minigame-matrix', [AdminAnalyticsController, 'userMinigameMatrix'])
+      router.get('/user/:id/timeline', [AdminAnalyticsController, 'userTimeline'])
+      router.get('/game/:id/completion-stats', [AdminAnalyticsController, 'gameCompletionStats'])
+      router.get('/activity-heatmap', [AdminAnalyticsController, 'activityHeatmap'])
+      router.get('/user/:id/performance', [AdminAnalyticsController, 'userPerformanceReport'])
+      router.get('/export', [AdminAnalyticsController, 'exportData'])
+    }).prefix('/analytics')
+  }).prefix('/admin').use(middleware.auth())
 
   // Leaderboard
   router.get('/leaderboard', [PlayerProgressController, 'leaderboard'])

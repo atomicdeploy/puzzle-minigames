@@ -36,6 +36,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare isEmailVerified: boolean
 
   @column()
+  declare isApproved: boolean
+
+  @column()
+  declare isBlocked: boolean
+
+  @column()
   declare deviceInfo: string | null
 
   @column()
@@ -53,9 +59,15 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @hasMany(() => PlayerProgress)
   declare progress: HasMany<typeof PlayerProgress>
 
+  @hasMany(() => PlayerProgress)
+  declare playerProgress: HasMany<typeof PlayerProgress>
+
   @hasMany(() => UserSession)
   declare sessions: HasMany<typeof UserSession>
 
   @hasMany(() => PageVisit)
   declare visits: HasMany<typeof PageVisit>
+
+  @hasMany(() => PageVisit)
+  declare pageVisits: HasMany<typeof PageVisit>
 }

@@ -20,11 +20,11 @@ export default class QrController {
     })
 
     const data = await vine.validate({ schema: validateSchema, data: request.all() })
-    const userId = auth.user?.id || null
+    const userId = auth?.user?.id || null
     const sessionToken = request.header('x-session-token')
 
     // Collect client information
-    const clientInfo = clientInfoCollector.collectFromHttp(request)
+    const clientInfo = clientInfoCollector.collectFromHttp({ request } as any)
 
     // Look up the QR token
     const qrToken = await QrToken.query()
@@ -84,12 +84,14 @@ export default class QrController {
     // Log with emoji
     logger.qr.accessed(data.game, data.token, accessStatus === 'granted')
 
-    // Send notification
-    await notificationService.notifyQrAccessed(
-      data.game,
-      accessStatus,
-      userId || undefined
-    )
+    // Send notification (only for granted/denied, not invalid)
+    if (accessStatus !== 'invalid') {
+      await notificationService.notifyQrAccessed(
+        data.game,
+        accessStatus as 'granted' | 'denied',
+        userId || undefined
+      )
+    }
 
     // Emit socket event for QR access
     if (io) {

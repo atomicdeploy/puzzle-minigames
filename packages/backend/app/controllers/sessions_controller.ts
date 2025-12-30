@@ -30,11 +30,11 @@ export default class SessionsController {
 
     const data = await vine.validate({ schema: trackSchema, data: request.all() })
 
-    const userId = auth.user?.id || null
+    const userId = auth?.user?.id || null
     const sessionToken = request.header('x-session-token') || randomBytes(32).toString('hex')
     
     // Collect comprehensive client information
-    const clientInfo = clientInfoCollector.collectFromHttp(request, {
+    const clientInfo = clientInfoCollector.collectFromHttp({ request } as any, {
       screenResolution: data.screenResolution,
       colorDepth: data.colorDepth,
       pixelRatio: data.pixelRatio,
