@@ -18,7 +18,8 @@
     "db:rollback": "node --import tsx/esm ace.js migration:rollback",
     "make:controller": "node --import tsx/esm ace.js make:controller",
     "make:model": "node --import tsx/esm ace.js make:model",
-    "make:migration": "node --import tsx/esm ace.js make:migration"
+    "make:migration": "node --import tsx/esm ace.js make:migration",
+    "monitor:clients": "node --import tsx/esm commands/monitor_clients.ts"
   },
   "imports": {
     "#controllers/*": "./app/controllers/*.js",
@@ -56,6 +57,7 @@
     "hot-hook": "^0.4.0",
     "pino-pretty": "^13.0.0",
     "prettier": "^3.5.3",
+    "socket.io-client": "^4.8.3",
     "ts-node-maintained": "^10.9.5",
     "tsx": "^4.21.0",
     "typescript": "~5.8"
@@ -66,9 +68,11 @@
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.6.1",
     "@adonisjs/session": "^7.6.1",
+    "@types/blessed": "^0.1.27",
     "@types/node-notifier": "^8.0.5",
     "@types/uuid": "^10.0.0",
     "@vinejs/vine": "^3.0.1",
+    "blessed": "^0.1.81",
     "luxon": "^3.5.0",
     "melipayamak": "^1.0.5",
     "mysql2": "^3.11.5",

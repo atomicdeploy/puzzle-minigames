@@ -129,59 +129,62 @@ async function verifyToken(gameNum, tokenValue) {
   // Optional: keep a small artificial delay for UX consistency
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  const accessKey = `minigame_access_${gameNum}`;
-  const accessData = {
-    token: tokenValue,
-    timestamp: new Date().toISOString(),
-    gameNumber: gameNum
-  };
-
   try {
-    // First, ask the backend to verify that this token is valid for the given game
-    const response = await fetch('/api/minigame/verify-access', {
+    // Get API base URL from environment
+    const config = useRuntimeConfig()
+    const apiBaseUrl = config.public.apiBaseUrl || 'http://localhost:3001/api'
+    
+    // Get session token if available
+    const sessionToken = process.client ? localStorage.getItem('sessionToken') : null
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    
+    if (sessionToken) {
+      headers['x-session-token'] = sessionToken
+    }
+    
+    // Call the new backend QR validation endpoint
+    const response = await fetch(`${apiBaseUrl}/qr/validate`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({
-        gameNumber: gameNum,
+        game: parseInt(gameNum),
         token: tokenValue
       })
     });
 
-    // If the request itself failed (e.g. 4xx/5xx), treat as invalid
-    if (!response.ok) {
-      console.error('Token verification failed with status:', response.status);
-      return false;
-    }
-
+    // Parse response
     const data = await response.json();
 
-    // Expect backend to return an object like: { valid: boolean, ... }
-    if (!data || data.valid !== true) {
-      return false;
-    }
-
-    // Only after successful verification, store access data locally as a cache
-    try {
-      const existingAccess = localStorage.getItem(accessKey);
-      if (existingAccess) {
-        const existing = JSON.parse(existingAccess);
-        if (existing.token === tokenValue) {
-          return true;
+    if (response.ok && data.success && data.accessGranted) {
+      // Store access data locally as a cache
+      if (process.client) {
+        const accessKey = `minigame_access_${gameNum}`;
+        const accessData = {
+          token: tokenValue,
+          timestamp: new Date().toISOString(),
+          gameNumber: gameNum
+        };
+        try {
+          localStorage.setItem(accessKey, JSON.stringify(accessData));
+        } catch (storageError) {
+          console.error('Error storing access data:', storageError);
         }
       }
-      localStorage.setItem(accessKey, JSON.stringify(accessData));
-    } catch (storageError) {
-      console.error('Error storing access data:', storageError);
-      // Storage failure should not grant access if verification failed,
-      // but at this point verification already succeeded, so still allow.
+      return true;
+    } else {
+      // Access denied or invalid token
+      if (data.reason) {
+        errorMessage.value = `دسترسی رد شد: ${data.reason}`;
+      }
+      return false;
     }
-
-    return true;
   } catch (e) {
     // Network or unexpected errors: do NOT silently grant access
     console.error('Error verifying token:', e);
+    errorMessage.value = 'خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.';
     return false;
   }
 }
