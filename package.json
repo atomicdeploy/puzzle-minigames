@@ -9,6 +9,7 @@
     "packages/backend"
   ],
   "scripts": {
+<<<<<<< HEAD
     "mobile:dev": "npm run dev --workspace=packages/mobile-app",
     "mobile:build": "npm run build --workspace=packages/mobile-app",
     "mobile:generate": "npm run generate --workspace=packages/mobile-app",
@@ -19,6 +20,19 @@
     "build": "npm run mobile:build && npm run backend:build",
     "build:deploy": "./build.sh",
     "install:all": "npm install && npm install --workspace=packages/mobile-app && npm install --workspace=packages/backend"
+=======
+    "dev": "node scripts/dev-server.js",
+    "dev:mobile": "node scripts/dev-server.js --mobile",
+    "dev:vite": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "mobile:open": "node scripts/open-mobile.js",
+    "mobile:scrcpy": "node scripts/launch-scrcpy.js",
+    "android:init": "npx cap add android",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:build": "npm run build && npx cap sync android && npx cap copy android"
+>>>>>>> 23d523a6e7cacae1b53497450bf14a76eb1a1715
   },
   "keywords": [
     "puzzle",

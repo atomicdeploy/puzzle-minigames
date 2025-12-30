@@ -237,11 +237,45 @@ The mobile app is configured in:
 
 ## Testing on Mobile
 
-### Test Web Version on Mobile
+### Mobile Development with ADB (Recommended)
+
+The project includes automated scripts for mobile development using ADB.
+
+**Prerequisites:**
+- Android device with USB debugging enabled
+- ADB (Android Platform Tools) installed
+- Device and computer on the same network
+
+**Quick Start:**
+```bash
+# Start dev server and automatically open in mobile device
+npm run dev:mobile
+
+# Or start dev server normally, then open in mobile
+npm run dev
+npm run mobile:open  # in another terminal
+
+# Launch screen mirroring with scrcpy
+npm run mobile:scrcpy
+```
+
+**Installation Instructions:**
+- See `scripts/README.md` for detailed setup and troubleshooting
+- Install ADB: 
+  - Windows: Download [Platform Tools](https://dl.google.com/android/repository/platform-tools-latest-windows.zip)
+  - macOS: `brew install android-platform-tools`
+  - Linux: `sudo apt-get install android-tools-adb`
+
+### Test Web Version on Mobile (Manual Method)
 
 1. Start dev server: `npm run dev`
-2. Find your local IP: `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
-3. Access from mobile: `http://YOUR_IP:3000`
+2. The script will automatically display your network URL (e.g., `http://10.1.0.93:3000`)
+3. Access this URL from your mobile browser
+
+**Alternative:** Find your local IP manually:
+- Windows: `ipconfig` 
+- Mac/Linux: `ifconfig`
+- Then access: `http://YOUR_IP:3000`
 
 ### Test APK on Physical Device
 
