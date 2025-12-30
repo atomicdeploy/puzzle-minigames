@@ -3,8 +3,14 @@ import { useRuntimeConfig } from '#app';
 
 export function useApi() {
   const config = useRuntimeConfig();
-  const API_BASE_URL = config.public.apiBaseUrl;
+  const API_BASE_URL = config.public?.apiBaseUrl;
 
+  if (typeof API_BASE_URL !== 'string' || API_BASE_URL.trim() === '') {
+    throw new Error(
+      'Runtime configuration error: public.apiBaseUrl is not set or is invalid. ' +
+      'Please configure `public.apiBaseUrl` in your Nuxt runtime config/environment.'
+    );
+  }
   // API Endpoints
   const API_ENDPOINTS = {
     // Auth endpoints
