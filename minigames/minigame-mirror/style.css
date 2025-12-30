@@ -688,6 +688,12 @@ header h1 {
     }
 }
 
+/* Force LTR direction for numeric inputs */
+input[type="number"],
+input[inputmode="numeric"] {
+    direction: ltr !important;
+}
+
 /* Accessibility */
 .visually-hidden {
     position: absolute;
