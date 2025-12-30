@@ -13,6 +13,7 @@ const GamesController = () => import('#controllers/games_controller')
 const PlayerProgressController = () => import('#controllers/player_progress_controller')
 const MinigameAnswersController = () => import('#controllers/minigame_answers_controller')
 const SessionsController = () => import('#controllers/sessions_controller')
+const SettingsController = () => import('#controllers/settings_controller')
 
 // Health check
 router.get('/health', async () => {
@@ -62,4 +63,13 @@ router.group(() => {
 
   // Leaderboard
   router.get('/leaderboard', [PlayerProgressController, 'leaderboard'])
+
+  // Settings routes
+  router.get('/settings', [SettingsController, 'index']) // Public settings
+  router.get('/settings/:key', [SettingsController, 'show']) // Get specific setting
+  router.group(() => {
+    router.get('/all', [SettingsController, 'all']) // All settings (admin)
+    router.post('/upsert', [SettingsController, 'upsert']) // Create/update setting
+    router.delete('/:key', [SettingsController, 'destroy']) // Delete setting
+  }).prefix('/settings').use(middleware.auth())
 }).prefix('/api')
