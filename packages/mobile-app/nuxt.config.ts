@@ -35,6 +35,12 @@ export default defineNuxtConfig({
           additionalData: ''
         }
       }
+    },
+    server: {
+      watch: {
+        usePolling: process.platform === 'win32',
+        ignored: ['**/packages/mobile-app/**']
+      }
     }
   },
   
