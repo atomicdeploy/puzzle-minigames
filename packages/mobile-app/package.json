@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "nuxt dev",
+    "dev": "cross-env CHOKIDAR_USEPOLLING=true nuxt dev",
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^5.5.1",
+    "cross-env": "^7.0.3",
     "sass": "^1.83.4",
     "sass-loader": "^16.0.4"
   }

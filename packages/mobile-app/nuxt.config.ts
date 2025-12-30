@@ -35,6 +35,11 @@ export default defineNuxtConfig({
           additionalData: ''
         }
       }
+    },
+    server: {
+      watch: {
+        usePolling: process.env.CHOKIDAR_USEPOLLING === 'true' || process.platform === 'win32'
+      }
     }
   },
   
