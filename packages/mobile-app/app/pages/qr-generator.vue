@@ -272,7 +272,7 @@ function getQROptions(style) {
   return { ...baseOptions, ...styles[style] };
 }
 
-// Update preview
+// Update preview with optional logo overlay
 async function updatePreview() {
   if (!process.client || !baseUrl.value) return;
 
@@ -281,7 +281,12 @@ async function updatePreview() {
 
   try {
     const options = getQROptions(qrStyle.value);
-    const dataUrl = await QRCode.toDataURL(url, options);
+    let dataUrl = await QRCode.toDataURL(url, options);
+
+    // Apply logo overlay if logo is uploaded
+    if (logo.value) {
+      dataUrl = await applyLogoOverlay(dataUrl, logo.value);
+    }
 
     const previewContainer = document.getElementById('qrPreview');
     if (previewContainer) {
@@ -300,6 +305,49 @@ async function updatePreview() {
   }
 }
 
+// Apply logo overlay to QR code
+async function applyLogoOverlay(qrDataUrl, logoDataUrl) {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const qrImg = new Image();
+    qrImg.onload = () => {
+      // Set canvas size
+      canvas.width = qrImg.width;
+      canvas.height = qrImg.height;
+      
+      // Draw QR code
+      ctx.drawImage(qrImg, 0, 0);
+      
+      // Load and draw logo
+      const logoImg = new Image();
+      logoImg.onload = () => {
+        const logoSize = Math.floor(qrImg.width * LOGO_CONFIG.SIZE_PERCENTAGE);
+        const logoX = (qrImg.width - logoSize) / 2;
+        const logoY = (qrImg.height - logoSize) / 2;
+        
+        // Draw white background with padding
+        const bgSize = logoSize + LOGO_CONFIG.ADDITIONAL_PADDING;
+        const bgX = (qrImg.width - bgSize) / 2;
+        const bgY = (qrImg.height - bgSize) / 2;
+        
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(bgX, bgY, bgSize, bgSize);
+        
+        // Draw logo
+        ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+        
+        resolve(canvas.toDataURL());
+      };
+      logoImg.onerror = () => reject(new Error('Failed to load logo'));
+      logoImg.src = logoDataUrl;
+    };
+    qrImg.onerror = () => reject(new Error('Failed to load QR code'));
+    qrImg.src = qrDataUrl;
+  });
+}
+
 // Generate all QR codes
 async function generateQRCodes() {
   isGenerating.value = true;
@@ -310,7 +358,12 @@ async function generateQRCodes() {
       const token = uuidv4();
       const url = `${baseUrl.value}?game=${i}&token=${token}`;
       const options = getQROptions(qrStyle.value);
-      const dataUrl = await QRCode.toDataURL(url, options);
+      let dataUrl = await QRCode.toDataURL(url, options);
+
+      // Apply logo overlay if logo is uploaded
+      if (logo.value) {
+        dataUrl = await applyLogoOverlay(dataUrl, logo.value);
+      }
 
       qrCodes.value.push({
         gameNumber: i,
