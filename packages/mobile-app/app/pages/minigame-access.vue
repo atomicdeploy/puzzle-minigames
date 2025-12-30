@@ -126,30 +126,63 @@ function getGameDescription(num) {
 }
 
 async function verifyToken(gameNum, tokenValue) {
-  // Simulate server delay
+  // Optional: keep a small artificial delay for UX consistency
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  // Store access in localStorage
   const accessKey = `minigame_access_${gameNum}`;
   const accessData = {
     token: tokenValue,
     timestamp: new Date().toISOString(),
     gameNumber: gameNum
   };
-  
+
   try {
-    const existingAccess = localStorage.getItem(accessKey);
-    if (existingAccess) {
-      const existing = JSON.parse(existingAccess);
-      if (existing.token === tokenValue) {
-        return true;
-      }
+    // First, ask the backend to verify that this token is valid for the given game
+    const response = await fetch('/api/minigame/verify-access', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        gameNumber: gameNum,
+        token: tokenValue
+      })
+    });
+
+    // If the request itself failed (e.g. 4xx/5xx), treat as invalid
+    if (!response.ok) {
+      console.error('Token verification failed with status:', response.status);
+      return false;
     }
-    localStorage.setItem(accessKey, JSON.stringify(accessData));
+
+    const data = await response.json();
+
+    // Expect backend to return an object like: { valid: boolean, ... }
+    if (!data || data.valid !== true) {
+      return false;
+    }
+
+    // Only after successful verification, store access data locally as a cache
+    try {
+      const existingAccess = localStorage.getItem(accessKey);
+      if (existingAccess) {
+        const existing = JSON.parse(existingAccess);
+        if (existing.token === tokenValue) {
+          return true;
+        }
+      }
+      localStorage.setItem(accessKey, JSON.stringify(accessData));
+    } catch (storageError) {
+      console.error('Error storing access data:', storageError);
+      // Storage failure should not grant access if verification failed,
+      // but at this point verification already succeeded, so still allow.
+    }
+
     return true;
   } catch (e) {
-    console.error('Error storing access data:', e);
-    return true;
+    // Network or unexpected errors: do NOT silently grant access
+    console.error('Error verifying token:', e);
+    return false;
   }
 }
 
