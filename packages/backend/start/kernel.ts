@@ -6,7 +6,8 @@ server.errorHandler(() => import('#exceptions/handler'))
 server.use([
   () => import('@adonisjs/core/bodyparser_middleware'),
   () => import('@adonisjs/cors/cors_middleware'),
-  () => import('@adonisjs/session/session_middleware'),
+  // Temporarily disabled session middleware due to configuration issues
+  // () => import('@adonisjs/session/session_middleware'),
 ])
 
 export const middleware = router.named({

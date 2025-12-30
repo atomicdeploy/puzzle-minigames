@@ -107,32 +107,14 @@ export default defineConfig(({ command, mode }) => {
       outDir: 'dist',
       sourcemap: false,
       rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+          'ar-hologram': resolve(__dirname, 'minigames/ar-hologram/index.html')
+        },
         output: {
           manualChunks: {
             three: ['three']
           }
-<<<<<<< HEAD
-=======
-        ]
-      }
-    })
-  ],
-  server: {
-    host: true,
-    port: 3000
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: false,
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        'ar-hologram': resolve(__dirname, 'minigames/ar-hologram/index.html')
-      },
-      output: {
-        manualChunks: {
-          three: ['three']
->>>>>>> f8a5637006a18279fbd7f7eb61f83883ec7db283
         }
       }
     }

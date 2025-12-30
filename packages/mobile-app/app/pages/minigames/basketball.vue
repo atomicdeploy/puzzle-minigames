@@ -67,7 +67,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useConfetti } from '~/composables/useConfetti';
 
 // Set page metadata
 useHead({
@@ -77,166 +76,23 @@ useHead({
   ]
 });
 
-// Refs
-const courtCanvas = ref(null);
-const confettiCanvas = ref(null);
-const digits = ref([0, 0, 0, 0, 0]);
-const selectedDigitIndex = ref(0);
-const feedbackMessage = ref('');
-const feedbackClass = ref('');
-
-// Confetti composable
-const { playConfetti, stopConfetti } = useConfetti();
-
-// Game logic - simplified version
-// In production, this would include the full canvas drawing logic from game.js
-let ctx = null;
-let resizeHandler = null;
-
-function resizeCourtCanvas() {
-  const canvas = courtCanvas.value;
-  if (!canvas) return;
-
-  // Match the canvas resolution to its displayed size
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-
-  // Reacquire context in case canvas was resized
-  ctx = canvas.getContext('2d');
-
-  // Redraw the court with the new dimensions
-  drawCourt();
-}
+// Load the full game.js implementation
+useScript('/minigames/minigame-basketball/game.js', {
+  defer: true
+});
 
 onMounted(() => {
   if (!process.client) return;
-
-  // Initialize canvas
-  if (courtCanvas.value) {
-    // Initial sizing and draw
-    resizeCourtCanvas();
-
-    // Update canvas size and redraw on window resize
-    resizeHandler = () => {
-      resizeCourtCanvas();
-    };
-    window.addEventListener('resize', resizeHandler);
-  }
-
-  // Set up digit selection
-  setupDigitSelection();
+  
+  console.log('✅ Basketball minigame page mounted - game.js should be loading');
 });
 
 onUnmounted(() => {
-  if (!process.client) return;
-  if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler);
-    resizeHandler = null;
-  }
-});
-function drawCourt() {
-  if (!ctx) return;
-  
-  const canvas = courtCanvas.value;
-  const width = canvas.width;
-  const height = canvas.height;
-  
-  // Draw court background
-  ctx.fillStyle = '#2c5f2d';
-  ctx.fillRect(0, 0, width, height);
-  
-  // Draw court lines (simplified)
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(20, 20, width - 40, height - 40);
-  
-  // Draw center circle
-  ctx.beginPath();
-  ctx.arc(width / 2, height / 2, 50, 0, Math.PI * 2);
-  ctx.stroke();
-  
-  // Draw three-point line (simplified)
-  ctx.strokeStyle = '#ff6b35';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(width / 2, 50, 100, 0, Math.PI);
-  ctx.stroke();
-}
-
-function setupDigitSelection() {
-  const digitElements = document.querySelectorAll('.digit');
-  digitElements.forEach((el, index) => {
-    el.addEventListener('click', () => {
-      selectedDigitIndex.value = index;
-      // Remove active class from all
-      digitElements.forEach(d => d.classList.remove('active'));
-      // Add active class to selected
-      el.classList.add('active');
-    });
-  });
-}
-
-function increaseDigit() {
-  const index = selectedDigitIndex.value;
-  digits.value[index] = (digits.value[index] + 1) % 10;
-  updateSevenSegmentDisplay(index, digits.value[index]);
-}
-
-function decreaseDigit() {
-  const index = selectedDigitIndex.value;
-  digits.value[index] = (digits.value[index] - 1 + 10) % 10;
-  updateSevenSegmentDisplay(index, digits.value[index]);
-}
-
-function updateSevenSegmentDisplay(index, value) {
-  // Defer DOM update to ensure Vue has applied its own DOM changes first
-  setTimeout(() => {
-    const digit = document.querySelector(`.digit[data-index="${index}"]`);
-    if (digit) {
-      digit.setAttribute('data-value', value);
-    }
-  }, 0);
-}
-
-function submitAnswer() {
-  const answer = digits.value.join('');
-  console.log('Submitted answer:', answer);
-  
-  // In production, this would check against the correct answer
-  // For now, show success message and play confetti
-  feedbackMessage.value = 'پاسخ شما ثبت شد!';
-  feedbackClass.value = 'success';
-  
-  // Play confetti animation on success
-  if (confettiCanvas.value) {
-    playConfetti(confettiCanvas.value);
-  }
-  
-  setTimeout(() => {
-    feedbackMessage.value = '';
-  }, 3000);
-}
-}
-
-onUnmounted(() => {
-  // Cleanup
-  if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler);
-    resizeHandler = null;
-  }
-  
-  // Stop confetti animation
-  stopConfetti();
-  
-  ctx = null;
+  console.log('Basketball minigame unmounted');
 });
 </script>
 
-<style lang="scss" scoped>
-@import '@/assets/scss/minigame-basketball.scss';
 
-.minigame-basketball {
-  width: 100%;
-  height: 100vh;
-}
+<style lang="scss">
+@import '@/assets/scss/minigame-basketball.scss';
 </style>

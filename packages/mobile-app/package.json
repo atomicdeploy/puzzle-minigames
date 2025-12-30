@@ -5,7 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "cross-env CHOKIDAR_USEPOLLING=true nuxt dev",
+    "dev": "nuxt dev",
+    "dev:poll": "cross-env CHOKIDAR_USEPOLLING=true nuxt dev",
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -31,6 +32,7 @@
     "@capacitor/android": "^5.5.1",
     "@capacitor/core": "^5.5.1",
     "@capacitor/haptics": "^5.0.6",
+    "@nuxt/scripts": "^0.13.2",
     "jszip": "^3.10.1",
     "matter-js": "^0.20.0",
     "nuxt": "^4.2.2",

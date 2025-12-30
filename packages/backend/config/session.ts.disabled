@@ -1,9 +1,9 @@
-import { defineConfig, stores } from '@adonisjs/session'
+import { defineConfig } from '@adonisjs/session'
+import app from '@adonisjs/core/services/app'
 
 export default defineConfig({
   enabled: true,
   driver: 'cookie',
-  store: stores.cookie(),
 
   cookieName: 'adonis-session',
 
@@ -14,7 +14,7 @@ export default defineConfig({
   cookie: {
     path: '/',
     httpOnly: true,
-    secure: false,
+    secure: app.inProduction,
     sameSite: 'lax',
   },
 })

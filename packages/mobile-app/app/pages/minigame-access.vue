@@ -137,7 +137,7 @@ async function verifyToken(gameNum, tokenValue) {
     // Get session token if available
     const sessionToken = process.client ? localStorage.getItem('sessionToken') : null
     
-    const headers: Record<string, string> = {
+    const headers = {
       'Content-Type': 'application/json'
     }
     

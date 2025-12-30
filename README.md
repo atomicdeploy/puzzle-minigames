@@ -332,14 +332,11 @@ npm run build
 ## Features ✨
 
 - **3D Interactive Environment**: Built with Three.js for rich 3D graphics
-<<<<<<< HEAD
 - **Augmented Reality (AR)**: AR.js integration for marker-based AR experiences
   - View treasure chests in AR using your device camera
   - Interactive 3D objects in real-world space
   - Hiro marker tracking support
-=======
-- **AR/VR Experience**: NEW! Holographic AR minigame with camera tracking and stunning visual effects
->>>>>>> f8a5637006a18279fbd7f7eb61f83883ec7db283
+  - AR/VR Holographic minigame with camera tracking and stunning visual effects
 - **Sudoku-style Puzzle Board**: 3x3 grid with unique puzzle pieces
 - **Discovery Mechanism**: Unlock puzzle pieces from treasure chests
 - **Mini-Games Integration**: Complete AR/VR challenges to earn puzzle pieces
@@ -415,7 +412,6 @@ npm run dev
 
 Open http://localhost:3000 in your browser (or mobile browser for testing).
 
-<<<<<<< HEAD
 #### Advanced Development Options
 
 The Vite configuration supports:
@@ -426,7 +422,7 @@ The Vite configuration supports:
 - **Custom Headers**: Security headers and more
 
 See [docs/development/vite-config-guide.md](./docs/development/vite-config-guide.md) for detailed configuration options.
-=======
+
 **Mobile Development:**
 
 To automatically open the dev server in your connected Android device:
@@ -457,7 +453,6 @@ npm run mobile:scrcpy
 ```
 
 This allows you to see and control your device from your computer while developing.
->>>>>>> 23d523a6e7cacae1b53497450bf14a76eb1a1715
 
 ### Build for Production
 
