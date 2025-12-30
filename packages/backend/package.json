@@ -1,0 +1,36 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend server for Puzzle Minigames - Node.js with Express, Socket.io, and MySQL",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "build": "echo 'No build step required for pure Node.js'"
+  },
+  "keywords": [
+    "backend",
+    "nodejs",
+    "express",
+    "socket.io",
+    "mysql"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-validator": "^7.3.1",
+    "morgan": "^1.10.1",
+    "mysql2": "^3.11.5",
+    "socket.io": "^4.8.1",
+    "useragent": "^2.3.0",
+    "useragent-parser": "^0.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

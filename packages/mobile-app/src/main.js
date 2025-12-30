@@ -2,6 +2,12 @@ import './style.css';
 import * as THREE from 'three';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
+// Check if user is logged in, redirect to welcome page if not
+const currentUser = localStorage.getItem('infernal-current-user');
+if (!currentUser) {
+    window.location.href = '/welcome.html';
+}
+
 // Constants
 const PUZZLE_SIZE = 9;
 const AUTO_SAVE_INTERVAL = 5000; // milliseconds
@@ -654,6 +660,27 @@ function saveGameState() {
 // Auto-save on changes
 setInterval(saveGameState, AUTO_SAVE_INTERVAL);
 
+// Check for QR code unlock from URL
+function checkQRUnlock() {
+    const params = new URLSearchParams(window.location.search);
+    const unlock = params.get('unlock');
+    const token = params.get('token');
+    
+    if (unlock && token) {
+        const puzzleNumber = parseInt(unlock);
+        if (puzzleNumber >= 1 && puzzleNumber <= 9) {
+            // Auto-unlock the puzzle from QR code
+            setTimeout(() => {
+                openTreasureChest(puzzleNumber);
+                showNotification(`🎉 مینی‌گیم ${puzzleNumber} از طریق QR Code باز شد!`, 3000);
+            }, 2000);
+            
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+}
+
 // Initialize game
 function initGame() {
     initAudio();
@@ -661,7 +688,17 @@ function initGame() {
     initPuzzleBoard();
     initTreasureChests();
     loadGameState();
+    checkQRUnlock();
     initUI();
+    
+    // Display user name in header
+    const userData = JSON.parse(localStorage.getItem('infernal-current-user'));
+    if (userData && userData.name) {
+        const header = document.querySelector('header h1');
+        if (header) {
+            header.textContent = `🧩 سلام ${userData.name.split(' ')[0]}! 🧩`;
+        }
+    }
     
     // Hide loading screen
     setTimeout(() => {

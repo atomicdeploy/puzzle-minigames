@@ -2,11 +2,288 @@
 
 <div dir="rtl">
 
-## درباره بازی
+## درباره پروژه
 
-اینفرنال یک بازی پازل سه‌بعدی تعاملی است که برای مرورگرهای موبایل و PWA طراحی شده است. در این بازی، کاربران باید قطعات پازل را از صندوق‌های گنج کشف کرده و آن‌ها را در جای صحیح خود در یک جدول 3x3 (شبیه سودوکو) قرار دهند.
+اینفرنال یک بازی پازل سه‌بعدی تعاملی است که به صورت یک مونوریپو (Monorepo) سازماندهی شده و شامل دو بخش اصلی است:
+
+1. **Mobile App**: برنامه موبایل با Nuxt 3 + Vue 3 + Capacitor
+2. **Backend**: سرور Node.js با Express + Socket.io + MySQL/MariaDB
 
 </div>
+
+## 🏗️ Monorepo Structure
+
+```
+puzzle-minigames/
+├── packages/
+│   ├── mobile-app/          # Nuxt 3 Mobile Application
+│   │   ├── app/             # Nuxt app directory
+│   │   ├── assets/          # SCSS styles and assets
+│   │   ├── components/      # Vue components
+│   │   ├── pages/           # Nuxt pages
+│   │   ├── composables/     # Vue composables
+│   │   ├── public/          # Static files
+│   │   ├── minigames/       # Mini-game modules
+│   │   └── package.json
+│   └── backend/             # Node.js Backend Server
+│       ├── src/
+│       │   ├── config/      # Configuration files
+│       │   ├── controllers/ # Request controllers
+│       │   ├── routes/      # API routes
+│       │   ├── socket/      # Socket.io handlers
+│       │   ├── models/      # Database models
+│       │   └── server.js    # Main server file
+│       ├── database/        # Database schemas
+│       └── package.json
+├── package.json             # Root workspace configuration
+└── README.md               # This file
+```
+
+## ✨ Features
+
+### Mobile App
+- **Nuxt 3 & Vue 3**: Modern reactive framework
+- **SCSS Styling**: Organized, maintainable styles with nesting
+- **3D Graphics**: Three.js integration for rich 3D visuals
+- **Sudoku-style Puzzle**: 3x3 grid puzzle board
+- **Mini-games**: Modular mini-game system
+- **Capacitor**: Native mobile deployment (Android/iOS)
+- **RTL Support**: Full Persian (Farsi) language support
+- **PWA Ready**: Progressive Web App capabilities
+
+### Backend
+- **Express.js**: Fast, minimalist web framework
+- **Socket.io**: Real-time bidirectional communication
+- **MySQL/MariaDB**: Relational database for data persistence
+- **RESTful API**: Clean API design
+- **Player Progress**: Save and load game state
+- **Leaderboard**: Track top players
+- **CORS Enabled**: Cross-origin resource sharing
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- MySQL or MariaDB (for backend)
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd puzzle-minigames
+```
+
+2. Install all dependencies:
+```bash
+npm install
+```
+
+This will install dependencies for the root workspace and both packages.
+
+### Setting up the Backend
+
+1. Navigate to the backend package:
+```bash
+cd packages/backend
+```
+
+2. Create `.env` file:
+```bash
+cp .env.example .env
+```
+
+3. Configure your database connection in `.env`
+
+4. Create the database and tables:
+```bash
+mysql -u root -p < database/schema.sql
+```
+
+### Running the Applications
+
+#### Development Mode (Both Services)
+
+From the root directory:
+```bash
+npm run dev
+```
+
+This will start both the mobile app and backend server concurrently.
+
+#### Individual Services
+
+**Mobile App Only:**
+```bash
+npm run mobile:dev
+```
+The app will be available at http://localhost:3000
+
+**Backend Only:**
+```bash
+npm run backend:dev
+```
+The server will run on http://localhost:3001
+
+### Building for Production
+
+**Build all packages:**
+```bash
+npm run build
+```
+
+**Build individual packages:**
+```bash
+npm run mobile:build
+npm run backend:build
+```
+
+## 📱 Mobile App Development
+
+### Available Scripts
+
+```bash
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run generate     # Generate static site
+npm run preview      # Preview production build
+```
+
+### Building for Android
+
+1. Generate the static site:
+```bash
+npm run generate
+```
+
+2. Sync with Capacitor:
+```bash
+npm run android:sync
+```
+
+3. Open in Android Studio:
+```bash
+npm run android:open
+```
+
+See `packages/mobile-app/README.md` for more details.
+
+## 🔧 Backend Development
+
+### API Endpoints
+
+- `GET /health` - Health check
+- `GET /api/games` - Get all games
+- `GET /api/players/:playerId/progress` - Get player progress
+- `POST /api/players/:playerId/progress` - Save player progress
+- `GET /api/leaderboard` - Get leaderboard
+
+### Socket.io Events
+
+**Client → Server:**
+- `player:join`
+- `game:start`
+- `game:move`
+- `game:complete`
+- `puzzle:discovered`
+
+**Server → Client:**
+- `player:joined`
+- `game:started`
+- `game:move`
+- `game:completed`
+- `puzzle:saved`
+
+See `packages/backend/README.md` for complete documentation.
+
+## 🛠️ Technology Stack
+
+### Mobile App
+- **Nuxt 3** - Vue.js framework
+- **Vue 3** - Progressive JavaScript framework
+- **SCSS** - CSS preprocessor
+- **Three.js** - 3D graphics library
+- **Matter.js** - 2D physics engine
+- **Capacitor** - Native runtime for web apps
+- **Vite** - Build tool
+
+### Backend
+- **Node.js** - JavaScript runtime
+- **Express.js** - Web framework
+- **Socket.io** - Real-time engine
+- **MySQL2** - MySQL client
+- **CORS** - Cross-origin middleware
+- **dotenv** - Environment configuration
+
+## 📝 Development Workflow
+
+1. **Make changes** in the appropriate package
+2. **Test locally** using `npm run dev`
+3. **Build** using `npm run build`
+4. **Commit** your changes with descriptive messages
+
+## 🔐 Environment Configuration
+
+### Backend (.env)
+```env
+PORT=3001
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=puzzle_minigames
+CORS_ORIGIN=*
+```
+
+## 🌐 Browser Support
+
+- Chrome/Edge (latest)
+- Firefox (latest)
+- Safari (iOS 12+)
+- Chrome Mobile (Android 5+)
+
+## 📄 License
+
+MIT License - Feel free to use and modify
+
+## 👥 Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+---
+
+<div dir="rtl">
+
+## راهنمای سریع فارسی
+
+### نصب و اجرا
+```bash
+# نصب وابستگی‌ها
+npm install
+
+# اجرای هر دو سرویس
+npm run dev
+
+# اجرای تنها برنامه موبایل
+npm run mobile:dev
+
+# اجرای تنها بک‌اند
+npm run backend:dev
+```
+
+### ساخت نسخه نهایی
+```bash
+npm run build
+```
+
+</div>
+
 
 ## Features ✨
 
@@ -202,6 +479,27 @@ Each mini-game should:
 2. Return success/failure status
 3. Award a puzzle piece upon completion
 4. Follow the same RTL/Persian design language
+
+### QR Code Access System 🎯
+
+The game includes a comprehensive QR code system for Game Masters:
+
+**For Game Masters:**
+- Navigate to `/qr-generator.html` to generate QR codes
+- Create 9 unique QR codes (one per mini-game) with security tokens
+- Customize appearance: colors, error correction, margins, logos
+- Download high-resolution images (300 DPI) in a ZIP file
+- Print and place QR codes around the game environment
+
+**For Players:**
+- Scan QR codes to unlock mini-games
+- Access is validated with unique UUID tokens
+- Automatic puzzle piece unlocking upon valid access
+- Seamless integration with main game
+
+**Documentation:**
+- See [QR-SYSTEM-DOCS.md](./QR-SYSTEM-DOCS.md) for complete documentation
+- Includes security considerations and customization guide
 
 ## Customization 🎨
 
