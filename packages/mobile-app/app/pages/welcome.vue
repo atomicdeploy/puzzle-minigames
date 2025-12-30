@@ -670,12 +670,17 @@ function startGame() {
 .welcome-page {
   width: 100%;
   min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   
   .screen {
     display: none;
+    min-height: 100vh;
     
     &.active {
       display: flex;
+      flex-direction: column;
     }
   }
 }

@@ -134,8 +134,8 @@ function drawCourt() {
   const width = canvas.width;
   const height = canvas.height;
   
-  // Draw court background
-  ctx.fillStyle = '#2c5f2d';
+  // Draw court background - use CSS variable for court color
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--court-color') || '#c17b3a';
   ctx.fillRect(0, 0, width, height);
   
   // Draw court lines (simplified)
