@@ -8,42 +8,42 @@
           <p class="game-subtitle">اتاق فرار محیطی</p>
           <p class="event-name">رویداد بازیهای فکری دانشگاه هنر</p>
         </div>
-        <button class="btn btn-primary" @click="currentScreen = 'tour'">شروع کنید</button>
+        <button class="btn btn-primary" @click="currentScreen = 'tour'">بزن بریم!</button>
       </div>
     </div>
 
     <!-- Tour/Guide Screen -->
     <div v-else-if="currentScreen === 'tour'" class="screen active">
       <div class="tour-content">
-        <h2>🎮 راهنمای بازی</h2>
+        <h2>🎮 بازی چه جوریه؟</h2>
         
         <div class="tour-step">
           <div class="step-icon">🔍</div>
-          <h3>کشف پازل‌ها</h3>
-          <p>در محیط اطراف خود به دنبال QR کدهای مخفی بگردید</p>
+          <h3>پیدا کردن پازل‌ها</h3>
+          <p>تو محیط اطرافت دنبال کدهای QR بگرد</p>
         </div>
 
         <div class="tour-step">
           <div class="step-icon">📱</div>
-          <h3>اسکن کد</h3>
-          <p>با اسکن QR کد، پازل‌های پنهان را کشف کنید</p>
+          <h3>اسکن کردن</h3>
+          <p>هر کد رو که اسکن کنی، یه پازل جدید باز میشه</p>
         </div>
 
         <div class="tour-step">
           <div class="step-icon">🧩</div>
           <h3>حل معما</h3>
-          <p>هر پازل یک معمای جذاب دارد که باید حل کنید</p>
+          <p>هر پازل یه معمای جذاب داره که باید حلش کنی</p>
         </div>
 
         <div class="tour-step">
           <div class="step-icon">🏆</div>
-          <h3>برنده شوید</h3>
-          <p>با حل همه معماها، فاتح بازی شوید!</p>
+          <h3>برنده شو!</h3>
+          <p>همه معماهارو حل کن و فاتح بازی بشو!</p>
         </div>
 
         <div class="tour-navigation">
-          <button class="btn btn-secondary" @click="currentScreen = 'welcome'">بازگشت</button>
-          <button class="btn btn-primary" @click="currentScreen = 'auth-choice'">متوجه شدم</button>
+          <button class="btn btn-secondary" @click="currentScreen = 'welcome'">برگردیم</button>
+          <button class="btn btn-primary" @click="currentScreen = 'auth-choice'">فهمیدم، بریم!</button>
         </div>
       </div>
     </div>
@@ -51,21 +51,21 @@
     <!-- Auth Choice Screen -->
     <div v-else-if="currentScreen === 'auth-choice'" class="screen active">
       <div class="auth-choice-content">
-        <h2>ورود به بازی</h2>
-        <p class="subtitle">برای شروع بازی، لطفاً انتخاب کنید:</p>
+        <h2>بیا تو بازی!</h2>
+        <p class="subtitle">برای شروع، یکیشو انتخاب کن:</p>
         
         <div class="auth-buttons">
           <button class="btn btn-primary btn-large" @click="currentScreen = 'registration'">
             <span class="btn-icon">📝</span>
-            ثبت نام جدید
+            می‌خوام ثبت نام کنم
           </button>
           <button class="btn btn-secondary btn-large" @click="currentScreen = 'signin'">
             <span class="btn-icon">🔑</span>
-            ورود با حساب کاربری
+            قبلاً ثبت نام کردم
           </button>
         </div>
 
-        <button class="btn-back" @click="currentScreen = 'tour'">← بازگشت</button>
+        <button class="btn-back" @click="currentScreen = 'tour'">← برگردیم</button>
       </div>
     </div>
 
@@ -89,18 +89,18 @@
             >
           </div>
 
-          <button type="submit" class="btn btn-primary btn-large">ارسال کد تایید</button>
+          <button type="submit" class="btn btn-primary btn-large">بفرست برام کد بیاد</button>
         </form>
 
-        <button class="btn-back" @click="currentScreen = 'auth-choice'">← بازگشت</button>
+        <button class="btn-back" @click="currentScreen = 'auth-choice'">← برگردیم</button>
       </div>
     </div>
 
     <!-- OTP Verification Screen (for sign in) -->
     <div v-else-if="currentScreen === 'otp-signin'" class="screen active">
       <div class="otp-content">
-        <h2>تایید شماره موبایل</h2>
-        <p class="subtitle">کد 6 رقمی ارسال شده به شماره {{ signinPhone }} را وارد کنید</p>
+        <h2>کد تایید رو بزن!</h2>
+        <p class="subtitle">کد ۶ رقمی که برات فرستادیم رو بزن ({{ signinPhone }})</p>
         
         <div class="otp-inputs" role="group" aria-label="6-digit one-time passcode">
           <input 
@@ -118,10 +118,10 @@
           >
         </div>
 
-        <button @click="verifySignInOTP" class="btn btn-primary btn-large">تایید کد</button>
-        <button @click="resendOTP('signin')" class="btn btn-text">ارسال مجدد کد</button>
+        <button @click="verifySignInOTP" class="btn btn-primary btn-large">تایید کن!</button>
+        <button @click="resendOTP('signin')" class="btn btn-text">دوباره بفرست</button>
 
-        <button class="btn-back" @click="currentScreen = 'signin'">← بازگشت</button>
+        <button class="btn-back" @click="currentScreen = 'signin'">← برگردیم</button>
       </div>
     </div>
 
@@ -135,6 +135,29 @@
           <div class="form-group">
             <label for="name">نام و نام خانوادگی <span class="required">*</span></label>
             <input v-model="formData.name" type="text" id="name" class="form-control" required>
+          </div>
+
+          <!-- Profile Picture Upload -->
+          <div class="form-group">
+            <label for="profilePicture">تصویر پروفایل (اختیاری)</label>
+            <div class="profile-picture-upload">
+              <div class="profile-preview" @click="$refs.profileInput?.click()">
+                <img v-if="profilePicturePreview" :src="profilePicturePreview" alt="Profile Preview" />
+                <span v-else class="placeholder-emoji">👤</span>
+              </div>
+              <input 
+                ref="profileInput"
+                type="file" 
+                id="profilePicture" 
+                accept="image/*"
+                @change="handleProfileUpload"
+                style="display: none;"
+              >
+              <button type="button" class="btn btn-secondary btn-small" @click="$refs.profileInput?.click()">
+                انتخاب تصویر
+              </button>
+              <small class="help-text">حداکثر ۵۰۰ کیلوبایت</small>
+            </div>
           </div>
 
           <!-- Birthday -->
@@ -160,6 +183,26 @@
                 <span>ترجیح می‌دهم نگویم</span>
               </label>
             </div>
+          </div>
+
+          <!-- Education Level -->
+          <div class="form-group">
+            <label for="educationLevel">مقطع تحصیلی <span class="required">*</span></label>
+            <select v-model="formData.educationLevel" id="educationLevel" class="form-control" required>
+              <option value="" disabled selected>انتخاب کنید</option>
+              <option value="high-school">دبیرستان</option>
+              <option value="diploma">دیپلم</option>
+              <option value="associate">کاردانی</option>
+              <option value="bachelor">کارشناسی</option>
+              <option value="master">کارشناسی ارشد</option>
+              <option value="phd">دکتری</option>
+            </select>
+          </div>
+
+          <!-- Field of Study -->
+          <div class="form-group">
+            <label for="fieldOfStudy">رشته تحصیلی <span class="required">*</span></label>
+            <input v-model="formData.fieldOfStudy" type="text" id="fieldOfStudy" class="form-control" required placeholder="مثال: مهندسی کامپیوتر">
           </div>
 
           <!-- Phone Number -->
@@ -207,18 +250,18 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-large">ادامه</button>
+          <button type="submit" class="btn btn-primary btn-large">بریم به مرحله بعد!</button>
         </form>
 
-        <button class="btn-back" @click="currentScreen = 'auth-choice'">← بازگشت</button>
+        <button class="btn-back" @click="currentScreen = 'auth-choice'">← برگردیم</button>
       </div>
     </div>
 
     <!-- OTP Verification Screen (for registration) -->
     <div v-else-if="currentScreen === 'otp-registration'" class="screen active">
       <div class="otp-content">
-        <h2>تایید شماره موبایل</h2>
-        <p class="subtitle">کد 6 رقمی ارسال شده به شماره {{ formData.phone }} را وارد کنید</p>
+        <h2>کد تایید رو بزن!</h2>
+        <p class="subtitle">کد ۶ رقمی که برات فرستادیم رو بزن ({{ formData.phone }})</p>
         
         <div class="otp-inputs" role="group" aria-label="6-digit one-time passcode">
           <input 
@@ -236,10 +279,10 @@
           >
         </div>
 
-        <button @click="verifyRegistrationOTP" class="btn btn-primary btn-large">تایید و ثبت نام</button>
-        <button @click="resendOTP('registration')" class="btn btn-text">ارسال مجدد کد</button>
+        <button @click="verifyRegistrationOTP" class="btn btn-primary btn-large">تایید کن و بریم!</button>
+        <button @click="resendOTP('registration')" class="btn btn-text">دوباره بفرست</button>
 
-        <button class="btn-back" @click="currentScreen = 'registration'">← بازگشت</button>
+        <button class="btn-back" @click="currentScreen = 'registration'">← برگردیم</button>
       </div>
     </div>
 
@@ -247,11 +290,14 @@
     <div v-else-if="currentScreen === 'success'" class="screen active">
       <div class="success-content">
         <div class="success-icon">🎉</div>
-        <h2>ثبت نام با موفقیت انجام شد!</h2>
+        <h2>یه ذهنم! ثبت نام شد!</h2>
         
         <div class="player-info">
           <div class="player-id-card">
-            <div class="player-avatar">👤</div>
+            <div class="player-avatar">
+              <img v-if="profilePicturePreview" :src="profilePicturePreview" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+              <span v-else>👤</span>
+            </div>
             <div class="player-details">
               <h3>{{ formData.name }}</h3>
               <p class="player-label">کد بازیکن</p>
@@ -262,16 +308,16 @@
         </div>
 
         <div class="instructions">
-          <h3>🎮 راهنمای شروع بازی</h3>
+          <h3>🎮 حالا چیکار کنیم؟</h3>
           <ul class="instruction-list">
-            <li>در محیط اطراف خود به دنبال QR کدهای مخفی بگردید</li>
-            <li>با اسکن هر QR کد، یک پازل جدید فعال می‌شود</li>
-            <li>معماهای هر پازل را حل کنید و امتیاز کسب کنید</li>
-            <li>کد بازیکن خود را برای ورود بعدی یادداشت کنید</li>
+            <li>تو محیط اطرافت دنبال کدهای QR بگرد</li>
+            <li>هر کد رو که اسکن کنی، یه پازل جدید باز میشه</li>
+            <li>معماهارو حل کن و امتیاز بگیر</li>
+            <li>کد بازیکنت رو یادداشت کن که بعد لازمت میشه</li>
           </ul>
         </div>
 
-        <button class="btn btn-primary btn-large" @click="startGame">شروع بازی</button>
+        <button class="btn btn-primary btn-large" @click="startGame">بزن بریم بازی!</button>
       </div>
     </div>
   </div>
@@ -344,6 +390,34 @@ onMounted(async () => {
     }
   }
 });
+
+// Handle profile picture upload
+function handleProfileUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  
+  // Validate file size (max 500KB)
+  if (file.size > 500 * 1024) {
+    alert('حجم فایل باید کمتر از ۵۰۰ کیلوبایت باشد');
+    event.target.value = '';
+    return;
+  }
+  
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('فقط فایل‌های تصویری مجاز هستند');
+    event.target.value = '';
+    return;
+  }
+  
+  // Read and preview the image
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    profilePicturePreview.value = e.target?.result;
+    formData.value.profilePicture = e.target?.result;
+  };
+  reader.readAsDataURL(file);
+}
 
 // Validate phone number
 function validatePhoneNumber(phone) {
