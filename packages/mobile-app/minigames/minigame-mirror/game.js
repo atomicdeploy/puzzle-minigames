@@ -17,6 +17,9 @@ let currentOrder = {
     middle: null,
     bottom: null
 };
+let selectedCard = null; // Track selected card in tap mode
+let toastTimeout = null; // Track toast timeout for cleanup
+let toastShown = false; // Track if toast has been shown in current input session
 
 // Initialize the game
 function init() {
@@ -40,6 +43,10 @@ function setupEventListeners() {
             handlePasswordSubmit();
         }
     });
+    
+    // Input validation and space trimming
+    passwordInput.addEventListener('input', handlePasswordInput);
+    passwordInput.addEventListener('blur', handlePasswordBlur);
     
     // Stage 2: Drag and drop
     setupDragAndDrop();
@@ -68,6 +75,122 @@ function handleMirrorClick() {
     } else {
         inputGroup.classList.remove('mirrored');
     }
+}
+
+// Farsi Unicode ranges: 0600-06FF (Arabic), FB50-FDFF (Arabic Presentation Forms-A), FE70-FEFF (Arabic Presentation Forms-B)
+// Also includes Persian-specific characters
+function isFarsiCharacter(char) {
+    const code = char.charCodeAt(0);
+    // Farsi/Persian and Arabic ranges
+    return (code >= 0x0600 && code <= 0x06FF) ||
+           (code >= 0xFB50 && code <= 0xFDFF) ||
+           (code >= 0xFE70 && code <= 0xFEFF) ||
+           char === ' '; // Allow spaces
+}
+
+// Handle password input validation
+function handlePasswordInput(e) {
+    const input = e.target;
+    const value = input.value;
+    const helperText = document.getElementById('input-helper-text');
+    
+    let newValue = '';
+    let hasInvalidChar = false;
+    let hasEnglishChar = false;
+    
+    // Check each character
+    for (let i = 0; i < value.length; i++) {
+        const char = value[i];
+        
+        // Check if it's a valid Farsi character or space
+        if (isFarsiCharacter(char)) {
+            newValue += char;
+        } else {
+            hasInvalidChar = true;
+            // Check if it's an English character
+            if (/[a-zA-Z]/.test(char)) {
+                hasEnglishChar = true;
+            }
+        }
+    }
+    
+    // Replace contiguous spaces with a single space
+    newValue = newValue.replace(/\s+/g, ' ');
+    
+    // Update input value if it changed
+    if (input.value !== newValue) {
+        input.value = newValue;
+        // Cursor will naturally adjust to end, which is acceptable for this use case
+    }
+    
+    // Show helper text if English characters detected
+    if (hasEnglishChar) {
+        helperText.classList.remove('hidden');
+    } else {
+        helperText.classList.add('hidden');
+    }
+    
+    // Show toast for non-English invalid characters only (to avoid redundant feedback)
+    // Also debounce: only show once per input session
+    if (hasInvalidChar && !hasEnglishChar && !toastShown) {
+        showToast('فقط حروف فارسی و فاصله مجاز است');
+        toastShown = true;
+    }
+}
+
+// Handle password input blur (trim spaces)
+function handlePasswordBlur(e) {
+    const input = e.target;
+    const helperText = document.getElementById('input-helper-text');
+    let value = input.value;
+    
+    // Trim all leading spaces
+    value = value.replace(/^\s+/, '');
+    
+    // Allow only one trailing space (preserve if it exists, otherwise don't add)
+    if (value.endsWith(' ')) {
+        value = value.replace(/\s+$/, ' ');
+    }
+    
+    input.value = value;
+    
+    // Hide helper text on blur
+    helperText.classList.add('hidden');
+    
+    // Reset toast shown flag for next input session
+    toastShown = false;
+}
+
+// Show toast notification
+function showToast(message) {
+    // Clear existing toast timeout
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+    }
+    
+    // Find or create toast element
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.className = 'toast-notification';
+        document.body.appendChild(toast);
+    }
+    
+    toast.textContent = message;
+    toast.classList.add('show');
+    
+    // Announce to screen readers
+    const srAnnouncements = document.getElementById('sr-announcements');
+    if (srAnnouncements) {
+        srAnnouncements.setAttribute('role', 'alert');
+        srAnnouncements.textContent = `خطا: ${message}`;
+    }
+    
+    // Hide after 2 seconds
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2000);
 }
 
 // Handle password submission
@@ -126,6 +249,9 @@ function setupDragAndDrop() {
         card.addEventListener('dragstart', handleDragStart);
         card.addEventListener('dragend', handleDragEnd);
         
+        // Click/tap events for tap mode
+        card.addEventListener('click', handleCardTap);
+        
         // Touch events for mobile
         card.addEventListener('touchstart', handleTouchStart, { passive: false });
         card.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -137,6 +263,9 @@ function setupDragAndDrop() {
         zone.addEventListener('dragover', handleDragOver);
         zone.addEventListener('dragleave', handleDragLeave);
         zone.addEventListener('drop', handleDrop);
+        
+        // Click/tap events for tap mode
+        zone.addEventListener('click', handleZoneTap);
     });
 }
 
@@ -249,6 +378,59 @@ function updateTouchClonePosition(touch) {
     touchClone.style.top = `${top}px`;
 }
 
+// Tap mode handlers
+function handleCardTap(e) {
+    // Don't interfere with drag operations
+    if (draggedElement || touchElement) return;
+    
+    const card = e.currentTarget;
+    
+    // If this card is already selected, deselect it
+    if (selectedCard === card) {
+        card.classList.remove('selected');
+        selectedCard = null;
+        return;
+    }
+    
+    // Deselect previous card
+    if (selectedCard) {
+        selectedCard.classList.remove('selected');
+    }
+    
+    // Select this card
+    card.classList.add('selected');
+    selectedCard = card;
+}
+
+function handleZoneTap(e) {
+    // Don't interfere with drag operations
+    if (draggedElement || touchElement) return;
+    
+    const zone = e.currentTarget;
+    
+    // If a card is selected, place it in this zone
+    if (selectedCard) {
+        placeWordInZone(selectedCard, zone);
+        selectedCard.classList.remove('selected');
+        selectedCard = null;
+        return;
+    }
+}
+
+// Update words pool visibility based on whether it has visible cards
+function updateWordsPoolVisibility() {
+    const wordsPool = document.querySelector('.words-pool');
+    if (!wordsPool) return;
+    
+    const visibleCards = wordsPool.querySelectorAll('.word-card:not(.hidden)');
+    
+    if (visibleCards.length === 0) {
+        wordsPool.classList.add('empty');
+    } else {
+        wordsPool.classList.remove('empty');
+    }
+}
+
 // Place word in drop zone
 function placeWordInZone(wordCard, zone) {
     const position = zone.dataset.position;
@@ -292,8 +474,17 @@ function placeWordInZone(wordCard, zone) {
     currentOrder[position] = word;
     zone.classList.add('filled');
     
-    // Hide original word in pool
+    // Hide original word in pool and clear any selection state
+    wordCard.classList.remove('selected');
     wordCard.classList.add('hidden');
+    
+    // If this word was selected in tap mode, clear the selection
+    if (typeof selectedCard !== 'undefined' && selectedCard === wordCard) {
+        selectedCard = null;
+    }
+    
+    // Update words pool visibility
+    updateWordsPoolVisibility();
 }
 
 // Return word to pool
@@ -304,6 +495,9 @@ function returnWordToPool(word) {
             card.classList.remove('hidden');
         }
     });
+    
+    // Update words pool visibility
+    updateWordsPoolVisibility();
 }
 
 // Handle order submission
