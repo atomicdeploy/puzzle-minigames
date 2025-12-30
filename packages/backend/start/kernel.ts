@@ -9,7 +9,7 @@ server.use([
   () => import('@adonisjs/session/session_middleware'),
 ])
 
-router.use([
-  () => import('#middleware/container_bindings_middleware'),
-  () => import('#middleware/auth_middleware'),
-])
+export const middleware = router.named({
+  auth: () => import('#middleware/auth_middleware'),
+})
+

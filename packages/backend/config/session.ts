@@ -1,9 +1,9 @@
 import { defineConfig, stores } from '@adonisjs/session'
-import env from '#start/env'
 
 export default defineConfig({
   enabled: true,
-  driver: env.get('SESSION_DRIVER'),
+  driver: 'cookie',
+  store: stores.cookie(),
 
   cookieName: 'adonis-session',
 
@@ -16,9 +16,5 @@ export default defineConfig({
     httpOnly: true,
     secure: false,
     sameSite: 'lax',
-  },
-
-  stores: {
-    cookie: stores.cookie(),
   },
 })

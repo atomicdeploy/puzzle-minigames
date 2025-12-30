@@ -1,10 +1,16 @@
 import { defineConfig } from '@adonisjs/core/http'
-import router from '@adonisjs/core/services/router'
+import env from '#start/env'
 
 export default defineConfig({
   generateRequestId: true,
   allowMethodSpoofing: false,
   useAsyncLocalStorage: true,
+
+  appKey: env.get('APP_KEY'),
+
+  http: {
+    trustProxy: false,
+  },
 
   cookie: {
     domain: '',

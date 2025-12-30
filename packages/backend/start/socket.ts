@@ -4,24 +4,31 @@
 |--------------------------------------------------------------------------
 */
 
-import server from '@adonisjs/core/services/server'
+import app from '@adonisjs/core/services/app'
 import { Server } from 'socket.io'
 import UserSession from '#models/user_session'
 import { DateTime } from 'luxon'
 
 let io: Server | null = null
 
-server.ready(() => {
-  const httpServer = server.getNodeServer()
-  
-  if (!httpServer) {
+app.ready(() => {
+  const server = app.server
+
+  if (!server) {
     console.error('HTTP server not available')
+    return
+  }
+
+  const httpServer = server.getNodeServer()
+
+  if (!httpServer) {
+    console.error('Node HTTP server not available')
     return
   }
 
   io = new Server(httpServer, {
     cors: {
-      origin: '*', // Configure based on env.get('CORS_ORIGIN')
+      origin: '*', // Configure based on env
       methods: ['GET', 'POST'],
       credentials: true,
     },

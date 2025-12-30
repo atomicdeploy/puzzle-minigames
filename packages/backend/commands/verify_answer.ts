@@ -11,8 +11,8 @@ export default class VerifyAnswer extends BaseCommand {
     startApp: true,
   }
 
-  @args.number({ description: 'Submission ID to verify', required: false })
-  declare submissionId: number
+  @args.string({ description: 'Submission ID to verify', required: false })
+  declare submissionId: string
 
   @flags.boolean({ description: 'List all pending submissions' })
   declare list: boolean
@@ -28,8 +28,14 @@ export default class VerifyAnswer extends BaseCommand {
       return
     }
 
+    const id = parseInt(this.submissionId, 10)
+    if (isNaN(id)) {
+      this.logger.error('Invalid submission ID')
+      return
+    }
+
     const submission = await AnswerSubmission.query()
-      .where('id', this.submissionId)
+      .where('id', id)
       .preload('user')
       .first()
 
