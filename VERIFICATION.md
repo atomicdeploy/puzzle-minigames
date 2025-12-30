@@ -339,3 +339,22 @@ cd packages/backend && node scripts/create-demo-users.mjs
 ```
 
 For more information, see [INSTALLATION.md](./INSTALLATION.md)
+
+---
+
+## ⚠️ Important Notes
+
+### Password Hashing in Test Scripts
+
+The test scripts (`test-users.mjs` and `create-demo-users.mjs`) use SHA-256 for password hashing for simplicity. **This is for demonstration purposes only.** 
+
+In production, the AdonisJS authentication system uses **bcrypt** (via the `@adonisjs/core/services/hash` module with 'scrypt' algorithm) which is the proper way to hash passwords with salt and configurable work factors.
+
+The demo accounts created by these scripts are for testing and demonstration only and should not be used in production.
+
+### Cookie Handling in Tests
+
+The test files assume a simplified cookie handling for demonstration. In a production test suite, proper cookie parsing should be implemented to handle multiple cookies and extract specific session tokens.
+
+---
+
