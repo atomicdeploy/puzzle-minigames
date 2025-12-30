@@ -248,7 +248,6 @@ export default class AuthController {
       return response.ok({
         success: true,
         message: 'ورود با موفقیت انجام شد',
-        token: 'session-token', // Will be in session cookie
         user: {
           id: user.id,
           phone: user.phoneNumber,
@@ -280,6 +279,24 @@ export default class AuthController {
 
     // Normalize phone number
     const normalizedPhone = data.phone.replace(/^(\+98|0)/, '0')
+
+    // Ensure there is a recently verified OTP for this phone number
+    const otpValidityWindowMinutes = 10
+    const otpVerifiedAfter = DateTime.now().minus({ minutes: otpValidityWindowMinutes })
+
+    const recentVerifiedOtp = await Otp.query()
+      .where('phone_number', normalizedPhone)
+      .where('is_used', true)
+      .where('created_at', '>=', otpVerifiedAfter.toSQL())
+      .orderBy('created_at', 'desc')
+      .first()
+
+    if (!recentVerifiedOtp) {
+      return response.unauthorized({
+        success: false,
+        message: 'کد تایید برای این شماره معتبر نیست. لطفاً دوباره OTP دریافت کنید.',
+      })
+    }
 
     // Check if user already exists
     const existingUser = await User.findBy('phone_number', normalizedPhone)
@@ -315,7 +332,6 @@ export default class AuthController {
     return response.created({
       success: true,
       message: 'ثبت نام با موفقیت انجام شد',
-      token: 'session-token', // Will be in session cookie
       user: {
         id: user.id,
         phone: user.phoneNumber,

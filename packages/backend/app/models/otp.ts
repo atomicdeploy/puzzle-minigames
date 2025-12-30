@@ -7,25 +7,25 @@ export default class Otp extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'user_id' })
   declare userId: number | null
 
-  @column()
+  @column({ columnName: 'phone_number' })
   declare phoneNumber: string
 
   @column()
   declare code: string
 
-  @column()
+  @column({ columnName: 'session_id' })
   declare sessionId: string | null
 
-  @column()
+  @column({ columnName: 'is_used' })
   declare isUsed: boolean
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'expires_at' })
   declare expiresAt: DateTime
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   declare createdAt: DateTime
 
   @belongsTo(() => User)

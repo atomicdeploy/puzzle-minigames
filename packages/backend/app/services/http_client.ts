@@ -2,7 +2,9 @@ import https from 'node:https'
 import http from 'node:http'
 import { URL } from 'node:url'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-import app from '@adonisjs/core/services/app'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 
 /**
  * Unified HTTP client for making HTTP/HTTPS requests
@@ -18,14 +20,16 @@ export class HttpClient {
 
   constructor() {
     // Get package info for User-Agent
-    const packageJson = app.makeURL('package.json')
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = dirname(__filename)
     let appName = 'Infernal-Puzzle-Backend'
     let version = '1.0.0'
 
     try {
-      const pkg = require(packageJson.pathname)
-      appName = pkg.name || appName
-      version = pkg.version || version
+      const packageJsonPath = join(__dirname, '../../package.json')
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
+      appName = packageJson.name || appName
+      version = packageJson.version || version
     } catch {
       // Use defaults if package.json not found
     }

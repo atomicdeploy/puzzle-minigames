@@ -14,8 +14,7 @@ export default class extends BaseSchema {
       table.text('profile_picture').nullable()
       table.string('player_id', 255).nullable().unique()
       
-      // Add indexes for common queries
-      table.index('player_id')
+      // Note: player_id unique constraint automatically creates an index
     })
   }
 

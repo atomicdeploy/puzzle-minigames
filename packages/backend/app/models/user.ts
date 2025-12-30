@@ -44,19 +44,19 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare gender: 'male' | 'female' | 'other' | null
 
-  @column()
+  @column({ columnName: 'education_level' })
   declare educationLevel: string | null
 
-  @column()
+  @column({ columnName: 'field_of_study' })
   declare fieldOfStudy: string | null
 
   @column()
   declare color: string | null
 
-  @column()
+  @column({ columnName: 'profile_picture' })
   declare profilePicture: string | null
 
-  @column()
+  @column({ columnName: 'player_id' })
   declare playerId: string | null
 
   @column()

@@ -31,7 +31,7 @@ echo "Test 3: Retrieving OTP codes from database..."
 if [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then
   echo "Database credentials not set. Please set DB_USER and DB_PASSWORD environment variables."
 else
-  mysql -u "$DB_USER" -p"$DB_PASSWORD" -e "USE puzzle_minigames; SELECT phone, otp_code, created_at FROM otp_sessions WHERE verified=0 ORDER BY created_at DESC LIMIT 2;" 2>/dev/null
+  mysql -u "$DB_USER" -p"$DB_PASSWORD" -e "USE puzzle_minigames; SELECT phone_number, code, created_at FROM otps WHERE is_used=0 ORDER BY created_at DESC LIMIT 2;" 2>/dev/null
 fi
 echo ""
 

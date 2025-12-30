@@ -23,7 +23,8 @@ MELLIPAYAMAK_PATTERN_CODE=413580
 Run the following SQL scripts to set up the required tables:
 
 1. `database/schema.sql` - Creates the base database and tables
-2. `database/auth_schema.sql` - Creates authentication tables (users and otp_sessions)
+2. `database/migrations/*_create_users_table.ts` - Creates users table
+3. `database/migrations/*_create_otps_table.ts` - Creates OTP tracking table
 
 ```bash
 mysql -u root < packages/backend/database/schema.sql
@@ -114,11 +115,11 @@ Verifies the OTP code and returns user information if the user exists.
 }
 ```
 
-### 3. Register User
+### 3. Complete Registration
 
-Registers a new user in the system.
+Completes registration for a new user with profile information.
 
-**Endpoint:** `POST /api/auth/register`
+**Endpoint:** `POST /api/auth/complete-registration`
 
 **Request Body:**
 ```json
@@ -165,7 +166,7 @@ Registers a new user in the system.
 5. User enters OTP code
 6. Frontend calls `POST /api/auth/verify-otp` with phone and OTP
 7. Backend verifies OTP and marks it as verified
-8. Frontend calls `POST /api/auth/register` with user details
+8. Frontend calls `POST /api/auth/complete-registration` with user details
 9. Backend creates user account and returns auth token
 10. User is authenticated and redirected to game
 
@@ -244,15 +245,15 @@ curl -X POST http://localhost:3001/api/auth/send-otp \
   -d '{"phone": "09901212697"}'
 
 # 2. Get OTP from database (or SMS)
-mysql -u root -p -e "USE puzzle_minigames; SELECT otp_code FROM otp_sessions WHERE phone='09901212697' ORDER BY created_at DESC LIMIT 1;"
+mysql -u root -p -e "USE puzzle_minigames; SELECT code FROM otps WHERE phone_number='09901212697' ORDER BY created_at DESC LIMIT 1;"
 
 # 3. Verify OTP
 curl -X POST http://localhost:3001/api/auth/verify-otp \
   -H "Content-Type: application/json" \
-  -d '{"phone": "09901212697", "otp": "YOUR_OTP"}'
+  -d '{"phoneNumber": "09901212697", "code": "YOUR_OTP"}'
 
-# 4. Register user
-curl -X POST http://localhost:3001/api/auth/register \
+# 4. Complete registration
+curl -X POST http://localhost:3001/api/auth/complete-registration \
   -H "Content-Type: application/json" \
   -d '{
     "phone": "09901212697",
@@ -297,7 +298,7 @@ CREATE TABLE users (
 );
 ```
 
-### otp_sessions table
+### otps table
 
 ```sql
 CREATE TABLE otp_sessions (
