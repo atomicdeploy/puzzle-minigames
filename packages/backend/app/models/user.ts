@@ -36,6 +36,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare isEmailVerified: boolean
 
   @column()
+  declare isAdmin: boolean
+
+  @column()
   declare deviceInfo: string | null
 
   @column()

@@ -12,6 +12,7 @@ export default class extends BaseSchema {
       table.string('password', 180).notNullable()
       table.boolean('is_phone_verified').defaultTo(false)
       table.boolean('is_email_verified').defaultTo(false)
+      table.boolean('is_admin').defaultTo(false)
       table.text('device_info').nullable()
       table.text('user_agent').nullable()
       table.timestamp('last_login_at').nullable()
