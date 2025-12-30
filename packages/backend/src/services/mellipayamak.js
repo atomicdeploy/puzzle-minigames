@@ -7,7 +7,7 @@ import https from 'https';
 
 class MellipayamakService {
   constructor() {
-    this.endpoint = process.env.MELLIPAYAMAK_ENDPOINT || 'api.payamak-panel.com';
+    this.endpoint = process.env.MELLIPAYAMAK_ENDPOINT || 'rest.payamak-panel.com';
     this.username = process.env.MELLIPAYAMAK_USERNAME;
     this.password = process.env.MELLIPAYAMAK_PASSWORD; // API key
     this.patternCode = process.env.MELLIPAYAMAK_PATTERN_CODE || '413580';
@@ -31,17 +31,13 @@ class MellipayamakService {
     // Clean phone number (remove any non-digit characters)
     const cleanPhone = phone.replace(/\D/g, '');
 
-    // Prepare the request body for pattern-based SMS
+    // Prepare the request body for REST API
     const requestBody = JSON.stringify({
       username: this.username,
       password: this.password,
       to: cleanPhone,
-      patternCode: this.patternCode,
-      inputData: [
-        {
-          "verification-code": otp
-        }
-      ]
+      bodyId: parseInt(this.patternCode),
+      text: otp
     });
 
     console.log(`📤 Sending OTP to ${cleanPhone} via Mellipayamak (pattern: ${this.patternCode})`);
@@ -50,7 +46,7 @@ class MellipayamakService {
       const options = {
         hostname: this.endpoint,
         port: 443,
-        path: '/api/v2/send/pattern',
+        path: '/api/SendSMS/BaseServiceNumber',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +65,11 @@ class MellipayamakService {
           try {
             const response = JSON.parse(data);
             
-            if (res.statusCode === 200 || res.statusCode === 201) {
+            console.log(`📊 Response status: ${res.statusCode}`);
+            console.log(`📊 Response:`, response);
+            
+            // Mellipayamak returns RetStatus: 1 for success
+            if ((res.statusCode === 200 || res.statusCode === 201) && response.RetStatus === 1) {
               console.log('✅ OTP sent successfully via Mellipayamak', response);
               resolve({
                 success: true,
@@ -78,7 +78,7 @@ class MellipayamakService {
               });
             } else {
               console.error('❌ Mellipayamak API error:', response);
-              reject(new Error(`Mellipayamak API error: ${response.message || 'Unknown error'}`));
+              reject(new Error(`Mellipayamak API error: ${response.StrRetStatus || 'Unknown error'}`));
             }
           } catch (error) {
             console.error('❌ Failed to parse Mellipayamak response:', data);
