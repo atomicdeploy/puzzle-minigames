@@ -3,14 +3,21 @@
   "version": "1.0.0",
   "description": "اینفرنال - 3D Puzzle Mini-Games",
   "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/mobile-app",
+    "packages/backend"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "android:init": "npx cap add android",
-    "android:sync": "npx cap sync android",
-    "android:open": "npx cap open android",
-    "android:build": "npm run build && npx cap sync android && npx cap copy android"
+    "mobile:dev": "npm run dev --workspace=packages/mobile-app",
+    "mobile:build": "npm run build --workspace=packages/mobile-app",
+    "mobile:generate": "npm run generate --workspace=packages/mobile-app",
+    "backend:dev": "npm run dev --workspace=packages/backend",
+    "backend:build": "npm run build --workspace=packages/backend",
+    "backend:start": "npm run start --workspace=packages/backend",
+    "dev": "concurrently \"npm run mobile:dev\" \"npm run backend:dev\"",
+    "build": "npm run mobile:build && npm run backend:build",
+    "install:all": "npm install && npm install --workspace=packages/mobile-app && npm install --workspace=packages/backend"
   },
   "keywords": [
     "puzzle",
@@ -33,6 +40,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^5.5.1",
+    "concurrently": "^8.2.2",
     "vite": "^5.0.10",
     "vite-plugin-pwa": "^0.17.4"
   }
