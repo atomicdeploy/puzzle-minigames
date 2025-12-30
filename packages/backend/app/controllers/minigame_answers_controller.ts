@@ -57,12 +57,15 @@ export default class MinigameAnswersController {
       ? 'pending'
       : 'instant'
 
+    // For answers requiring admin verification, do not persist the real correctness yet
+    const storedIsCorrect = correctAnswer.requiresAdminVerification ? false : isCorrect
+
     // Create submission record
     const submission = await AnswerSubmission.create({
       userId: user.id,
       minigameName,
       submittedAnswer: answer,
-      isCorrect,
+      isCorrect: storedIsCorrect,
       verificationStatus,
     })
 
