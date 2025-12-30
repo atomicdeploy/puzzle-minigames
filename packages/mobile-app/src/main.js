@@ -2,6 +2,12 @@ import './style.css';
 import * as THREE from 'three';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
+// Check if user is logged in, redirect to welcome page if not
+const currentUser = localStorage.getItem('infernal-current-user');
+if (!currentUser) {
+    window.location.href = '/welcome.html';
+}
+
 // Constants
 const PUZZLE_SIZE = 9;
 const AUTO_SAVE_INTERVAL = 5000; // milliseconds
@@ -662,6 +668,15 @@ function initGame() {
     initTreasureChests();
     loadGameState();
     initUI();
+    
+    // Display user name in header
+    const userData = JSON.parse(localStorage.getItem('infernal-current-user'));
+    if (userData && userData.name) {
+        const header = document.querySelector('header h1');
+        if (header) {
+            header.textContent = `🧩 سلام ${userData.name.split(' ')[0]}! 🧩`;
+        }
+    }
     
     // Hide loading screen
     setTimeout(() => {
