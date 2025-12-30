@@ -109,7 +109,7 @@ const captchaInputRef = ref<HTMLInputElement>()
 
 // Default values
 const baseUrl = props.apiBaseUrl || '/api/captcha'
-const placeholder = props.placeholder || 'کد تصویر'
+const placeholderText = props.placeholder || 'کد تصویر'
 
 /**
  * Load CAPTCHA from backend
