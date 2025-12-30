@@ -457,7 +457,8 @@ function placeWordInZone(wordCard, zone) {
     currentOrder[position] = word;
     zone.classList.add('filled');
     
-    // Hide original word in pool
+    // Hide original word in pool and clear any selection state
+    wordCard.classList.remove('selected');
     wordCard.classList.add('hidden');
     
     // Update words pool visibility
