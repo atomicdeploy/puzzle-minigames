@@ -28,9 +28,12 @@ export function useApi() {
     SAVE_GAME_STATE: '/game/state',
   };
 
-  // API Helper functions
+  // API Helper functions with retry logic
   async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
+    const maxRetries = options.maxRetries || 3;
+    const retryDelay = options.retryDelay || 1000;
+    
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -47,19 +50,61 @@ export function useApi() {
       }
     }
     
-    try {
-      const response = await fetch(url, config);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
+    let lastError;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, config);
+        
+        // Try to parse JSON response
+        let data;
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          // If response is not JSON, create error object
+          data = { message: 'Invalid response format' };
+        }
+        
+        if (!response.ok) {
+          // Categorize errors
+          const error = new Error(data.message || 'API request failed');
+          error.status = response.status;
+          error.data = data;
+          
+          // Don't retry on client errors (4xx), only on server errors (5xx)
+          if (response.status >= 400 && response.status < 500) {
+            throw error;
+          }
+          
+          // For server errors, retry
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, attempt)));
+            continue;
+          }
+          
+          throw error;
+        }
+        
+        return data;
+      } catch (error) {
+        lastError = error;
+        
+        // Network errors - retry with exponential backoff
+        if (error.name === 'TypeError' || error.message.includes('fetch')) {
+          if (attempt < maxRetries) {
+            console.warn(`Network error, retrying... (${attempt + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, attempt)));
+            continue;
+          }
+        }
+        
+        // For other errors or if we've exhausted retries, throw
+        console.error('API request error:', error);
+        throw error;
       }
-      
-      return data;
-    } catch (error) {
-      console.error('API request error:', error);
-      throw error;
     }
+    
+    throw lastError;
   }
 
   // Specific API functions
