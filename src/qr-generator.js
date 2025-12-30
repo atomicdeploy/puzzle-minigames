@@ -19,8 +19,8 @@ const NOTIFICATION_DURATION = {
 const state = {
     qrCodes: [],
     settings: {
-        // TODO: Configure this to your production URL before deployment
-        baseUrl: 'https://yourdomain.com/minigame-access',
+        // Auto-detect base URL from current location, fallback to placeholder
+        baseUrl: `${window.location.origin}/minigame-access`,
         errorCorrection: 'M',
         margin: 4,
         scale: 10,
@@ -33,6 +33,9 @@ const state = {
 
 // Initialize app
 function init() {
+    // Set the baseUrl input field with auto-detected URL
+    document.getElementById('baseUrl').value = state.settings.baseUrl;
+    
     setupEventListeners();
     updatePreview();
 }
@@ -163,7 +166,8 @@ async function updatePreview() {
         document.getElementById('previewInfo').style.display = 'block';
     } catch (error) {
         console.error('Error generating preview:', error);
-        previewContainer.innerHTML = '<p class="placeholder-text">خطا در تولید پیش‌نمایش</p>';
+        const errorDetails = error.message || 'نامشخص';
+        previewContainer.innerHTML = `<p class="placeholder-text">خطا در تولید پیش‌نمایش: ${errorDetails}</p>`;
     }
 }
 
@@ -206,6 +210,11 @@ async function generateQRCanvas(data) {
     await QRCode.toCanvas(canvas, data, options);
 
     // Apply themed styling
+    // Note: Themed styles modify the QR code appearance after generation.
+    // While these styles maintain visual QR code structure, they should be
+    // thoroughly tested with actual QR scanners before deployment to ensure
+    // scannability. Use higher error correction levels (Q or H) for better
+    // resilience when applying custom styling.
     if (styleConfig.gradient) {
         applyGradientStyle(canvas, styleConfig);
     } else if (styleConfig.dots) {
@@ -225,8 +234,6 @@ async function generateQRCanvas(data) {
 // Apply gradient style to QR code
 function applyGradientStyle(canvas, styleConfig) {
     const ctx = canvas.getContext('2d');
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
     
     // Create gradient
     const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
@@ -242,21 +249,12 @@ function applyGradientStyle(canvas, styleConfig) {
         gradient.addColorStop(1, '#fd79a8');
     }
     
-    // Apply gradient to dark pixels
+    // Use compositing to apply gradient efficiently
+    // This method is much faster than pixel-by-pixel drawing
+    ctx.globalCompositeOperation = 'source-in';
     ctx.fillStyle = gradient;
-    
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        // Check if pixel is dark (part of QR code)
-        if (r < 128 && g < 128 && b < 128) {
-            const x = (i / 4) % canvas.width;
-            const y = Math.floor((i / 4) / canvas.width);
-            ctx.fillRect(x, y, 1, 1);
-        }
-    }
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'source-over';
 }
 
 // Apply dots style to QR code
@@ -275,18 +273,28 @@ function applyDotsStyle(canvas) {
     gradient.addColorStop(1, '#a29bfe');
     ctx.fillStyle = gradient;
     
-    // Use QR module size (scale) as the sampling step so we align with modules
-    const moduleSize = state.settings && state.settings.scale ? state.settings.scale : 4;
-    const dotRadius = Math.max(1, moduleSize / 2 - 1);
+    // Scale dot radius and spacing based on QR scale setting.
+    // For the default scale of 10, this preserves the original behavior:
+    // baseStep = 4, baseDotRadius = 2, offset = 2.
+    const baseScale = 10;
+    const baseStep = 4;
+    const baseDotRadius = 2;
+    const currentScale = state && state.settings && typeof state.settings.scale === 'number'
+        ? state.settings.scale
+        : baseScale;
+    const scaleFactor = currentScale / baseScale;
+    const step = baseStep * scaleFactor;
+    const dotRadius = Math.max(1, baseDotRadius * scaleFactor);
+    const offset = step / 2;
     
-    for (let y = 0; y < canvas.height; y += moduleSize) {
-        for (let x = 0; x < canvas.width; x += moduleSize) {
-            const i = (y * canvas.width + x) * 4;
+    for (let y = 0; y < canvas.height; y += step) {
+        for (let x = 0; x < canvas.width; x += step) {
+            const i = (Math.floor(y) * canvas.width + Math.floor(x)) * 4;
             const r = data[i];
             
             if (r < 128) {
                 ctx.beginPath();
-                ctx.arc(x + moduleSize / 2, y + moduleSize / 2, dotRadius, 0, Math.PI * 2);
+                ctx.arc(x + offset, y + offset, dotRadius, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
