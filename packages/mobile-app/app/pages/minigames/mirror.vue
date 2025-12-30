@@ -140,25 +140,73 @@ function onDragStart(event, word) {
 
 function onDrop(event, position) {
   event.preventDefault();
-  
+
+  if (!draggedWord.value) {
+    return;
+  }
+
+  // Find if the dragged word is currently placed in any drop position
+  const currentPosition = Object.keys(droppedWords.value).find(
+    (pos) => droppedWords.value[pos] === draggedWord.value
+  );
+
+  // If dropped back onto the same position, do nothing
+  if (currentPosition && position === currentPosition) {
+    draggedWord.value = null;
+    return;
+  }
+
+  // Special case: dropping back into the pool (if template passes 'pool')
+  if (position === 'pool') {
+    // Remove from its current drop zone, if any
+    if (currentPosition) {
+      droppedWords.value[currentPosition] = null;
+    }
+    // Ensure the word is in the available pool
+    if (!availableWords.value.includes(draggedWord.value)) {
+      availableWords.value.push(draggedWord.value);
+    }
+    draggedWord.value = null;
+    return;
+  }
+
+  // At this point, we're dropping into a specific position (top/middle/bottom)
   if (draggedWord.value) {
-    // Remove from available words
+    // If the dragged word came from another position, clear that position
+    if (currentPosition && currentPosition !== position) {
+      droppedWords.value[currentPosition] = null;
+    }
+
+    // Remove from available words if it came from the pool
     const index = availableWords.value.indexOf(draggedWord.value);
     if (index > -1) {
       availableWords.value.splice(index, 1);
     }
-    
+
     // If there's already a word in this position, return it to available
     if (droppedWords.value[position]) {
-      availableWords.value.push(droppedWords.value[position]);
+      if (!availableWords.value.includes(droppedWords.value[position])) {
+        availableWords.value.push(droppedWords.value[position]);
+      }
     }
-    
+
     // Place the dragged word
     droppedWords.value[position] = draggedWord.value;
     draggedWord.value = null;
   }
 }
 
+function returnWordToPool(position) {
+  // Helper to explicitly return a word from a drop zone back to the pool
+  const word = droppedWords.value[position];
+  if (!word) {
+    return;
+  }
+  if (!availableWords.value.includes(word)) {
+    availableWords.value.push(word);
+  }
+  droppedWords.value[position] = null;
+}
 function submitOrder() {
   // Check if all positions are filled
   if (!droppedWords.value.top || !droppedWords.value.middle || !droppedWords.value.bottom) {
