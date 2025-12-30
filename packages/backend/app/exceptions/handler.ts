@@ -1,0 +1,16 @@
+import { ExceptionHandler, HttpContext } from '@adonisjs/core/http'
+import app from '@adonisjs/core/services/app'
+import { StatusCodes } from 'http-status-codes'
+
+export default class Handler extends ExceptionHandler {
+  protected debug = !app.inProduction
+  protected renderStatusPages = app.inProduction
+
+  async handle(error: unknown, ctx: HttpContext) {
+    return super.handle(error, ctx)
+  }
+
+  async report(error: unknown, ctx: HttpContext) {
+    return super.report(error, ctx)
+  }
+}
