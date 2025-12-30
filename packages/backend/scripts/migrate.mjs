@@ -113,6 +113,8 @@ const migrations = [
           session_token VARCHAR(255) NOT NULL UNIQUE,
           ip_address VARCHAR(45) NULL,
           user_agent TEXT NULL,
+          device_info TEXT NULL,
+          is_active BOOLEAN DEFAULT TRUE,
           last_activity TIMESTAMP NULL,
           expires_at TIMESTAMP NULL,
           created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
