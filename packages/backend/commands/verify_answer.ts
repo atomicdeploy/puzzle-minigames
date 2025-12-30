@@ -65,7 +65,9 @@ export default class VerifyAnswer extends BaseCommand {
 
     submission.verificationStatus = action === 'approve' ? 'approved' : 'rejected'
     submission.isCorrect = action === 'approve'
-    submission.verifiedBy = 1 // TODO: Get admin user ID
+    // TODO: Implement proper admin authentication to get current admin user ID
+    // For now, setting to null since we don't have admin auth context in CLI
+    submission.verifiedBy = null
     submission.verifiedAt = DateTime.now()
     await submission.save()
 

@@ -173,8 +173,10 @@ export default class AuthController {
     
     if (!user) {
       // Create a new user with phone number
+      // Use phone number as username part in email for uniqueness
+      const emailUsername = normalizedPhone.replace(/\D/g, '')
       user = await User.create({
-        email: `${normalizedPhone}@temp.local`, // Temporary email
+        email: `${emailUsername}@phone.user`,
         phoneNumber: normalizedPhone,
         password: randomBytes(32).toString('hex'), // Random password
         isPhoneVerified: true,
