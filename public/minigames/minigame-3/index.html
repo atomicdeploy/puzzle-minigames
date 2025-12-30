@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>کنترل صوتی - Mini Game 3</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>🎤 کنترل صوتی 🎵</h1>
+        </header>
+        
+        <div id="game-info">
+            <div class="info-panel">
+                <div class="score-display">
+                    <span class="label">امتیاز:</span>
+                    <span id="score" class="value">0</span>
+                </div>
+                <div class="time-display">
+                    <span class="label">زمان:</span>
+                    <span id="timer" class="value">30</span>
+                </div>
+            </div>
+            <div id="pitch-indicator">
+                <div class="pitch-bar">
+                    <div id="pitch-level" class="pitch-level"></div>
+                </div>
+                <div class="direction-display">
+                    <span id="current-direction">---</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="canvas-container">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="game">بازی</button>
+                <button class="tab-btn" data-tab="spectrogram">اسپکتروگرام</button>
+            </div>
+            <div class="tab-content active" id="game-tab">
+                <canvas id="game-canvas"></canvas>
+            </div>
+            <div class="tab-content" id="spectrogram-tab">
+                <canvas id="spectrogram-canvas"></canvas>
+                <div id="frequency-display">فرکانس: --- Hz</div>
+                <div id="direction-bars">
+                    <div class="direction-bar RIGHT" data-direction="RIGHT">
+                        <span class="direction-bar-label">راست</span>
+                        <div class="direction-bar-meter">
+                            <div class="direction-bar-fill"></div>
+                        </div>
+                    </div>
+                    <div class="direction-bar UP" data-direction="UP">
+                        <span class="direction-bar-label">بالا</span>
+                        <div class="direction-bar-meter">
+                            <div class="direction-bar-fill"></div>
+                        </div>
+                    </div>
+                    <div class="direction-bar DOWN" data-direction="DOWN">
+                        <span class="direction-bar-label">پایین</span>
+                        <div class="direction-bar-meter">
+                            <div class="direction-bar-fill"></div>
+                        </div>
+                    </div>
+                    <div class="direction-bar LEFT" data-direction="LEFT">
+                        <span class="direction-bar-label">چپ</span>
+                        <div class="direction-bar-meter">
+                            <div class="direction-bar-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="pitch-preview" class="pitch-preview hidden">
+            <h3>گوش دادن به نمونه صداها:</h3>
+            <p>قبل از شروع، روی هر دکمه کلیک کنید تا صدای مربوط به آن جهت را بشنوید</p>
+            <div class="direction-buttons">
+                <button class="direction-btn" data-direction="UP" data-frequency="320">
+                    <span class="arrow">⬆️</span>
+                    <span class="label">بالا</span>
+                </button>
+                <div class="horizontal-btns">
+                    <button class="direction-btn" data-direction="LEFT" data-frequency="157">
+                        <span class="arrow">⬅️</span>
+                        <span class="label">چپ</span>
+                    </button>
+                    <button class="direction-btn" data-direction="DOWN" data-frequency="117">
+                        <span class="arrow">⬇️</span>
+                        <span class="label">پایین</span>
+                    </button>
+                    <button class="direction-btn" data-direction="RIGHT" data-frequency="209">
+                        <span class="arrow">➡️</span>
+                        <span class="label">راست</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="controls">
+            <button id="start-btn" class="primary-button">شروع آموزش</button>
+            <button id="skip-tutorial-btn" class="secondary-button hidden">رد شدن از آموزش</button>
+            <button id="mic-btn" class="secondary-button hidden">
+                <span id="mic-icon">🎤</span>
+                <span id="mic-text">فعال‌سازی میکروفون</span>
+            </button>
+        </div>
+        
+        <div id="instructions" class="instructions">
+            <h3>درباره بازی:</h3>
+            <p>در این بازی، شما با استفاده از صدای خود توپ را کنترل می‌کنید!</p>
+            <ul>
+                <li>🎵 <strong>صدای پایین‌ترین</strong>: حرکت به پایین ⬇️</li>
+                <li>🎵 <strong>صدای متوسط-پایین</strong>: حرکت به چپ ⬅️</li>
+                <li>🎵 <strong>صدای متوسط-بالا</strong>: حرکت به راست ➡️</li>
+                <li>🎵 <strong>صدای بالاترین</strong>: حرکت به بالا ⬆️</li>
+            </ul>
+            <p><strong>نکته:</strong> صدای بلندتر = حرکت سریع‌تر! 🔊</p>
+            <p>ابتدا آموزش را کامل کنید تا یاد بگیرید چگونه توپ را کنترل کنید.</p>
+        </div>
+        
+        <div id="feedback" class="feedback hidden"></div>
+    </div>
+    
+    <script type="module" src="game.js"></script>
+</body>
+</html>

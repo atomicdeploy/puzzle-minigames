@@ -1,0 +1,580 @@
+/* Import Persian font */
+@import url('https://cdn.jsdelivr.net/npm/vazirmatn@33.0.3/Vazirmatn-font-face.css');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #fd79a8;
+    --success-color: #00b894;
+    --error-color: #d63031;
+    --warning-color: #fdcb6e;
+    --bg-dark: #0f0e17;
+    --bg-medium: #1a1a2e;
+    --text-light: #ffffff;
+    --text-dark: #2d3436;
+}
+
+body {
+    font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-medium) 100%);
+    color: var(--text-light);
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+#game-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 1rem;
+    padding-bottom: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    text-shadow: 0 0 20px rgba(108, 92, 231, 0.5);
+}
+
+#game-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.info-panel {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 0.8rem;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+}
+
+.score-display,
+.time-display {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 1.2rem;
+}
+
+.label {
+    color: var(--text-light);
+    opacity: 0.8;
+}
+
+.value {
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+#pitch-indicator {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 1rem;
+    border: 2px solid var(--secondary-color);
+    box-shadow: 0 4px 15px rgba(253, 121, 168, 0.3);
+}
+
+.pitch-bar {
+    width: 100%;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 0.8rem;
+    position: relative;
+}
+
+.pitch-level {
+    height: 100%;
+    background: linear-gradient(90deg, 
+        var(--error-color) 0%, 
+        var(--warning-color) 25%, 
+        var(--success-color) 50%, 
+        var(--secondary-color) 75%, 
+        var(--primary-color) 100%
+    );
+    width: 0%;
+    transition: width 0.1s ease-out;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(108, 92, 231, 0.5);
+}
+
+.direction-display {
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--warning-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
+}
+
+#current-direction {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    line-height: 2rem;
+    padding: 0.3rem 1rem;
+    background: rgba(253, 203, 110, 0.2);
+    border-radius: 10px;
+}
+
+#canvas-container {
+    width: 100%;
+    height: 400px;
+    min-height: 400px;
+    max-height: 400px;
+    background: rgba(15, 14, 23, 0.5);
+    border-radius: 15px;
+    border: 3px solid var(--primary-color);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.tabs {
+    display: flex;
+    background: rgba(26, 26, 46, 0.8);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 0.8rem;
+    background: transparent;
+    color: var(--text-light);
+    border: none;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-btn:hover {
+    background: rgba(108, 92, 231, 0.2);
+}
+
+.tab-btn.active {
+    background: rgba(108, 92, 231, 0.3);
+    border-bottom-color: var(--secondary-color);
+    color: var(--secondary-color);
+}
+
+.tab-content {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-content.active {
+    display: flex;
+    flex-direction: column;
+}
+
+#game-canvas, #spectrogram-canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    display: block;
+    flex-shrink: 0;
+}
+
+#spectrogram-tab {
+    background: #000;
+}
+
+#frequency-display {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(108, 92, 231, 0.9);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 1.1rem;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.5);
+    z-index: 10;
+}
+
+#direction-bars {
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 10;
+}
+
+.direction-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(26, 26, 46, 0.8);
+    padding: 5px 10px;
+    border-radius: 8px;
+    min-width: 150px;
+}
+
+.direction-bar-label {
+    font-size: 0.9rem;
+    min-width: 40px;
+    text-align: right;
+}
+
+.direction-bar-meter {
+    flex: 1;
+    height: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.direction-bar-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.1s ease;
+    border-radius: 5px;
+}
+
+.direction-bar.active {
+    background: rgba(108, 92, 231, 0.3);
+    box-shadow: 0 0 10px rgba(108, 92, 231, 0.5);
+}
+
+.direction-bar.LEFT .direction-bar-fill {
+    background: linear-gradient(90deg, #ff6b6b, #ff8787);
+}
+
+.direction-bar.DOWN .direction-bar-fill {
+    background: linear-gradient(90deg, #4ecdc4, #6fe1d9);
+}
+
+.direction-bar.UP .direction-bar-fill {
+    background: linear-gradient(90deg, #a29bfe, #b9b3ff);
+}
+
+.direction-bar.RIGHT .direction-bar-fill {
+    background: linear-gradient(90deg, #feca57, #ffda79);
+}
+
+#controls {
+    width: 100%;
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+button {
+    font-family: 'Vazirmatn', sans-serif;
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.primary-button {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--text-light);
+}
+
+.primary-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 92, 231, 0.5);
+}
+
+.primary-button:active {
+    transform: translateY(0);
+}
+
+.secondary-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    border: 2px solid var(--primary-color);
+}
+
+.secondary-button:hover {
+    background: rgba(108, 92, 231, 0.2);
+}
+
+.secondary-button.active {
+    background: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.instructions {
+    width: 100%;
+    background: rgba(26, 26, 46, 0.9);
+    border-radius: 15px;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 2px solid var(--warning-color);
+    box-shadow: 0 4px 15px rgba(253, 203, 110, 0.3);
+}
+
+.instructions h3 {
+    color: var(--warning-color);
+    margin-bottom: 0.8rem;
+    text-align: center;
+}
+
+.instructions ul {
+    list-style: none;
+    padding-right: 0;
+}
+
+.instructions li {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.instructions p {
+    margin-top: 0.8rem;
+    text-align: center;
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+.feedback {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(26, 26, 46, 0.95);
+    padding: 2rem;
+    border-radius: 20px;
+    text-align: center;
+    z-index: 1000;
+    min-width: 300px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 3px solid var(--primary-color);
+}
+
+.feedback.success {
+    border-color: var(--success-color);
+}
+
+.feedback.error {
+    border-color: var(--error-color);
+}
+
+.feedback h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.feedback p {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.feedback button {
+    margin: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .info-panel {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    
+    #canvas-container {
+        max-height: 300px;
+    }
+    
+    button {
+        padding: 0.7rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .instructions li {
+        font-size: 0.85rem;
+    }
+}
+
+/* Animation for pulsing mic button */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.secondary-button.active {
+    animation: pulse 2s infinite;
+}
+
+/* Pitch preview section */
+.pitch-preview {
+    width: 100%;
+    background: rgba(26, 26, 46, 0.9);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    text-align: center;
+}
+
+.pitch-preview h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.8rem;
+    font-size: 1.3rem;
+}
+
+.pitch-preview p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.direction-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.horizontal-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.direction-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 100px;
+    min-height: 100px;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.3), rgba(253, 121, 168, 0.3));
+    border: 2px solid var(--primary-color);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Vazirmatn', sans-serif;
+    color: var(--text-light);
+}
+
+.direction-btn:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(108, 92, 231, 0.5);
+    border-color: var(--secondary-color);
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.5), rgba(253, 121, 168, 0.5));
+}
+
+.direction-btn:active {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.direction-btn .arrow {
+    font-size: 2rem;
+}
+
+.direction-btn .label {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.direction-btn.playing {
+    animation: pulse-play 0.5s ease-in-out;
+    border-color: var(--success-color);
+    background: linear-gradient(135deg, rgba(0, 184, 148, 0.5), rgba(108, 92, 231, 0.5));
+}
+
+@keyframes pulse-play {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Responsive adjustments for pitch preview */
+@media (max-width: 768px) {
+    .pitch-preview {
+        padding: 1rem;
+    }
+    
+    .pitch-preview h3 {
+        font-size: 1.1rem;
+    }
+    
+    .pitch-preview p {
+        font-size: 0.85rem;
+    }
+    
+    .direction-btn {
+        min-width: 80px;
+        min-height: 80px;
+        padding: 0.8rem;
+    }
+    
+    .direction-btn .arrow {
+        font-size: 1.5rem;
+    }
+    
+    .direction-btn .label {
+        font-size: 0.85rem;
+    }
+}
