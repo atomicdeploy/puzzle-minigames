@@ -160,10 +160,13 @@ function decreaseDigit() {
 }
 
 function updateSevenSegmentDisplay(index, value) {
-  const digit = document.querySelector(`.digit[data-index="${index}"]`);
-  if (digit) {
-    digit.setAttribute('data-value', value);
-  }
+  // Defer DOM update to ensure Vue has applied its own DOM changes first
+  setTimeout(() => {
+    const digit = document.querySelector(`.digit[data-index="${index}"]`);
+    if (digit) {
+      digit.setAttribute('data-value', value);
+    }
+  }, 0);
 }
 
 function submitAnswer() {
