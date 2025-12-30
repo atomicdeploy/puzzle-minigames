@@ -85,8 +85,9 @@ Users can type in any case:
   - Variable length codes
 
 ### 8. Documentation
-- **CAPTCHA_DOCUMENTATION.md** - Complete technical guide (12KB)
-- **CAPTCHA_README.md** - Quick start guide (3KB)
+- **[captcha-system.md](./captcha-system.md)** - Complete technical guide (12KB)
+- **[captcha-quick-start.md](./captcha-quick-start.md)** - Quick start guide (3KB)
+- **[captcha-implementation-summary.md](./captcha-implementation-summary.md)** - Implementation summary (6KB)
 - **Demo page** - Interactive showcase (`/captcha-demo`)
 - **Example HTML** - Standalone visual demo
 - **Code examples** - Integration guides
@@ -150,8 +151,9 @@ The CAPTCHA achieves a **mind-blowing aesthetic**:
 - `packages/mobile-app/public/captcha-example.html` (NEW) - Standalone example
 
 ### Documentation
-- `CAPTCHA_DOCUMENTATION.md` (NEW) - Complete guide
-- `CAPTCHA_README.md` (NEW) - Quick start
+- `docs/guides/captcha-system.md` (NEW) - Complete guide
+- `docs/guides/captcha-quick-start.md` (NEW) - Quick start
+- `docs/guides/captcha-implementation-summary.md` (NEW) - Implementation summary
 
 ## Requirements Met
 

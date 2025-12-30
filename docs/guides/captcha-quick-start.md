@@ -135,7 +135,7 @@ private readonly COLOR_PALETTES = {
 
 ## Full Documentation
 
-See [CAPTCHA_DOCUMENTATION.md](./CAPTCHA_DOCUMENTATION.md) for complete details.
+See [captcha-system.md](./captcha-system.md) for complete details.
 
 ---
 
