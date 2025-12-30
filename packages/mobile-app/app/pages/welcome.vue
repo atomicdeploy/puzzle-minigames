@@ -96,6 +96,35 @@
       </div>
     </div>
 
+    <!-- OTP Verification Screen (for sign in) -->
+    <div v-else-if="currentScreen === 'otp-signin'" class="screen active">
+      <div class="otp-content">
+        <h2>تایید شماره موبایل</h2>
+        <p class="subtitle">کد 6 رقمی ارسال شده به شماره {{ signinPhone }} را وارد کنید</p>
+        
+        <div class="otp-inputs" role="group" aria-label="6-digit one-time passcode">
+          <input 
+            v-for="i in 6" 
+            :key="i"
+            v-model="otpDigits[i-1]"
+            type="text" 
+            class="otp-input" 
+            maxlength="1" 
+            pattern="\d" 
+            inputmode="numeric"
+            :aria-label="`OTP digit ${i}`"
+            @input="handleOTPInput($event, i-1)"
+            @keydown="handleOTPKeydown($event, i-1)"
+          >
+        </div>
+
+        <button @click="verifySignInOTP" class="btn btn-primary btn-large">تایید کد</button>
+        <button @click="resendOTP('signin')" class="btn btn-text">ارسال مجدد کد</button>
+
+        <button class="btn-back" @click="currentScreen = 'signin'">← بازگشت</button>
+      </div>
+    </div>
+
     <!-- Registration Screen -->
     <div v-else-if="currentScreen === 'registration'" class="screen active">
       <div class="registration-content">
@@ -185,6 +214,35 @@
       </div>
     </div>
 
+    <!-- OTP Verification Screen (for registration) -->
+    <div v-else-if="currentScreen === 'otp-registration'" class="screen active">
+      <div class="otp-content">
+        <h2>تایید شماره موبایل</h2>
+        <p class="subtitle">کد 6 رقمی ارسال شده به شماره {{ formData.phone }} را وارد کنید</p>
+        
+        <div class="otp-inputs" role="group" aria-label="6-digit one-time passcode">
+          <input 
+            v-for="i in 6" 
+            :key="i"
+            v-model="otpDigits[i-1]"
+            type="text" 
+            class="otp-input" 
+            maxlength="1" 
+            pattern="\d" 
+            inputmode="numeric"
+            :aria-label="`OTP digit ${i}`"
+            @input="handleOTPInput($event, i-1)"
+            @keydown="handleOTPKeydown($event, i-1)"
+          >
+        </div>
+
+        <button @click="verifyRegistrationOTP" class="btn btn-primary btn-large">تایید و ثبت نام</button>
+        <button @click="resendOTP('registration')" class="btn btn-text">ارسال مجدد کد</button>
+
+        <button class="btn-back" @click="currentScreen = 'registration'">← بازگشت</button>
+      </div>
+    </div>
+
     <!-- Success Screen -->
     <div v-else-if="currentScreen === 'success'" class="screen active">
       <div class="success-content">
@@ -239,13 +297,18 @@ const api = useApi();
 const currentScreen = ref('welcome');
 const signinPhone = ref('');
 const playerId = ref('');
+const profilePicturePreview = ref(null);
+const otpDigits = ref(['', '', '', '', '', '']);
 
 const formData = ref({
   name: '',
   birthday: '',
   gender: '',
+  educationLevel: '',
+  fieldOfStudy: '',
   phone: '',
-  color: ''
+  color: '',
+  profilePicture: null
 });
 
 // Check if user is already logged in
@@ -298,14 +361,124 @@ async function handleSignIn() {
   try {
     const response = await api.sendOTP(signinPhone.value);
     if (response.success) {
-      // In a real app, would show OTP screen
-      // For now, just log success
-      console.log('OTP sent successfully');
-      alert('کد تایید ارسال شد (در نسخه آزمایشی)');
+      // Clear OTP digits and transition to OTP screen
+      otpDigits.value = ['', '', '', '', '', ''];
+      currentScreen.value = 'otp-signin';
     }
   } catch (error) {
     console.error('Error sending OTP:', error);
     alert('خطا در ارسال کد تایید');
+  }
+}
+
+// Handle OTP input
+function handleOTPInput(event, index) {
+  const value = event.target.value;
+  
+  // Only allow digits
+  if (value && !/^\d$/.test(value)) {
+    otpDigits.value[index] = '';
+    return;
+  }
+  
+  // Move to next input if value is entered
+  if (value && index < 5) {
+    const inputs = document.querySelectorAll('.otp-input');
+    inputs[index + 1]?.focus();
+  }
+}
+
+// Handle OTP keydown for backspace navigation
+function handleOTPKeydown(event, index) {
+  if (event.key === 'Backspace' && !otpDigits.value[index] && index > 0) {
+    const inputs = document.querySelectorAll('.otp-input');
+    inputs[index - 1]?.focus();
+  }
+}
+
+// Verify sign in OTP
+async function verifySignInOTP() {
+  const otp = otpDigits.value.join('');
+  
+  if (otp.length !== 6) {
+    alert('لطفاً کد 6 رقمی را کامل وارد کنید');
+    return;
+  }
+  
+  try {
+    const response = await api.verifyOTP(signinPhone.value, otp);
+    if (response.success && response.token) {
+      // Store auth token and user data
+      if (process.client) {
+        localStorage.setItem('auth-token', response.token);
+        if (response.user) {
+          localStorage.setItem('infernal-current-user', JSON.stringify(response.user));
+        }
+      }
+      // Navigate to main game
+      router.push('/');
+    } else {
+      alert('کد تایید اشتباه است');
+      otpDigits.value = ['', '', '', '', '', ''];
+    }
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    alert('خطا در تایید کد');
+  }
+}
+
+// Verify registration OTP
+async function verifyRegistrationOTP() {
+  const otp = otpDigits.value.join('');
+  
+  if (otp.length !== 6) {
+    alert('لطفاً کد 6 رقمی را کامل وارد کنید');
+    return;
+  }
+  
+  try {
+    const response = await api.verifyOTP(formData.value.phone, otp);
+    if (response.success) {
+      // Generate player ID
+      playerId.value = `P${Date.now().toString().slice(-6)}`;
+      
+      const userData = {
+        ...formData.value,
+        playerId: playerId.value
+      };
+      
+      // Store auth token and user data
+      if (process.client) {
+        if (response.token) {
+          localStorage.setItem('auth-token', response.token);
+        }
+        localStorage.setItem('infernal-current-user', JSON.stringify(userData));
+      }
+      
+      currentScreen.value = 'success';
+    } else {
+      alert('کد تایید اشتباه است');
+      otpDigits.value = ['', '', '', '', '', ''];
+    }
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    alert('خطا در تایید کد');
+  }
+}
+
+// Resend OTP
+async function resendOTP(type) {
+  const phone = type === 'signin' ? signinPhone.value : formData.value.phone;
+  
+  try {
+    const response = await api.sendOTP(phone);
+    if (response.success) {
+      alert('کد تایید مجدداً ارسال شد');
+      otpDigits.value = ['', '', '', '', '', ''];
+    }
+  } catch (error) {
+    console.error('Error resending OTP:', error);
+    alert('خطا در ارسال مجدد کد');
   }
 }
 
@@ -317,25 +490,15 @@ async function handleRegistration() {
   }
 
   try {
-    // Generate a simple player ID (in production this would come from backend)
-    playerId.value = `P${Date.now().toString().slice(-6)}`;
-    
-    const userData = {
-      ...formData.value,
-      playerId: playerId.value
-    };
-
-    // In a real app, would send to backend
-    // For now, store locally
-    if (process.client) {
-      localStorage.setItem('infernal-current-user', JSON.stringify(userData));
-      localStorage.setItem('auth-token', 'demo-token');
+    const response = await api.sendOTP(formData.value.phone);
+    if (response.success) {
+      // Clear OTP digits and transition to OTP screen
+      otpDigits.value = ['', '', '', '', '', ''];
+      currentScreen.value = 'otp-registration';
     }
-    
-    currentScreen.value = 'success';
   } catch (error) {
-    console.error('Error during registration:', error);
-    alert('خطا در ثبت نام');
+    console.error('Error sending OTP:', error);
+    alert('خطا در ارسال کد تایید');
   }
 }
 
