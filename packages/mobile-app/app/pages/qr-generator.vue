@@ -198,21 +198,25 @@ watch([baseUrl, qrStyle, qrColor, bgColor, errorCorrection, margin, scale], () =
 
 // Color sync watchers
 watch(qrColor, (val) => {
-  qrColorText.value = val;
+  if (qrColorText.value !== val) {
+    qrColorText.value = val;
+  }
 });
 
 watch(qrColorText, (val) => {
-  if (/^#[0-9A-F]{6}$/i.test(val)) {
+  if (/^#[0-9A-F]{6}$/i.test(val) && qrColor.value !== val) {
     qrColor.value = val;
   }
 });
 
 watch(bgColor, (val) => {
-  bgColorText.value = val;
+  if (bgColorText.value !== val) {
+    bgColorText.value = val;
+  }
 });
 
 watch(bgColorText, (val) => {
-  if (/^#[0-9A-F]{6}$/i.test(val)) {
+  if (/^#[0-9A-F]{6}$/i.test(val) && bgColor.value !== val) {
     bgColor.value = val;
   }
 });
