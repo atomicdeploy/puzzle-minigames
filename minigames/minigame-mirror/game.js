@@ -461,6 +461,11 @@ function placeWordInZone(wordCard, zone) {
     wordCard.classList.remove('selected');
     wordCard.classList.add('hidden');
     
+    // If this word was selected in tap mode, clear the selection
+    if (typeof selectedCard !== 'undefined' && selectedCard === wordCard) {
+        selectedCard = null;
+    }
+    
     // Update words pool visibility
     updateWordsPoolVisibility();
 }
