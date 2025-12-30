@@ -30,6 +30,19 @@
   ],
   "author": "",
   "license": "MIT",
+<<<<<<< HEAD
+=======
+  "dependencies": {
+    "@capacitor/android": "^5.5.1",
+    "@capacitor/core": "^5.5.1",
+    "@capacitor/haptics": "^5.0.6",
+    "jszip": "^3.10.1",
+    "qrcode": "^1.5.4",
+    "three": "^0.160.0",
+    "uuid": "^13.0.0",
+    "matter-js": "^0.20.0"
+  },
+>>>>>>> 64744a8cbc6ce422eef2d2fe270ac58baec6a34a
   "devDependencies": {
     "concurrently": "^8.2.2"
   }
