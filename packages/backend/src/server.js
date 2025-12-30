@@ -15,8 +15,8 @@ import { domainStaticMiddleware, configureDomain } from './middleware/domainStat
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from root directory
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = (process.env.CORS_ORIGIN || '')

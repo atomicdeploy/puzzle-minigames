@@ -3,6 +3,22 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   
+  // Environment variables
+  runtimeConfig: {
+    // Private keys (server-side only)
+    // These are not exposed to the client
+    
+    // Public keys (exposed to client with NUXT_PUBLIC_ prefix)
+    public: {
+      apiBaseUrl: process.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
+      socketUrl: process.env.VITE_SOCKET_URL || 'http://localhost:3001',
+      appName: process.env.VITE_APP_NAME || 'اینفرنال',
+      appVersion: process.env.VITE_APP_VERSION || '1.0.0',
+      enableSocket: process.env.VITE_ENABLE_SOCKET === 'true',
+      enablePwa: process.env.VITE_ENABLE_PWA === 'true',
+    }
+  },
+  
   // CSS configuration
   css: [
     '@/assets/scss/main.scss'
