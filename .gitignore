@@ -47,8 +47,6 @@ coverage/
 sw.js
 workbox-*.js
 
-<<<<<<< HEAD
-=======
 # SSL/TLS Certificates
 *.pem
 *.key
@@ -56,4 +54,3 @@ workbox-*.js
 *.cert
 *.p12
 *.pfx
->>>>>>> 1530a018de33f7c9a4091845072d42b1a1b5089c
