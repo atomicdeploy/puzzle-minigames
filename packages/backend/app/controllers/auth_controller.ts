@@ -113,7 +113,7 @@ export default class AuthController {
 
   /**
    * Send OTP to phone number
-   * Rate limiting: 5 OTP requests per phone number per hour
+   * Rate limiting: 5 OTP requests per phone number per hour AND 10 per IP per hour
    */
   async sendOtp({ request, response }: HttpContext) {
     const otpSchema = vine.object({
@@ -126,11 +126,23 @@ export default class AuthController {
     const normalizedPhone = phoneNumber.replace(/^(\+98|0)/, '0')
 
     // Rate limiting: 5 OTP requests per hour per phone
-    const rateLimitKey = `otp:send:${normalizedPhone}`
-    if (rateLimiter.isRateLimited(rateLimitKey, 5, 60 * 60 * 1000)) {
-      const timeUntilReset = rateLimiter.getTimeUntilReset(rateLimitKey)
+    const phoneRateLimitKey = `otp:send:phone:${normalizedPhone}`
+    if (rateLimiter.isRateLimited(phoneRateLimitKey, 5, 60 * 60 * 1000)) {
+      const timeUntilReset = rateLimiter.getTimeUntilReset(phoneRateLimitKey)
       return response.tooManyRequests({
-        error: 'Too many OTP requests',
+        error: 'Too many OTP requests for this phone number',
+        message: `Please try again in ${Math.ceil(timeUntilReset / 60)} minutes`,
+        retryAfter: timeUntilReset,
+      })
+    }
+
+    // Rate limiting: 10 OTP requests per hour per IP
+    const clientIp = request.ip()
+    const ipRateLimitKey = `otp:send:ip:${clientIp}`
+    if (rateLimiter.isRateLimited(ipRateLimitKey, 10, 60 * 60 * 1000)) {
+      const timeUntilReset = rateLimiter.getTimeUntilReset(ipRateLimitKey)
+      return response.tooManyRequests({
+        error: 'Too many OTP requests from this IP address',
         message: `Please try again in ${Math.ceil(timeUntilReset / 60)} minutes`,
         retryAfter: timeUntilReset,
       })

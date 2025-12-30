@@ -41,6 +41,10 @@ export default class CreateUser extends BaseCommand {
       required: false,
     })
 
+    const isAdmin = await this.prompt.confirm('Is this user an admin?', {
+      default: false,
+    })
+
     // Create user
     const user = await User.create({
       email,
@@ -49,12 +53,16 @@ export default class CreateUser extends BaseCommand {
       phoneNumber: phoneNumber || null,
       isPhoneVerified: false,
       isEmailVerified: false,
+      isAdmin,
     })
 
     this.logger.success(`User created successfully with ID: ${user.id}`)
     this.logger.info(`Email: ${user.email}`)
     if (user.fullName) {
       this.logger.info(`Name: ${user.fullName}`)
+    }
+    if (isAdmin) {
+      this.logger.warning('User has admin privileges')
     }
   }
 }
