@@ -7,6 +7,7 @@ This directory contains documentation for the Backend server package.
 ### API & Integration
 - **[API Integration Guide](./api-integration.md)** - Complete guide to backend API endpoints, authentication, and integration
 - **[Socket.io Guide](./socket-io-guide.md)** - Real-time communication setup, events, and usage examples
+- **[OTP Authentication](../../../docs/api/otp-authentication.md)** - OTP-based authentication with Mellipayamak SMS provider
 
 ## 🚀 Quick Start
 

@@ -2,6 +2,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
 
 /* CSS Variables (native CSS3) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+}
+
 :root {
     --primary-color: #6c5ce7;
     --secondary-color: #fd79a8;
@@ -257,14 +273,53 @@ header h1 {
 
 .puzzle-slot.filled {
     border-style: solid;
+    border-color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.puzzle-slot.valid {
     border-color: var(--success-color);
-    background: rgba(0, 184, 148, 0.1);
+    background: rgba(0, 184, 148, 0.2);
+    box-shadow: 0 0 15px rgba(0, 184, 148, 0.4);
+}
+
+.puzzle-slot.invalid {
+    border-color: var(--error-color);
+    background: rgba(214, 48, 49, 0.2);
+    box-shadow: 0 0 15px rgba(214, 48, 49, 0.4);
 }
 
 .puzzle-slot.highlight {
     border-color: var(--accent-3);
-    background: rgba(255, 230, 109, 0.2);
-    box-shadow: 0 0 20px rgba(255, 230, 109, 0.4);
+    background: rgba(255, 230, 109, 0.3);
+    box-shadow: 0 0 30px rgba(255, 230, 109, 0.6);
+    animation: slot-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes slot-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 30px rgba(255, 230, 109, 0.6);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px rgba(255, 230, 109, 0.8);
+    }
+}
+
+/* Piece entrance animation */
+@keyframes piece-entrance {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    60% {
+        transform: translate(-50%, -50%) scale(1.15) rotate(10deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+    }
 }
 
 .puzzle-slot.error {
@@ -293,6 +348,7 @@ header h1 {
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: none; /* Badge should not be interactive */
 }
 
 /* Treasure Chests */
@@ -372,12 +428,32 @@ header h1 {
     z-index: 1000;
     touch-action: none;
     user-select: none;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                box-shadow 0.2s ease;
+}
+
+.puzzle-piece:hover {
+    transform: scale(1.05);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
+.puzzle-piece:active {
+    cursor: grabbing;
 }
 
 .puzzle-piece.dragging {
     cursor: grabbing;
-    transform: scale(1.2);
-    opacity: 0.9;
+    transform: scale(1.15);
+    opacity: 0.95;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    filter: brightness(1.1);
+    z-index: 10000;
+}
+
+.puzzle-piece.selected {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 0 0 3px var(--accent-3), 0 15px 40px rgba(0, 0, 0, 0.6);
+    filter: brightness(1.15);
 }
 
 /* Feedback Overlay */
@@ -519,6 +595,91 @@ input[inputmode="numeric"] {
     border: 0;
 }
 
+/* Header Right Side */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Reset Button */
+.reset-btn {
+    background: linear-gradient(135deg, var(--error-color), #e17055);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(214, 48, 49, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reset-btn:hover {
+    transform: scale(1.1) rotate(180deg);
+    box-shadow: 0 6px 20px rgba(214, 48, 49, 0.6);
+}
+
+.reset-btn:active {
+    transform: scale(0.95) rotate(180deg);
+}
+
+/* Dialog Overlay */
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Dialog Box */
+.dialog-box {
+    background: linear-gradient(135deg, var(--bg-medium), var(--bg-light));
+    border: 2px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+    animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.dialog-box h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
 /* Modal Styles */
 .modal {
     position: fixed;
@@ -602,6 +763,144 @@ input[inputmode="numeric"] {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    text-align: center;
+}
+
+.dialog-box p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.warning-text {
+    color: var(--warning-color) !important;
+    font-weight: 700;
+    font-size: 1rem !important;
+}
+
+/* Dialog Buttons */
+.dialog-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--error-color), #e17055);
+    color: white;
+    box-shadow: 0 4px 15px rgba(214, 48, 49, 0.4);
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(214, 48, 49, 0.6);
+}
+
+.btn-danger:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+}
+
+/* Error Notification Overlay */
+.error-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.error-modal {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease-out;
+    direction: rtl;
+    text-align: center;
+}
+
+.error-modal h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: white;
+    font-weight: 700;
+}
+
+.error-message {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.5;
+}
+
+.error-line {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Courier New', monospace;
+    margin-bottom: 20px;
+}
+
+.error-dismiss {
+    background: white;
+    color: #ff6b6b;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+.error-dismiss:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.error-dismiss:active {
+    transform: scale(0.98);
+}
+
     margin-bottom: 0.5rem;
 }
 

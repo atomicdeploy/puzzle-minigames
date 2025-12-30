@@ -8,6 +8,12 @@ dist/
 build/
 .output/
 .nuxt/
+dist-deploy/
+
+# Deployment packages
+puzzle-minigames-*.tar.gz
+puzzle-minigames-*.tar.gz.sha256
+puzzle-minigames-*.tar.gz.md5
 
 # Capacitor
 android/
