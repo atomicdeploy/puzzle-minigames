@@ -33,7 +33,22 @@ app.ready(() => {
 
   // Use the same CORS configuration as the rest of the application
   const corsOrigin = env.get('CORS_ORIGIN')
-  const allowedOrigins = corsOrigin === '*' ? '*' : corsOrigin.split(',').map(o => o.trim())
+  
+  // Safely parse CORS origin with the same logic as config/cors.ts
+  const getSocketOrigin = () => {
+    if (!corsOrigin || corsOrigin === '*') {
+      return '*' // Allow all origins
+    }
+    
+    try {
+      const origins = corsOrigin.split(',').map(o => o.trim()).filter(o => o.length > 0)
+      return origins.length > 0 ? origins : ['http://localhost:3000']
+    } catch {
+      return ['http://localhost:3000'] // Fallback to localhost
+    }
+  }
+  
+  const allowedOrigins = getSocketOrigin()
 
   io = new Server(httpServer, {
     cors: {

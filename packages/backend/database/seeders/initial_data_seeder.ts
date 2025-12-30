@@ -1,9 +1,26 @@
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 import Game from '#models/game'
 import MinigameAnswer from '#models/minigame_answer'
+import User from '#models/user'
 
 export default class extends BaseSeeder {
   async run() {
+    // Create admin user if not exists
+    const adminEmail = 'admin@puzzle-minigames.local'
+    const existingAdmin = await User.findBy('email', adminEmail)
+    
+    if (!existingAdmin) {
+      await User.create({
+        email: adminEmail,
+        password: 'Admin@123456', // Should be changed in production
+        fullName: 'System Administrator',
+        isAdmin: true,
+        isEmailVerified: true,
+        isPhoneVerified: false,
+      })
+      console.log('✓ Admin user created:', adminEmail)
+    }
+
     // Insert games
     await Game.updateOrCreateMany('name', [
       {

@@ -40,6 +40,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column()
   declare isBlocked: boolean
+  
+  @column()
+  declare isAdmin: boolean
 
   @column()
   declare deviceInfo: string | null

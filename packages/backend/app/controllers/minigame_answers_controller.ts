@@ -88,10 +88,19 @@ export default class MinigameAnswersController {
   }
 
   /**
-   * Get pending submissions (for admin)
-   * TODO: Add admin authorization middleware to restrict access
+   * Get pending submissions (admin only)
    */
-  async pending({ response, request }: HttpContext) {
+  async pending({ response, request, auth }: HttpContext) {
+    const user = auth.user!
+    
+    // Check if user is admin
+    if (!user.isAdmin) {
+      return response.forbidden({
+        error: 'Unauthorized',
+        message: 'Only administrators can access pending submissions',
+      })
+    }
+
     const page = request.input('page', 1)
     const limit = request.input('limit', 20)
 
