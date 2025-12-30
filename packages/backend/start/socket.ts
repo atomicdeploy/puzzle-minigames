@@ -9,6 +9,10 @@ import env from '#start/env'
 import { Server } from 'socket.io'
 import UserSession from '#models/user_session'
 import { DateTime } from 'luxon'
+import logger from '#services/logger'
+import clientInfoCollector from '#services/client_info_collector'
+import connectedClientsManager from '#services/connected_clients_manager'
+import notificationService from '#services/notification_service'
 
 let io: Server | null = null
 
@@ -16,14 +20,14 @@ app.ready(() => {
   const server = app.server
 
   if (!server) {
-    console.error('HTTP server not available')
+    logger.critical('HTTP server not available')
     return
   }
 
   const httpServer = server.getNodeServer()
 
   if (!httpServer) {
-    console.error('Node HTTP server not available')
+    logger.critical('Node HTTP server not available')
     return
   }
 
@@ -67,7 +71,28 @@ app.ready(() => {
 
   io.on('connection', (socket) => {
     const userId = socket.data.userId
-    console.log(`✅ Client connected: ${socket.id}, User ID: ${userId || 'anonymous'}`)
+    
+    // Collect comprehensive client information
+    const clientInfo = clientInfoCollector.collectFromSocket(socket)
+    
+    // Add to connected clients manager
+    connectedClientsManager.add({
+      ...clientInfo,
+      userId,
+      sessionToken: socket.data.session?.sessionToken || null,
+      lastActivity: new Date(),
+    })
+    
+    // Log with emoji and detailed info
+    logger.socket.connect(socket.id, userId || undefined)
+    logger.info(clientInfoCollector.formatForDisplay(clientInfo), { context: 'Socket' })
+    
+    // Send OS notification for new connection
+    notificationService.notifyClientConnected(
+      socket.id,
+      userId || undefined,
+      `${clientInfo.deviceType} - ${clientInfo.browser} on ${clientInfo.os}`
+    )
 
     // Handle player join
     socket.on('player:join', (data) => {
@@ -75,7 +100,10 @@ app.ready(() => {
         socket.emit('error', { message: 'Invalid player:join data' })
         return
       }
-      console.log(`Player joined:`, data)
+      
+      connectedClientsManager.updateActivity(socket.id)
+      logger.socket.event('player:join', socket.id, data)
+      
       socket.emit('player:joined', {
         playerId: socket.id,
         userId: userId,
@@ -89,7 +117,10 @@ app.ready(() => {
         socket.emit('error', { message: 'Invalid game:start data' })
         return
       }
-      console.log(`Game started by ${socket.id}:`, data)
+      
+      connectedClientsManager.updateActivity(socket.id)
+      logger.socket.event('game:start', socket.id, data)
+      
       io!.emit('game:started', {
         gameId: data.gameId,
         playerId: socket.id,
@@ -102,7 +133,10 @@ app.ready(() => {
         socket.emit('error', { message: 'Invalid game:move data' })
         return
       }
-      console.log(`Game move from ${socket.id}:`, data)
+      
+      connectedClientsManager.updateActivity(socket.id)
+      logger.socket.event('game:move', socket.id, data)
+      
       socket.broadcast.emit('game:move', {
         playerId: socket.id,
         userId: userId,
@@ -115,7 +149,17 @@ app.ready(() => {
         socket.emit('error', { message: 'Invalid game:complete data' })
         return
       }
-      console.log(`Game completed by ${socket.id}:`, data)
+      
+      connectedClientsManager.updateActivity(socket.id)
+      logger.socket.event('game:complete', socket.id, data)
+      
+      // Send notification for game completion
+      notificationService.notifyGameCompleted(
+        data.gameId || 0,
+        userId || undefined,
+        data.score
+      )
+      
       io!.emit('game:completed', {
         playerId: socket.id,
         userId: userId,
@@ -129,7 +173,10 @@ app.ready(() => {
         socket.emit('error', { message: 'Invalid puzzle:discovered data' })
         return
       }
-      console.log(`Puzzle discovered by ${socket.id}:`, data)
+      
+      connectedClientsManager.updateActivity(socket.id)
+      logger.socket.event('puzzle:discovered', socket.id, data)
+      
       socket.emit('puzzle:saved', {
         puzzleNumber: data.puzzleNumber,
         success: true,
@@ -142,7 +189,10 @@ app.ready(() => {
         socket.emit('error', { message: 'Invalid chat:message data' })
         return
       }
-      console.log(`Chat message from ${socket.id}:`, data)
+      
+      connectedClientsManager.updateActivity(socket.id)
+      logger.socket.event('chat:message', socket.id, { messageLength: data.message.length })
+      
       io!.emit('chat:message', {
         playerId: socket.id,
         userId: userId,
@@ -153,17 +203,23 @@ app.ready(() => {
 
     // Handle disconnection
     socket.on('disconnect', () => {
-      console.log(`❌ Client disconnected: ${socket.id}`)
+      connectedClientsManager.remove(socket.id)
+      logger.socket.disconnect(socket.id, userId || undefined)
       io!.emit('player:left', { playerId: socket.id, userId: userId })
     })
 
     // Error handling
     socket.on('error', (error) => {
-      console.error(`Socket error for ${socket.id}:`, error)
+      logger.socket.error(`Socket error for ${socket.id}`, socket.id, error)
     })
   })
 
-  console.log('📡 Socket.io server ready with authentication')
+  logger.success('Socket.io server ready with authentication', { context: 'Socket' })
+  
+  // Start cleanup interval for stale connections
+  setInterval(() => {
+    connectedClientsManager.cleanupStale(30)
+  }, 5 * 60 * 1000) // Every 5 minutes
 })
 
 export { io }

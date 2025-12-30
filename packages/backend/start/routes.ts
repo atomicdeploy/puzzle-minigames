@@ -13,6 +13,8 @@ const GamesController = () => import('#controllers/games_controller')
 const PlayerProgressController = () => import('#controllers/player_progress_controller')
 const MinigameAnswersController = () => import('#controllers/minigame_answers_controller')
 const SessionsController = () => import('#controllers/sessions_controller')
+const ConnectedClientsController = () => import('#controllers/connected_clients_controller')
+const QrController = () => import('#controllers/qr_controller')
 
 // Health check
 router.get('/health', async () => {
@@ -59,6 +61,32 @@ router.group(() => {
     router.post('/track', [SessionsController, 'track'])
     router.get('/current', [SessionsController, 'current'])
   }).prefix('/sessions')
+
+  // Connected clients routes
+  router.group(() => {
+    router.get('/', [ConnectedClientsController, 'index'])
+    router.get('/stats', [ConnectedClientsController, 'stats'])
+    router.get('/:socketId', [ConnectedClientsController, 'show'])
+    router.get('/user/:userId', [ConnectedClientsController, 'byUser'])
+    router.post('/cleanup', [ConnectedClientsController, 'cleanup'])
+  }).prefix('/connected-clients')
+
+  // QR code routes
+  router.group(() => {
+    // Public validation endpoint
+    router.post('/validate', [QrController, 'validate'])
+    
+    // Admin routes (protected)
+    router.group(() => {
+      router.post('/generate', [QrController, 'generate'])
+      router.get('/', [QrController, 'index'])
+      router.get('/:id', [QrController, 'show'])
+      router.put('/:id', [QrController, 'update'])
+      router.delete('/:id', [QrController, 'destroy'])
+      router.get('/:id/logs', [QrController, 'logs'])
+      router.get('/logs/all', [QrController, 'allLogs'])
+    }).use(middleware.auth())
+  }).prefix('/qr')
 
   // Leaderboard
   router.get('/leaderboard', [PlayerProgressController, 'leaderboard'])
