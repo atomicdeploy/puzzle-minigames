@@ -19,6 +19,7 @@ let currentOrder = {
 };
 let selectedCard = null; // Track selected card in tap mode
 let toastTimeout = null; // Track toast timeout for cleanup
+let toastShown = false; // Track if toast has been shown in current input session
 
 // Initialize the game
 function init() {
@@ -129,15 +130,18 @@ function handlePasswordInput(e) {
         helperText.classList.add('hidden');
     }
     
-    // Show toast for invalid characters
-    if (hasInvalidChar) {
+    // Show toast for non-English invalid characters only (to avoid redundant feedback)
+    // Also debounce: only show once per input session
+    if (hasInvalidChar && !hasEnglishChar && !toastShown) {
         showToast('فقط حروف فارسی و فاصله مجاز است');
+        toastShown = true;
     }
 }
 
 // Handle password input blur (trim spaces)
 function handlePasswordBlur(e) {
     const input = e.target;
+    const helperText = document.getElementById('input-helper-text');
     let value = input.value;
     
     // Trim all leading spaces
@@ -149,6 +153,12 @@ function handlePasswordBlur(e) {
     }
     
     input.value = value;
+    
+    // Hide helper text on blur
+    helperText.classList.add('hidden');
+    
+    // Reset toast shown flag for next input session
+    toastShown = false;
 }
 
 // Show toast notification
