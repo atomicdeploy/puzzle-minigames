@@ -216,7 +216,6 @@ function submitAnswer() {
     feedbackMessage.value = '';
   }, 3000);
 }
-}
 
 onUnmounted(() => {
   // Cleanup
