@@ -70,7 +70,4 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @hasMany(() => PageVisit)
   declare visits: HasMany<typeof PageVisit>
-
-  @hasMany(() => PageVisit)
-  declare pageVisits: HasMany<typeof PageVisit>
 }
