@@ -1,5 +1,4 @@
-import { promises as fs } from 'fs';
-import fsSync from 'fs';
+import fs, { promises as fsPromises } from 'fs';
 import path from 'path';
 
 /**
@@ -16,7 +15,7 @@ import path from 'path';
  */
 export async function safeRealpath(p) {
   try {
-    return await fs.realpath(p);
+    return await fsPromises.realpath(p);
   } catch (error) {
     // If we get EISDIR (illegal operation on a directory), fall back to path.resolve
     if (error.code === 'EISDIR') {
@@ -35,7 +34,7 @@ export async function safeRealpath(p) {
  */
 export function safeRealpathSync(p) {
   try {
-    return fsSync.realpathSync(p);
+    return fs.realpathSync(p);
   } catch (error) {
     // If we get EISDIR (illegal operation on a directory), fall back to path.resolve
     if (error.code === 'EISDIR') {
