@@ -1,37 +1,26 @@
 {
-  "name": "puzzle-minigames-monorepo",
+  "name": "infernal-puzzle-game",
   "version": "1.0.0",
-  "description": "Monorepo for Puzzle Minigames - Mobile App (Nuxt/Vue/Capacitor) and Backend (Node.js/Socket.io)",
-  "private": true,
-  "workspaces": [
-    "packages/mobile-app",
-    "packages/backend"
-  ],
+  "description": "اینفرنال - 3D Puzzle Mini-Games",
+  "type": "module",
   "scripts": {
-    "mobile:dev": "npm run dev --workspace=packages/mobile-app",
-    "mobile:build": "npm run build --workspace=packages/mobile-app",
-    "mobile:generate": "npm run generate --workspace=packages/mobile-app",
-    "backend:dev": "npm run dev --workspace=packages/backend",
-    "backend:build": "npm run build --workspace=packages/backend",
-    "backend:start": "npm run start --workspace=packages/backend",
-    "dev": "concurrently \"npm run mobile:dev\" \"npm run backend:dev\"",
-    "build": "npm run mobile:build && npm run backend:build",
-    "install:all": "npm install && npm install --workspace=packages/mobile-app && npm install --workspace=packages/backend"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "android:init": "npx cap add android",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:build": "npm run build && npx cap sync android && npx cap copy android"
   },
   "keywords": [
     "puzzle",
     "game",
-    "monorepo",
-    "nuxt",
-    "vue",
-    "capacitor",
-    "nodejs",
-    "socket.io"
+    "3d",
+    "sudoku",
+    "persian"
   ],
   "author": "",
   "license": "MIT",
-<<<<<<< HEAD
-=======
   "dependencies": {
     "@capacitor/android": "^5.5.1",
     "@capacitor/core": "^5.5.1",
@@ -42,8 +31,9 @@
     "uuid": "^13.0.0",
     "matter-js": "^0.20.0"
   },
->>>>>>> 64744a8cbc6ce422eef2d2fe270ac58baec6a34a
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@capacitor/cli": "^5.5.1",
+    "vite": "^5.0.10",
+    "vite-plugin-pwa": "^0.17.4"
   }
 }

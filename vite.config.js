@@ -27,60 +27,6 @@ export default defineConfig({
                 statuses: [0, 200]
               }
             }
-<<<<<<< HEAD
-          ]
-        }
-      })
-    ],
-    server: {
-      // Network configuration
-      host: true, // Listen on all addresses, including LAN and public
-      port: 3000,
-      strictPort: false, // If port is in use, try next available port
-      open: false, // Don't auto-open browser
-      
-      // HTTPS configuration
-      https: useHttps,
-      
-      // CORS configuration
-      cors: true,
-      
-      // Allowed hosts configuration
-      allowedHosts: true,
-      
-      // HMR (Hot Module Replacement) configuration
-      hmr: {
-        protocol: useHttps ? 'wss' : 'ws',
-      },
-      
-      // Proxy configuration for API requests
-      proxy: {},
-      
-      // Custom headers
-      headers: {
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'SAMEORIGIN',
-      },
-      
-      // File watching configuration
-      watch: {},
-      
-      // Filesystem serving configuration
-      fs: {},
-    },
-    build: {
-      outDir: 'dist',
-      sourcemap: false,
-      rollupOptions: {
-        input: {
-          main: resolve(__dirname, 'index.html'),
-          welcome: resolve(__dirname, 'welcome.html')
-        },
-        output: {
-          manualChunks: {
-            three: ['three']
-=======
->>>>>>> 64744a8cbc6ce422eef2d2fe270ac58baec6a34a
           }
         ]
       }
