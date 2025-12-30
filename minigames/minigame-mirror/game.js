@@ -170,6 +170,13 @@ function showToast(message) {
     toast.textContent = message;
     toast.classList.add('show');
     
+    // Announce to screen readers
+    const srAnnouncements = document.getElementById('sr-announcements');
+    if (srAnnouncements) {
+        srAnnouncements.setAttribute('role', 'alert');
+        srAnnouncements.textContent = `خطا: ${message}`;
+    }
+    
     // Hide after 2 seconds
     toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
