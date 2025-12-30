@@ -835,6 +835,14 @@ function initGame() {
         arCloseBtn.addEventListener('click', disableARMode);
     }
     
+    // Setup leaderboard button
+    const leaderboardBtn = document.getElementById('leaderboard-btn');
+    if (leaderboardBtn) {
+        leaderboardBtn.addEventListener('click', () => {
+            window.location.href = '/leaderboard.html';
+        });
+    }
+    
     // Hide loading screen
     setTimeout(() => {
         document.getElementById('loading-screen').style.display = 'none';

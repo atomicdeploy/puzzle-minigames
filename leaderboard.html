@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="اینفرنال - جدول امتیازات">
+    <title>اینفرنال - جدول امتیازات 🏆</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/src/leaderboard.css">
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <header>
+                <button id="back-btn" class="back-button" aria-label="بازگشت">
+                    ← بازگشت
+                </button>
+                <h1 class="title">🏆 اینفرنال 🏆</h1>
+                <p class="subtitle">جدول برترین امتیازات</p>
+            </header>
+
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="total-players">0</div>
+                    <div class="stat-label">بازیکنان</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="total-games">0</div>
+                    <div class="stat-label">بازی‌ها</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-value" id="avg-time">0</div>
+                    <div class="stat-label">میانگین زمان</div>
+                </div>
+            </div>
+
+            <div class="leaderboard-wrapper">
+                <div class="leaderboard-header">
+                    <h2>🌟 رتبه‌بندی برتر 🌟</h2>
+                    <button id="refresh-btn" class="refresh-button" aria-label="بروزرسانی">
+                        🔄
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>رتبه</th>
+                                <th>بازیکن</th>
+                                <th>امتیاز</th>
+                                <th>زمان</th>
+                                <th>تلاش</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body">
+                            <!-- Leaderboard entries will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <div class="empty-icon">🎮</div>
+                    <h3>هنوز امتیازی ثبت نشده است</h3>
+                    <p>اولین بازیکن باش و رکورد خودت رو ثبت کن! 🚀</p>
+                </div>
+            </div>
+
+            <div class="user-section">
+                <div class="user-card">
+                    <div class="user-avatar" id="user-avatar">👤</div>
+                    <div class="user-info">
+                        <input 
+                            type="text" 
+                            id="username-input" 
+                            class="username-input" 
+                            placeholder="نام خود را وارد کنید"
+                            maxlength="20"
+                        />
+                        <button id="save-username-btn" class="save-button">
+                            💾 ذخیره نام
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/leaderboard.js"></script>
+</body>
+</html>
