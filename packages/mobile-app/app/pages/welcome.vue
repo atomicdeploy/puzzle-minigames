@@ -96,7 +96,6 @@
               :api-base-url="captchaApiUrl"
               :auto-load="true"
               placeholder="کد تصویر"
-              @verify="handleSignIn"
             />
           </div>
 
