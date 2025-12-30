@@ -8,6 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { setupSocketHandlers } from './socket/socketHandler.js';
 import apiRoutes from './routes/api.js';
+import authRoutes from './routes/auth.js';
 import { dbPool } from './config/database.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { domainStaticMiddleware, configureDomain } from './middleware/domainStatic.js';
@@ -84,6 +85,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api', apiRoutes);
+app.use('/api/auth', authRoutes);
 
 // Socket.io connection handling
 setupSocketHandlers(io);

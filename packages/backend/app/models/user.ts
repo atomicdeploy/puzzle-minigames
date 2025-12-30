@@ -45,6 +45,27 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare isAdmin: boolean
 
   @column()
+  declare birthday: string | null
+
+  @column()
+  declare gender: 'male' | 'female' | 'other' | null
+
+  @column({ columnName: 'education_level' })
+  declare educationLevel: string | null
+
+  @column({ columnName: 'field_of_study' })
+  declare fieldOfStudy: string | null
+
+  @column()
+  declare color: string | null
+
+  @column({ columnName: 'profile_picture' })
+  declare profilePicture: string | null
+
+  @column({ columnName: 'player_id' })
+  declare playerId: string | null
+
+  @column()
   declare deviceInfo: string | null
 
   @column()
