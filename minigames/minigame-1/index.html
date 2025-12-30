@@ -34,7 +34,7 @@
             <main>
                 <!-- Lock Icon -->
                 <div class="lock-container">
-                    <div id="lock-icon" class="lock-icon locked">🔒</div>
+                    <div id="lock-icon" class="lock-icon locked" role="img" aria-label="قفل قرمز">🔒</div>
                 </div>
 
                 <!-- Title -->
@@ -45,20 +45,20 @@
                 </div>
 
                 <!-- Combination Input Fields -->
-                <div id="combination-input" class="combination-input">
-                    <div class="digit-field" data-index="0">
+                <div id="combination-input" class="combination-input" role="group" aria-label="ورودی ترکیب پنج رقمی" aria-live="polite">
+                    <div class="digit-field" data-index="0" role="button" aria-label="رقم موقعیت 1" tabindex="0">
                         <div class="digit-display">-</div>
                     </div>
-                    <div class="digit-field" data-index="1">
+                    <div class="digit-field" data-index="1" role="button" aria-label="رقم موقعیت 2" tabindex="0">
                         <div class="digit-display">-</div>
                     </div>
-                    <div class="digit-field" data-index="2">
+                    <div class="digit-field" data-index="2" role="button" aria-label="رقم موقعیت 3" tabindex="0">
                         <div class="digit-display">-</div>
                     </div>
-                    <div class="digit-field" data-index="3">
+                    <div class="digit-field" data-index="3" role="button" aria-label="رقم موقعیت 4" tabindex="0">
                         <div class="digit-display">-</div>
                     </div>
-                    <div class="digit-field" data-index="4">
+                    <div class="digit-field" data-index="4" role="button" aria-label="رقم موقعیت 5" tabindex="0">
                         <div class="digit-display">-</div>
                     </div>
                 </div>
@@ -66,29 +66,29 @@
                 <!-- Hints Section -->
                 <div class="hints-container">
                     <h3>💡 سرنخ‌ها</h3>
-                    <div class="hints-list">
-                        <div class="hint-item" data-hint-index="0">
-                            <span class="hint-status"></span>
+                    <div class="hints-list" role="list" aria-label="لیست سرنخ‌ها">
+                        <div class="hint-item" data-hint-index="0" role="listitem" tabindex="0" aria-label="سرنخ 1: 82619 - دو رقم درست و در جای اشتباه">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
                             <span class="hint-number" dir="ltr">82619</span>
                             <span class="hint-text">دو رقم درست و در جای اشتباه</span>
                         </div>
-                        <div class="hint-item" data-hint-index="1">
-                            <span class="hint-status"></span>
+                        <div class="hint-item" data-hint-index="1" role="listitem" tabindex="0" aria-label="سرنخ 2: 70629 - یک رقم درست و در جای درست">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
                             <span class="hint-number" dir="ltr">70629</span>
                             <span class="hint-text">یک رقم درست و در جای درست</span>
                         </div>
-                        <div class="hint-item" data-hint-index="2">
-                            <span class="hint-status"></span>
+                        <div class="hint-item" data-hint-index="2" role="listitem" tabindex="0" aria-label="سرنخ 3: 47530 - سه رقم درست و در جای اشتباه">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
                             <span class="hint-number" dir="ltr">47530</span>
                             <span class="hint-text">سه رقم درست و در جای اشتباه</span>
                         </div>
-                        <div class="hint-item" data-hint-index="3">
-                            <span class="hint-status"></span>
+                        <div class="hint-item" data-hint-index="3" role="listitem" tabindex="0" aria-label="سرنخ 4: 86302 - دو رقم درست، یکی در جای درست و یکی در جای اشتباه">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
                             <span class="hint-number" dir="ltr">86302</span>
                             <span class="hint-text">دو رقم درست، یکی در جای درست و یکی در جای اشتباه</span>
                         </div>
-                        <div class="hint-item" data-hint-index="4">
-                            <span class="hint-status"></span>
+                        <div class="hint-item" data-hint-index="4" role="listitem" tabindex="0" aria-label="سرنخ 5: 91704 - دو رقم درست و در جای درست">
+                            <span class="hint-status" aria-live="polite" aria-label="وضعیت سرنخ"></span>
                             <span class="hint-number" dir="ltr">91704</span>
                             <span class="hint-text">دو رقم درست و در جای درست</span>
                         </div>

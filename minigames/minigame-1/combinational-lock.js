@@ -34,6 +34,18 @@ const PUZZLE_HINTS = [
     }
 ];
 
+// Helper function to check if all digits in a candidate are unique
+function hasUniqueDigits(candidate) {
+    const seen = new Set();
+    for (const digit of candidate) {
+        if (seen.has(digit)) {
+            return false;
+        }
+        seen.add(digit);
+    }
+    return true;
+}
+
 // Solver: Find all valid solutions based on hints
 function solvePuzzle(hints) {
     const solutions = [];
@@ -41,6 +53,11 @@ function solvePuzzle(hints) {
     // Try all possible 5-digit combinations (00000 to 99999)
     for (let i = 0; i <= 99999; i++) {
         const candidate = String(i).padStart(5, '0').split('').map(Number);
+        
+        // Enforce unique digit constraint: each digit must be used only once
+        if (!hasUniqueDigits(candidate)) {
+            continue;
+        }
         
         if (isValidSolution(candidate, hints)) {
             solutions.push(candidate);
@@ -202,6 +219,7 @@ function initDigitFields() {
     
     fields.forEach((field, index) => {
         field.addEventListener('click', () => openNumpad(index));
+        // Remove preventDefault to allow scrolling, consistent with hint item scroll detection
         field.addEventListener('touchstart', (e) => {
             e.preventDefault();
             openNumpad(index);
@@ -209,9 +227,69 @@ function initDigitFields() {
     });
 }
 
+// Focus trap utility for modals
+function createFocusTrap(modalElement) {
+    const focusableElements = modalElement.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+    
+    function handleTabKey(e) {
+        if (e.key !== 'Tab') return;
+        
+        if (e.shiftKey) {
+            // Shift + Tab
+            if (document.activeElement === firstFocusable) {
+                e.preventDefault();
+                lastFocusable.focus();
+            }
+        } else {
+            // Tab
+            if (document.activeElement === lastFocusable) {
+                e.preventDefault();
+                firstFocusable.focus();
+            }
+        }
+    }
+    
+    function handleEscapeKey(e) {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            // Determine which modal and close it
+            if (modalElement.id === 'numpad-modal') {
+                closeNumpad();
+            } else if (modalElement.id === 'hint-explanation-dialog') {
+                closeHintExplanation();
+            }
+        }
+    }
+    
+    modalElement.addEventListener('keydown', handleTabKey);
+    modalElement.addEventListener('keydown', handleEscapeKey);
+    
+    // Focus first element when trap is activated
+    if (firstFocusable) {
+        firstFocusable.focus();
+    }
+    
+    // Return cleanup function
+    return () => {
+        modalElement.removeEventListener('keydown', handleTabKey);
+        modalElement.removeEventListener('keydown', handleEscapeKey);
+    };
+}
+
+let numpadFocusTrapCleanup = null;
+let hintDialogFocusTrapCleanup = null;
+let lastFocusedElement = null;
+
 // Open numpad modal
 function openNumpad(index) {
     if (gameState.isUnlocked) return;
+    
+    // Save currently focused element
+    lastFocusedElement = document.activeElement;
     
     gameState.currentFieldIndex = index;
     
@@ -223,6 +301,9 @@ function openNumpad(index) {
     // Show modal
     const modal = document.getElementById('numpad-modal');
     modal.style.display = 'flex';
+    
+    // Activate focus trap
+    numpadFocusTrapCleanup = createFocusTrap(modal);
     
     // Update numpad buttons state
     updateNumpadButtons();
@@ -244,6 +325,18 @@ function openNumpad(index) {
 function closeNumpad() {
     const modal = document.getElementById('numpad-modal');
     modal.style.display = 'none';
+    
+    // Cleanup focus trap
+    if (numpadFocusTrapCleanup) {
+        numpadFocusTrapCleanup();
+        numpadFocusTrapCleanup = null;
+    }
+    
+    // Restore focus to previously focused element
+    if (lastFocusedElement) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
+    }
     
     // Remove active state
     document.querySelectorAll('.digit-field').forEach(field => {
@@ -464,6 +557,9 @@ function generateHintExplanation(userInput, hint, hintIndex) {
 
 // Show hint explanation dialog
 function showHintExplanation(hintIndex) {
+    // Save currently focused element
+    lastFocusedElement = document.activeElement;
+    
     const hint = PUZZLE_HINTS[hintIndex];
     const explanation = generateHintExplanation(gameState.combination, hint, hintIndex);
     
@@ -472,6 +568,9 @@ function showHintExplanation(hintIndex) {
     
     dialogText.innerHTML = explanation;
     dialog.style.display = 'flex';
+    
+    // Activate focus trap
+    hintDialogFocusTrapCleanup = createFocusTrap(dialog);
     
     // Play click sound
     if (gameState.audio.click) {
@@ -490,6 +589,18 @@ function showHintExplanation(hintIndex) {
 function closeHintExplanation() {
     const dialog = document.getElementById('hint-explanation-dialog');
     dialog.style.display = 'none';
+    
+    // Cleanup focus trap
+    if (hintDialogFocusTrapCleanup) {
+        hintDialogFocusTrapCleanup();
+        hintDialogFocusTrapCleanup = null;
+    }
+    
+    // Restore focus to previously focused element
+    if (lastFocusedElement) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
+    }
 }
 
 // Initialize hint click listeners
@@ -809,9 +920,20 @@ function handleError() {
     showNotification('ترکیب اشتباه است! دوباره تلاش کنید', 'error');
 }
 
-// Show notification
+// Notification queue to prevent stacking
+let currentNotification = null;
+let notificationQueue = [];
+
+// Show notification with queue system
 function showNotification(message, type = 'info') {
+    // If there's a current notification, queue this one
+    if (currentNotification) {
+        notificationQueue.push({ message, type });
+        return;
+    }
+    
     const notification = document.createElement('div');
+    currentNotification = notification;
     
     let bgColor = 'var(--primary-color)';
     if (type === 'error') bgColor = 'var(--error-color)';
@@ -840,7 +962,16 @@ function showNotification(message, type = 'info') {
     
     setTimeout(() => {
         notification.style.animation = 'fadeOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
+        setTimeout(() => {
+            notification.remove();
+            currentNotification = null;
+            
+            // Process next notification in queue
+            if (notificationQueue.length > 0) {
+                const next = notificationQueue.shift();
+                showNotification(next.message, next.type);
+            }
+        }, 300);
     }, 2000);
 }
 
@@ -930,6 +1061,9 @@ function initStickyBehavior() {
         return;
     }
     
+    let observer = null;
+    let sentinel = null;
+    
     // Function to update header height CSS variable
     function updateHeaderHeight() {
         const headerHeight = header.offsetHeight;
@@ -937,46 +1071,63 @@ function initStickyBehavior() {
         document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
     }
     
+    // Function to recreate IntersectionObserver with updated rootMargin
+    function recreateObserver() {
+        // Disconnect existing observer if any
+        if (observer) {
+            observer.disconnect();
+        }
+        
+        // Remove old sentinel if it exists to prevent memory leak
+        if (sentinel && sentinel.parentNode) {
+            sentinel.parentNode.removeChild(sentinel);
+        }
+        
+        // Create new sentinel element
+        sentinel = document.createElement('div');
+        sentinel.style.height = '1px';
+        sentinel.style.pointerEvents = 'none';
+        combinationInput.parentNode.insertBefore(sentinel, combinationInput);
+        
+        // Create new observer with updated rootMargin
+        observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    // When not intersecting with its original position, it's sticky
+                    if (!entry.isIntersecting) {
+                        combinationInput.classList.add('sticky');
+                    } else {
+                        combinationInput.classList.remove('sticky');
+                    }
+                });
+            },
+            {
+                threshold: [1],
+                rootMargin: `-${header.offsetHeight + 10}px 0px 0px 0px`
+            }
+        );
+        
+        observer.observe(sentinel);
+    }
+    
     // Update on load and keep in sync with header size changes
     updateHeaderHeight();
+    recreateObserver();
     
     if (typeof ResizeObserver !== 'undefined') {
         const resizeObserver = new ResizeObserver(() => {
             updateHeaderHeight();
+            // Recreate observer when header height changes
+            recreateObserver();
         });
         resizeObserver.observe(header);
     }
     
-    window.addEventListener('resize', updateHeaderHeight);
-    
-    // Track initial position of combination input
-    let combinationInputTop = null;
-    
-    // Intersection observer to detect when combination input becomes sticky
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach(entry => {
-                // When not intersecting with its original position, it's sticky
-                if (!entry.isIntersecting) {
-                    combinationInput.classList.add('sticky');
-                } else {
-                    combinationInput.classList.remove('sticky');
-                }
-            });
-        },
-        {
-            threshold: [1],
-            rootMargin: `-${header.offsetHeight + 10}px 0px 0px 0px`
-        }
-    );
-    
-    // Create a sentinel element to track original position
-    const sentinel = document.createElement('div');
-    sentinel.style.height = '1px';
-    sentinel.style.pointerEvents = 'none';
-    combinationInput.parentNode.insertBefore(sentinel, combinationInput);
-    
-    observer.observe(sentinel);
+    window.addEventListener('resize', () => {
+        updateHeaderHeight();
+        // Recreate observer when window resizes
+        recreateObserver();
+    });
 }
 
 // Initialize game
