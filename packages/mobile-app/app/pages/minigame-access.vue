@@ -245,9 +245,10 @@ function startGame() {
 }
 
 function retry() {
-  if (process.client) {
-    location.reload();
-  }
+  // Reset state and re-run validation instead of reloading the entire page
+  currentState.value = 'loading';
+  errorMessage.value = '';
+  validateAccess();
 }
 
 onMounted(() => {
