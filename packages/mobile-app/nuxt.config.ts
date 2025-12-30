@@ -38,7 +38,7 @@ export default defineNuxtConfig({
     },
     server: {
       watch: {
-        usePolling: process.platform === 'win32'
+        usePolling: process.env.CHOKIDAR_USEPOLLING === 'true' || process.platform === 'win32'
       }
     }
   },
