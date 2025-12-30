@@ -89,6 +89,7 @@ export default class MinigameAnswersController {
 
   /**
    * Get pending submissions (for admin)
+   * TODO: Add admin authorization middleware to restrict access
    */
   async pending({ response, request }: HttpContext) {
     const page = request.input('page', 1)

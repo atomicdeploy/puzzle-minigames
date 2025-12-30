@@ -1,6 +1,5 @@
 import { ExceptionHandler, HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
-import { StatusCodes } from 'http-status-codes'
 
 export default class Handler extends ExceptionHandler {
   protected debug = !app.inProduction

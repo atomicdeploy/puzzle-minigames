@@ -8,7 +8,7 @@ const loggerConfig = defineConfig({
   loggers: {
     app: {
       enabled: true,
-      name: env.get('APP_NAME', 'adonisjs'),
+      name: 'puzzle-minigames',
       level: env.get('LOG_LEVEL'),
       transport: {
         targets: targets()

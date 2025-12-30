@@ -1,6 +1,5 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { NextFn } from '@adonisjs/core/types/http'
-import { AuthorizerResponse } from '@adonisjs/bouncer'
 
 /**
  * Auth middleware is used to authenticate HTTP requests and deny

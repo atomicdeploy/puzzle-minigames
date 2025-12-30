@@ -1,7 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import Otp from '#models/otp'
-import UserSession from '#models/user_session'
 import SmsService from '#services/sms_service'
 import { DateTime } from 'luxon'
 import { randomBytes } from 'crypto'
@@ -56,6 +55,7 @@ export default class AuthController {
 
   /**
    * Login user
+   * TODO: Implement rate limiting (5-10 failed attempts per email per hour)
    */
   async login({ request, response, auth }: HttpContext) {
     const loginSchema = vine.object({
@@ -98,6 +98,7 @@ export default class AuthController {
 
   /**
    * Send OTP to phone number
+   * TODO: Implement rate limiting (3-5 OTP requests per phone number per hour)
    */
   async sendOtp({ request, response }: HttpContext) {
     const otpSchema = vine.object({
@@ -113,7 +114,7 @@ export default class AuthController {
     const code = Math.floor(100000 + Math.random() * 900000).toString()
 
     // Create OTP record
-    const otp = await Otp.create({
+    await Otp.create({
       phoneNumber: normalizedPhone,
       code,
       isUsed: false,
@@ -140,6 +141,8 @@ export default class AuthController {
 
   /**
    * Verify OTP
+   * TODO: Implement rate limiting (5 failed attempts per phone per OTP session)
+   * TODO: Add account lockout after multiple failed verification attempts
    */
   async verifyOtp({ request, response, auth }: HttpContext) {
     const verifySchema = vine.object({

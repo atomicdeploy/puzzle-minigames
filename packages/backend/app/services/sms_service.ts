@@ -19,7 +19,7 @@ export default class SmsService {
   async sendOtp(phoneNumber: string, code: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       if (!this.api) {
-        console.warn('Melipayamak SMS service not configured. OTP code:', code)
+        console.warn('Melipayamak SMS service not configured. OTP send attempted.')
         return { success: false, error: 'SMS service not configured' }
       }
 
@@ -36,7 +36,8 @@ export default class SmsService {
       }
     } catch (error) {
       console.error('Error sending OTP SMS:', error)
-      return { success: false, error: error.message || 'Unknown error' }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -60,7 +61,8 @@ export default class SmsService {
       }
     } catch (error) {
       console.error('Error sending SMS:', error)
-      return { success: false, error: error.message || 'Unknown error' }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      return { success: false, error: errorMessage }
     }
   }
 

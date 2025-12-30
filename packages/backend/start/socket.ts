@@ -5,6 +5,7 @@
 */
 
 import app from '@adonisjs/core/services/app'
+import env from '#start/env'
 import { Server } from 'socket.io'
 import UserSession from '#models/user_session'
 import { DateTime } from 'luxon'
@@ -26,9 +27,13 @@ app.ready(() => {
     return
   }
 
+  // Use the same CORS configuration as the rest of the application
+  const corsOrigin = env.get('CORS_ORIGIN')
+  const allowedOrigins = corsOrigin === '*' ? '*' : corsOrigin.split(',').map(o => o.trim())
+
   io = new Server(httpServer, {
     cors: {
-      origin: '*', // Configure based on env
+      origin: allowedOrigins,
       methods: ['GET', 'POST'],
       credentials: true,
     },

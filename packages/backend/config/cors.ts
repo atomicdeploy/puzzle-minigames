@@ -1,9 +1,11 @@
 import env from '#start/env'
 import { defineConfig } from '@adonisjs/cors'
 
+const corsOrigin = env.get('CORS_ORIGIN')
+
 export default defineConfig({
   enabled: true,
-  origin: env.get('CORS_ORIGIN') === '*' ? true : env.get('CORS_ORIGIN').split(','),
+  origin: corsOrigin === '*' ? true : (corsOrigin || 'http://localhost:3000').split(',').map(o => o.trim()),
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'],
   headers: true,
   exposeHeaders: [],
