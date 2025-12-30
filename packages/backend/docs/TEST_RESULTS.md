@@ -9,8 +9,8 @@ Status: ✅ **ALL TESTS PASSED**
 
 - **Endpoint:** rest.payamak-panel.com
 - **Pattern Code:** 413580
-- **Username:** 9901212697
-- **API Key:** 7f75ca63-dc32-4e1d-916a-2cb2a5eb7575 (working)
+- **Username:** [CONFIGURED]
+- **API Key:** [CONFIGURED - working]
 
 ## Test Results
 
@@ -108,7 +108,9 @@ All operations logged successfully with detailed information:
 - [x] Documentation
 
 ### Future Enhancements ⚠️
-- [ ] JWT token implementation (currently using simple tokens)
+- [ ] JWT token implementation with validation (currently using simple tokens without validation)
+- [ ] Token validation middleware for protected routes
+- [ ] OTP verification check in registration endpoint
 - [ ] Rate limiting for OTP endpoints
 - [ ] OTP attempt limiting (e.g., max 3 attempts)
 - [ ] SMS delivery status tracking

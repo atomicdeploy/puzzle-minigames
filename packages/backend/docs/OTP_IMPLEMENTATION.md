@@ -13,8 +13,8 @@ The following environment variables must be configured in `.env`:
 ```env
 # Mellipayamak SMS Configuration (for OTP)
 MELLIPAYAMAK_ENDPOINT=rest.payamak-panel.com
-MELLIPAYAMAK_USERNAME=9901212697
-MELLIPAYAMAK_PASSWORD=7f75ca63-dc32-4e1d-916a-2cb2a5eb7575
+MELLIPAYAMAK_USERNAME=your-username-here
+MELLIPAYAMAK_PASSWORD=your-api-key-here
 MELLIPAYAMAK_PATTERN_CODE=413580
 ```
 
@@ -196,8 +196,8 @@ The Mellipayamak service is implemented in `src/services/mellipayamak.js` and us
 
 ```json
 {
-  "username": "9901212697",
-  "password": "7f75ca63-dc32-4e1d-916a-2cb2a5eb7575",
+  "username": "your-username",
+  "password": "your-api-key",
   "to": "09901212697",
   "bodyId": 413580,
   "text": "123456"
@@ -273,6 +273,8 @@ curl -X POST http://localhost:3001/api/auth/register \
 4. **Rate Limiting:** Should be implemented to prevent abuse
 5. **HTTPS:** All API calls should use HTTPS in production
 6. **Token Security:** Auth tokens should use JWT with expiration in production
+7. **⚠️ Current Limitation:** Generated auth tokens are not validated. Token validation middleware needs to be implemented for protected routes.
+8. **⚠️ Registration Security:** Consider adding OTP verification check before allowing registration to prevent direct endpoint access.
 
 ## Database Schema
 

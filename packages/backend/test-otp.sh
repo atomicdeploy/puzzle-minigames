@@ -28,7 +28,11 @@ echo ""
 
 # Test 3: Get OTP from database (requires MySQL access)
 echo "Test 3: Retrieving OTP codes from database..."
-mysql -u debian-sys-maint -pds0580PLL5Vvkxm0 -e "USE puzzle_minigames; SELECT phone, otp_code, created_at FROM otp_sessions WHERE verified=0 ORDER BY created_at DESC LIMIT 2;" 2>/dev/null
+if [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then
+  echo "Database credentials not set. Please set DB_USER and DB_PASSWORD environment variables."
+else
+  mysql -u "$DB_USER" -p"$DB_PASSWORD" -e "USE puzzle_minigames; SELECT phone, otp_code, created_at FROM otp_sessions WHERE verified=0 ORDER BY created_at DESC LIMIT 2;" 2>/dev/null
+fi
 echo ""
 
 # Test 4: Verify OTP (you'll need to get the actual OTP from the SMS or database)
