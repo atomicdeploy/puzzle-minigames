@@ -28,9 +28,12 @@
                     </button>
                 </div>
                 <h1>🧩 اینفرنال 🧩</h1>
-                <div class="stats">
-                    <span id="discovered-count">0/9</span>
-                    <span>پازل‌های کشف شده</span>
+                <div class="header-right">
+                    <div class="stats">
+                        <span id="discovered-count">0/9</span>
+                        <span>پازل‌های کشف شده</span>
+                    </div>
+                    <button id="reset-button" class="reset-btn" title="ریست بازی">🔄</button>
                 </div>
             </header>
             <div id="scene-container"></div>
@@ -39,6 +42,17 @@
                 <div id="treasure-chests"></div>
             </div>
             <div id="feedback-overlay" style="display: none;"></div>
+            <div id="reset-dialog" class="dialog-overlay" style="display: none;">
+                <div class="dialog-box">
+                    <h2>ریست بازی</h2>
+                    <p>آیا مطمئن هستید که می‌خواهید تمام پیشرفت خود را از دست بدهید؟</p>
+                    <p class="warning-text">این عمل قابل بازگشت نیست!</p>
+                    <div class="dialog-buttons">
+                        <button id="reset-confirm" class="btn btn-danger">بله، ریست کن</button>
+                        <button id="reset-cancel" class="btn btn-secondary">انصراف</button>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Welcome Modal -->
