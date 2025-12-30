@@ -1,0 +1,475 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Vazirmatn', sans-serif;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    direction: rtl;
+}
+
+#ar-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#scene-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+}
+
+/* Loading Screen */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.loading-content,
+.instructions-content,
+.modal-content {
+    text-align: center;
+    padding: 2rem;
+    max-width: 90%;
+}
+
+.loading-content h2,
+.instructions-content h2,
+.modal-content h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: rainbow 3s ease infinite;
+}
+
+.loading-content p,
+.instructions-content p,
+.modal-content p {
+    font-size: 1rem;
+    color: #aaa;
+    margin-top: 1rem;
+}
+
+/* Holographic Loader */
+.hologram-loader {
+    width: 100px;
+    height: 100px;
+    margin: 2rem auto;
+    position: relative;
+}
+
+.hologram-loader::before,
+.hologram-loader::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 4px solid transparent;
+    border-radius: 50%;
+    animation: hologram-spin 2s linear infinite;
+}
+
+.hologram-loader::before {
+    width: 80px;
+    height: 80px;
+    border-top-color: #00ffff;
+    border-right-color: #00ffff;
+    animation-duration: 1s;
+}
+
+.hologram-loader::after {
+    width: 60px;
+    height: 60px;
+    border-bottom-color: #ff00ff;
+    border-left-color: #ff00ff;
+    animation-duration: 1.5s;
+    animation-direction: reverse;
+}
+
+@keyframes hologram-spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Instructions */
+.instructions-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+}
+
+.instructions-content li {
+    font-size: 1.1rem;
+    margin: 1rem 0;
+    padding: 0.8rem;
+    background: rgba(0, 255, 255, 0.1);
+    border-right: 3px solid #00ffff;
+    border-radius: 8px;
+    text-align: right;
+}
+
+/* Holographic Button */
+.hologram-btn {
+    background: linear-gradient(45deg, #00ffff, #ff00ff);
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    margin-top: 1rem;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.hologram-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+}
+
+.hologram-btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+.hologram-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 0, 255, 0.7);
+}
+
+/* UI Overlay */
+#ui-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    pointer-events: none;
+}
+
+#ui-overlay > * {
+    pointer-events: auto;
+}
+
+/* Top Bar */
+.top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #00ff00;
+    box-shadow: 0 0 10px currentColor;
+    animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Control Buttons */
+.control-btn {
+    background: rgba(0, 255, 255, 0.2);
+    border: 2px solid rgba(0, 255, 255, 0.5);
+    color: #00ffff;
+    padding: 0.6rem 1rem;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Vazirmatn', sans-serif;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+.control-btn:hover {
+    background: rgba(0, 255, 255, 0.4);
+    border-color: #00ffff;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+}
+
+/* Bottom Controls */
+.bottom-controls {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Info Panel */
+.info-panel {
+    position: absolute;
+    bottom: 8rem;
+    left: 0;
+    right: 0;
+    padding: 0 1rem;
+}
+
+.hologram-info {
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    border-radius: 15px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.hologram-info h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    color: #00ffff;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.hologram-info p {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+/* Success Modal */
+.modal-content {
+    background: rgba(0, 0, 0, 0.95);
+    border: 3px solid #00ffff;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+    animation: modal-appear 0.5s ease;
+}
+
+@keyframes modal-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Notifications */
+.notification,
+.error-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 255, 255, 0.9);
+    color: #000;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-weight: 700;
+    z-index: 2000;
+    animation: notification-appear 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
+}
+
+.error-message {
+    background: rgba(255, 0, 0, 0.9);
+    color: #fff;
+}
+
+@keyframes notification-appear {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Rainbow Animation */
+@keyframes rainbow {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .loading-content h2,
+    .instructions-content h2,
+    .modal-content h2 {
+        font-size: 1.5rem;
+    }
+    
+    .instructions-content li {
+        font-size: 0.95rem;
+        padding: 0.6rem;
+    }
+    
+    .hologram-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .control-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .bottom-controls {
+        bottom: 1rem;
+        gap: 0.5rem;
+    }
+    
+    .info-panel {
+        bottom: 6rem;
+    }
+    
+    .hologram-info {
+        padding: 0.8rem;
+    }
+    
+    .hologram-info h3 {
+        font-size: 1.1rem;
+    }
+    
+    .hologram-info p {
+        font-size: 0.85rem;
+    }
+}
+
+/* Portrait Mode Optimization */
+@media (orientation: portrait) {
+    .bottom-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+/* Landscape Mode Optimization */
+@media (orientation: landscape) {
+    .bottom-controls {
+        flex-direction: row;
+    }
+    
+    .info-panel {
+        right: 1rem;
+        left: auto;
+        bottom: 50%;
+        transform: translateY(50%);
+    }
+}
+
+/* Dark Mode (Default) */
+body {
+    --bg-primary: #000;
+    --bg-secondary: rgba(0, 0, 0, 0.8);
+    --text-primary: #fff;
+    --text-secondary: #aaa;
+    --accent-cyan: #00ffff;
+    --accent-magenta: #ff00ff;
+    --accent-yellow: #ffff00;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .control-btn,
+    .hologram-info {
+        border-width: 3px;
+    }
+    
+    .hologram-btn {
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+    }
+}
+
+/* Touch Feedback */
+.control-btn:active,
+.hologram-btn:active {
+    opacity: 0.8;
+}
+
+/* Prevent text selection */
+#ui-overlay,
+.control-btn,
+.hologram-btn {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}

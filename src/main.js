@@ -252,6 +252,13 @@ function openTreasureChest(number) {
         return; // Already discovered
     }
     
+    // Special handling for puzzle #1 - AR Minigame
+    if (number === 1) {
+        // Show AR minigame option
+        showARMinigamePrompt(number);
+        return;
+    }
+    
     // Haptic feedback
     try {
         Haptics.impact({ style: ImpactStyle.Medium });
@@ -389,6 +396,116 @@ function unlockPuzzlePiece(number) {
     
     // Show notification
     showNotification(`پازل ${number} کشف شد! 🎉`);
+}
+
+// Show AR Minigame Prompt
+function showARMinigamePrompt(number) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 3px solid #00ffff;
+        border-radius: 20px;
+        padding: 2rem;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+    `;
+    
+    content.innerHTML = `
+        <h2 style="font-size: 2rem; margin-bottom: 1rem; color: #00ffff;">
+            🌟 تجربه AR/VR 🌟
+        </h2>
+        <p style="font-size: 1.1rem; margin-bottom: 1.5rem; line-height: 1.6;">
+            برای دریافت این پازل، یک تجربه هولوگرافیک فوق‌العاده را تکمیل کنید!
+        </p>
+        <p style="font-size: 0.95rem; color: #aaa; margin-bottom: 1.5rem;">
+            از دوربین گوشی خود برای مشاهده اشیاء سه‌بعدی استفاده کنید
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <button id="start-ar-minigame" style="
+                background: linear-gradient(45deg, #00ffff, #ff00ff);
+                border: none;
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: white;
+                border-radius: 50px;
+                cursor: pointer;
+                font-family: 'Vazirmatn', sans-serif;
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            ">
+                🚀 شروع تجربه AR
+            </button>
+            <button id="skip-ar-minigame" style="
+                background: transparent;
+                border: 2px solid #666;
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+                color: #999;
+                border-radius: 50px;
+                cursor: pointer;
+                font-family: 'Vazirmatn', sans-serif;
+            ">
+                رد کردن
+            </button>
+        </div>
+    `;
+    
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    // Start AR minigame
+    document.getElementById('start-ar-minigame').addEventListener('click', () => {
+        window.location.href = '/minigames/ar-hologram/index.html';
+    });
+    
+    // Skip and get puzzle directly
+    document.getElementById('skip-ar-minigame').addEventListener('click', () => {
+        modal.remove();
+        
+        // Mark as discovered
+        gameState.discoveredPuzzles.add(number);
+        
+        // Update chest appearance
+        const chest = document.querySelector(`.treasure-chest[data-number="${number}"]`);
+        chest.classList.add('opened');
+        chest.innerHTML = '📦';
+        
+        // Play discover sound
+        if (gameState.audio.discover) {
+            gameState.audio.discover();
+        }
+        
+        // Haptic feedback
+        try {
+            Haptics.impact({ style: ImpactStyle.Medium });
+        } catch (e) {
+            console.debug('Haptics not available:', e.message);
+        }
+        
+        // Create draggable puzzle piece
+        createPuzzlePiece(number);
+        
+        // Update stats
+        updateStats();
+        
+        showNotification(`پازل ${number} کشف شد! 🎉`);
+    });
 }
 
 // Create Puzzle Piece
@@ -843,11 +960,56 @@ function initGame() {
         });
     }
     
+    // Check if returning from AR minigame
+    checkARMinigameCompletion();
+    
     // Hide loading screen
     setTimeout(() => {
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'flex';
     }, 1500);
+}
+
+// Check if AR minigame was completed
+function checkARMinigameCompletion() {
+    const completed = localStorage.getItem('ar-minigame-completed');
+    if (completed) {
+        try {
+            JSON.parse(completed); // Validate JSON format
+            const puzzleNumber = 1; // AR minigame awards puzzle #1
+            
+            if (!gameState.discoveredPuzzles.has(puzzleNumber)) {
+                // Mark as discovered
+                gameState.discoveredPuzzles.add(puzzleNumber);
+                
+                // Update chest appearance
+                const chest = document.querySelector(`.treasure-chest[data-number="${puzzleNumber}"]`);
+                if (chest) {
+                    chest.classList.add('opened');
+                    chest.innerHTML = '📦';
+                }
+                
+                // Create draggable puzzle piece
+                setTimeout(() => {
+                    createPuzzlePiece(puzzleNumber);
+                    updateStats();
+                    showNotification(`🎉 تبریک! پازل ${puzzleNumber} از AR دریافت شد! 🌟`);
+                    
+                    // Play discover sound
+                    if (gameState.audio.discover) {
+                        gameState.audio.discover();
+                    }
+                }, 2000);
+            }
+            
+            // Clear the completion flag
+            localStorage.removeItem('ar-minigame-completed');
+        } catch (e) {
+            console.error('Failed to process AR completion:', e);
+            // Clear corrupted data to allow future attempts
+            localStorage.removeItem('ar-minigame-completed');
+        }
+    }
 }
 
 // Start game when DOM is loaded
