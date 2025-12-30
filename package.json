@@ -29,6 +29,17 @@
   ],
   "author": "",
   "license": "MIT",
+<<<<<<< HEAD
+=======
+  "dependencies": {
+    "@ar-js-org/ar.js": "^3.4.5",
+    "@capacitor/android": "^5.5.1",
+    "@capacitor/core": "^5.5.1",
+    "@capacitor/haptics": "^5.0.6",
+    "matter-js": "^0.20.0",
+    "three": "^0.160.0"
+  },
+>>>>>>> 262bde2125e657d32d33b2cc0bd41ef3dbe60e19
   "devDependencies": {
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3"

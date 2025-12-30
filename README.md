@@ -332,6 +332,10 @@ npm run build
 ## Features ✨
 
 - **3D Interactive Environment**: Built with Three.js for rich 3D graphics
+- **Augmented Reality (AR)**: AR.js integration for marker-based AR experiences
+  - View treasure chests in AR using your device camera
+  - Interactive 3D objects in real-world space
+  - Hiro marker tracking support
 - **Sudoku-style Puzzle Board**: 3x3 grid with unique puzzle pieces
 - **Discovery Mechanism**: Unlock puzzle pieces from treasure chests
 - **Drag & Drop**: Intuitive touch-based controls for mobile
@@ -349,6 +353,7 @@ npm run build
 
 - **Frontend**: Vanilla JavaScript (ES6+)
 - **3D Graphics**: Three.js
+- **Augmented Reality**: AR.js
 - **Build Tool**: Vite
 - **PWA**: vite-plugin-pwa
 - **Native Mobile**: Capacitor
@@ -366,6 +371,7 @@ puzzle-minigames/
 │   └── icon-512.png.txt       # Placeholder for 512x512 icon
 ├── src/
 │   ├── main.js                # Main game logic
+│   ├── ar-scene.js            # AR.js integration module
 │   ├── style.css              # Styles with RTL support
 │   └── assets/
 │       ├── audio/             # Audio files (to be added)
@@ -500,6 +506,31 @@ Currently, the game generates sounds programmatically using Web Audio API.
 - Pieces must be placed in the correct position to complete the Sudoku-style grid
 - Incorrect placements trigger error feedback
 - Progress is automatically saved
+
+## Augmented Reality (AR) Mode 📱
+
+The game includes AR.js integration for an immersive augmented reality experience!
+
+### Features
+- **Marker-Based Tracking**: Uses the Hiro marker for AR object detection
+- **3D Treasure Chests**: View and interact with treasure chests in AR space
+- **Camera Integration**: Seamless camera access and tracking
+- **Interactive Objects**: Tap on AR chests to discover puzzle pieces
+
+### Quick Start
+1. Click the **📷 AR** button in the game header
+2. Grant camera permissions when prompted
+3. Download and print the [Hiro marker](https://github.com/AR-js-org/AR.js/blob/master/data/images/hiro.png)
+4. Point your camera at the marker
+5. Tap on treasure chests to unlock puzzle pieces
+
+### Requirements
+- Device with camera (mobile or desktop webcam)
+- HTTPS connection (required for camera access in production)
+- Good lighting conditions
+- Printed Hiro marker (at least 10×10 cm)
+
+For detailed AR instructions, see [AR-GUIDE.md](./AR-GUIDE.md)
 
 ## Mini-Games Integration 🎯
 

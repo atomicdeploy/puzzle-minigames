@@ -1,6 +1,17 @@
 import './style.css';
 import * as THREE from 'three';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { 
+    initARScene, 
+    initARToolkit, 
+    updateAR, 
+    renderAR, 
+    createARTreasureChest, 
+    addObjectToMarker,
+    animateARObjects,
+    cleanupAR,
+    getMarkerRoot
+} from './ar-scene.js';
 
 // Constants
 const PUZZLE_SIZE = 9;
@@ -16,7 +27,13 @@ const gameState = {
         error: null,
         success: null,
         discover: null
-    }
+    },
+    arMode: false,
+    arScene: null,
+    arCamera: null,
+    arRenderer: null,
+    arClickHandler: null,
+    arTouchHandler: null
 };
 
 // Initialize Audio
@@ -155,19 +172,27 @@ function createFloatingPuzzles() {
 function animate() {
     requestAnimationFrame(animate);
     
-    // Animate floating puzzles
-    floatingPuzzles.forEach(puzzle => {
-        puzzle.rotation.x += puzzle.userData.rotationSpeed;
-        puzzle.rotation.y += puzzle.userData.rotationSpeed;
-        puzzle.position.x += puzzle.userData.speedX;
-        puzzle.position.y += puzzle.userData.speedY;
+    if (gameState.arMode) {
+        // AR mode animation
+        updateAR();
+        animateARObjects(Date.now());
+        renderAR();
+    } else {
+        // Normal mode animation
+        // Animate floating puzzles
+        floatingPuzzles.forEach(puzzle => {
+            puzzle.rotation.x += puzzle.userData.rotationSpeed;
+            puzzle.rotation.y += puzzle.userData.rotationSpeed;
+            puzzle.position.x += puzzle.userData.speedX;
+            puzzle.position.y += puzzle.userData.speedY;
+            
+            // Wrap around screen
+            if (Math.abs(puzzle.position.x) > 6) puzzle.userData.speedX *= -1;
+            if (Math.abs(puzzle.position.y) > 6) puzzle.userData.speedY *= -1;
+        });
         
-        // Wrap around screen
-        if (Math.abs(puzzle.position.x) > 6) puzzle.userData.speedX *= -1;
-        if (Math.abs(puzzle.position.y) > 6) puzzle.userData.speedY *= -1;
-    });
-    
-    renderer.render(scene, camera);
+        renderer.render(scene, camera);
+    }
 }
 
 function onWindowResize() {
@@ -653,6 +678,142 @@ function saveGameState() {
 // Auto-save on changes
 setInterval(saveGameState, AUTO_SAVE_INTERVAL);
 
+// AR Mode Functions
+function toggleARMode() {
+    const arContainer = document.getElementById('ar-container');
+    const gameContainer = document.getElementById('game-container');
+    
+    if (!gameState.arMode) {
+        // Enable AR mode
+        gameState.arMode = true;
+        arContainer.style.display = 'block';
+        gameContainer.classList.add('ar-active');
+        
+        // Initialize AR scene
+        const { scene: arScene, camera: arCamera, renderer: arRenderer } = initARScene(arContainer);
+        gameState.arScene = arScene;
+        gameState.arCamera = arCamera;
+        gameState.arRenderer = arRenderer;
+        
+        // Initialize AR.js toolkit
+        try {
+            initARToolkit(arRenderer, arCamera, arScene);
+            
+            // Add treasure chests to AR scene
+            for (let i = 1; i <= PUZZLE_SIZE; i++) {
+                if (!gameState.discoveredPuzzles.has(i)) {
+                    const chest = createARTreasureChest(i);
+                    // Arrange chests in a 3x3 grid
+                    const row = Math.floor((i - 1) / 3);
+                    const col = (i - 1) % 3;
+                    chest.position.set((col - 1) * 0.8, chest.position.y, (row - 1) * 0.8);
+                    
+                    // Add click interaction
+                    chest.userData.chestNumber = i;
+                    addObjectToMarker(chest);
+                }
+            }
+            
+            // Add marker info
+            addARMarkerInfo();
+        } catch (error) {
+            console.error('AR initialization failed:', error);
+            showNotification('❌ خطا در فعال‌سازی AR', 2000);
+            disableARMode();
+        }
+    } else {
+        disableARMode();
+    }
+}
+
+function disableARMode() {
+    gameState.arMode = false;
+    const arContainer = document.getElementById('ar-container');
+    const gameContainer = document.getElementById('game-container');
+    
+    arContainer.style.display = 'none';
+    gameContainer.classList.remove('ar-active');
+    
+    // Remove AR event listeners
+    if (gameState.arClickHandler) {
+        arContainer.removeEventListener('click', gameState.arClickHandler);
+        gameState.arClickHandler = null;
+    }
+    if (gameState.arTouchHandler) {
+        arContainer.removeEventListener('touchend', gameState.arTouchHandler);
+        gameState.arTouchHandler = null;
+    }
+    
+    // Remove all dynamically added children from AR container
+    while (arContainer.firstChild) {
+        arContainer.removeChild(arContainer.firstChild);
+    }
+    
+    // Cleanup AR resources
+    cleanupAR();
+    
+    gameState.arScene = null;
+    gameState.arCamera = null;
+    gameState.arRenderer = null;
+}
+
+function addARMarkerInfo() {
+    const arContainer = document.getElementById('ar-container');
+    const markerInfo = document.createElement('div');
+    markerInfo.className = 'ar-marker-info';
+    markerInfo.innerHTML = `
+        <p>📱 به دنبال مارکر Hiro می‌گردید؟</p>
+        <p><a href="https://github.com/AR-js-org/AR.js/blob/master/data/images/hiro.png" target="_blank" rel="noopener noreferrer">دانلود مارکر Hiro</a></p>
+    `;
+    arContainer.appendChild(markerInfo);
+}
+
+function setupARInteraction() {
+    // Setup raycaster for AR object interaction
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    
+    const arContainer = document.getElementById('ar-container');
+    
+    // Only attach listeners if they haven't been attached yet
+    if (!gameState.arClickHandler) {
+        gameState.arClickHandler = function onARClick(event) {
+            if (!gameState.arMode) return;
+            
+            // Calculate mouse position in normalized device coordinates
+            const rect = arContainer.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, gameState.arCamera);
+            
+            const markerRoot = getMarkerRoot();
+            if (!markerRoot) return;
+            
+            const intersects = raycaster.intersectObjects(markerRoot.children, true);
+            
+            if (intersects.length > 0) {
+                // Find the chest object (traverse up to find userData.chestNumber)
+                let object = intersects[0].object;
+                while (object && !object.userData.chestNumber) {
+                    object = object.parent;
+                }
+                
+                if (object && object.userData.chestNumber) {
+                    openTreasureChest(object.userData.chestNumber);
+                    // Remove chest from AR scene after opening
+                    object.parent.remove(object);
+                }
+            }
+        };
+        
+        gameState.arTouchHandler = gameState.arClickHandler;
+        
+        arContainer.addEventListener('click', gameState.arClickHandler);
+        arContainer.addEventListener('touchend', gameState.arTouchHandler);
+    }
+}
+
 // Initialize game
 function initGame() {
     initAudio();
@@ -660,6 +821,19 @@ function initGame() {
     initPuzzleBoard();
     initTreasureChests();
     loadGameState();
+    setupARInteraction();
+    
+    // Setup AR toggle button
+    const arToggleBtn = document.getElementById('ar-toggle-btn');
+    const arCloseBtn = document.getElementById('ar-close-btn');
+    
+    if (arToggleBtn) {
+        arToggleBtn.addEventListener('click', toggleARMode);
+    }
+    
+    if (arCloseBtn) {
+        arCloseBtn.addEventListener('click', disableARMode);
+    }
     
     // Hide loading screen
     setTimeout(() => {
