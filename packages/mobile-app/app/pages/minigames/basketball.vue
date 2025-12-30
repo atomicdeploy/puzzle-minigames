@@ -87,24 +87,49 @@ const feedbackClass = ref('');
 // Game logic - simplified version
 // In production, this would include the full canvas drawing logic from game.js
 let ctx = null;
+let resizeHandler = null;
+
+function resizeCourtCanvas() {
+  const canvas = courtCanvas.value;
+  if (!canvas) return;
+
+  // Match the canvas resolution to its displayed size
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+
+  // Reacquire context in case canvas was resized
+  ctx = canvas.getContext('2d');
+
+  // Redraw the court with the new dimensions
+  drawCourt();
+}
 
 onMounted(() => {
   if (!process.client) return;
 
   // Initialize canvas
   if (courtCanvas.value) {
-    ctx = courtCanvas.value.getContext('2d');
-    courtCanvas.value.width = courtCanvas.value.offsetWidth;
-    courtCanvas.value.height = courtCanvas.value.offsetHeight;
-    
-    // Draw basketball court (simplified)
-    drawCourt();
+    // Initial sizing and draw
+    resizeCourtCanvas();
+
+    // Update canvas size and redraw on window resize
+    resizeHandler = () => {
+      resizeCourtCanvas();
+    };
+    window.addEventListener('resize', resizeHandler);
   }
 
   // Set up digit selection
   setupDigitSelection();
 });
 
+onUnmounted(() => {
+  if (!process.client) return;
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler);
+    resizeHandler = null;
+  }
+});
 function drawCourt() {
   if (!ctx) return;
   
