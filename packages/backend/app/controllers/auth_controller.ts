@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import Otp from '#models/otp'
 import SmsService from '#services/sms_service'
+import rateLimiter from '#services/rate_limiter'
 import { DateTime } from 'luxon'
 import { randomBytes } from 'crypto'
 import vine from '@vinejs/vine'
@@ -55,7 +56,7 @@ export default class AuthController {
 
   /**
    * Login user
-   * TODO: Implement rate limiting (5-10 failed attempts per email per hour)
+   * Rate limiting: 10 failed attempts per email per hour
    */
   async login({ request, response, auth }: HttpContext) {
     const loginSchema = vine.object({
@@ -65,9 +66,23 @@ export default class AuthController {
 
     const { email, password } = await vine.validate({ schema: loginSchema, data: request.all() })
 
+    // Rate limiting: 10 attempts per hour per email
+    const rateLimitKey = `login:${email}`
+    if (rateLimiter.isRateLimited(rateLimitKey, 10, 60 * 60 * 1000)) {
+      const timeUntilReset = rateLimiter.getTimeUntilReset(rateLimitKey)
+      return response.tooManyRequests({
+        error: 'Too many login attempts',
+        message: `Please try again in ${Math.ceil(timeUntilReset / 60)} minutes`,
+        retryAfter: timeUntilReset,
+      })
+    }
+
     try {
       const user = await User.verifyCredentials(email, password)
       await auth.use('web').login(user)
+
+      // Clear rate limit on successful login
+      rateLimiter.clear(rateLimitKey)
 
       // Update last login
       user.lastLoginAt = DateTime.now()
@@ -98,7 +113,7 @@ export default class AuthController {
 
   /**
    * Send OTP to phone number
-   * TODO: Implement rate limiting (3-5 OTP requests per phone number per hour)
+   * Rate limiting: 5 OTP requests per phone number per hour
    */
   async sendOtp({ request, response }: HttpContext) {
     const otpSchema = vine.object({
@@ -109,6 +124,17 @@ export default class AuthController {
 
     // Normalize phone number
     const normalizedPhone = phoneNumber.replace(/^(\+98|0)/, '0')
+
+    // Rate limiting: 5 OTP requests per hour per phone
+    const rateLimitKey = `otp:send:${normalizedPhone}`
+    if (rateLimiter.isRateLimited(rateLimitKey, 5, 60 * 60 * 1000)) {
+      const timeUntilReset = rateLimiter.getTimeUntilReset(rateLimitKey)
+      return response.tooManyRequests({
+        error: 'Too many OTP requests',
+        message: `Please try again in ${Math.ceil(timeUntilReset / 60)} minutes`,
+        retryAfter: timeUntilReset,
+      })
+    }
 
     // Generate 6-digit OTP
     const code = Math.floor(100000 + Math.random() * 900000).toString()
@@ -141,8 +167,7 @@ export default class AuthController {
 
   /**
    * Verify OTP
-   * TODO: Implement rate limiting (5 failed attempts per phone per OTP session)
-   * TODO: Add account lockout after multiple failed verification attempts
+   * Rate limiting: 5 failed attempts per phone number per OTP session
    */
   async verifyOtp({ request, response, auth }: HttpContext) {
     const verifySchema = vine.object({
@@ -154,6 +179,17 @@ export default class AuthController {
 
     // Normalize phone number
     const normalizedPhone = phoneNumber.replace(/^(\+98|0)/, '0')
+
+    // Rate limiting: 5 failed attempts per 15 minutes per phone
+    const rateLimitKey = `otp:verify:${normalizedPhone}`
+    if (rateLimiter.isRateLimited(rateLimitKey, 5, 15 * 60 * 1000)) {
+      const timeUntilReset = rateLimiter.getTimeUntilReset(rateLimitKey)
+      return response.tooManyRequests({
+        error: 'Too many verification attempts',
+        message: `Please try again in ${Math.ceil(timeUntilReset / 60)} minutes`,
+        retryAfter: timeUntilReset,
+      })
+    }
 
     // Find valid OTP
     const otp = await Otp.query()
@@ -170,6 +206,9 @@ export default class AuthController {
     // Mark OTP as used
     otp.isUsed = true
     await otp.save()
+
+    // Clear rate limit on successful verification
+    rateLimiter.clear(rateLimitKey)
 
     // Find or create user with this phone number
     let user = await User.findBy('phone_number', normalizedPhone)
