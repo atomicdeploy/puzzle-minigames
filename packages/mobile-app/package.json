@@ -5,7 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "cross-env CHOKIDAR_USEPOLLING=true nuxt dev",
+    "dev": "nuxt dev",
+    "dev:poll": "cross-env CHOKIDAR_USEPOLLING=true nuxt dev",
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
