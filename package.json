@@ -17,6 +17,7 @@
     "backend:start": "npm run start --workspace=packages/backend",
     "dev": "concurrently \"npm run mobile:dev\" \"npm run backend:dev\"",
     "build": "npm run mobile:build && npm run backend:build",
+    "build:deploy": "./build.sh",
     "install:all": "npm install && npm install --workspace=packages/mobile-app && npm install --workspace=packages/backend"
   },
   "keywords": [

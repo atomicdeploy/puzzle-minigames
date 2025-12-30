@@ -18,6 +18,7 @@ const QrController = () => import('#controllers/qr_controller')
 const AdminUsersController = () => import('#controllers/admin_users_controller')
 const AdminGamesController = () => import('#controllers/admin_games_controller')
 const AdminAnalyticsController = () => import('#controllers/admin_analytics_controller')
+const SettingsController = () => import('#controllers/settings_controller')
 
 // Health check
 router.get('/health', async () => {
@@ -137,4 +138,13 @@ router.group(() => {
 
   // Leaderboard
   router.get('/leaderboard', [PlayerProgressController, 'leaderboard'])
+
+  // Settings routes
+  router.get('/settings', [SettingsController, 'index']) // Public settings
+  router.get('/settings/:key', [SettingsController, 'show']) // Get specific setting
+  router.group(() => {
+    router.get('/all', [SettingsController, 'all']) // All settings (admin)
+    router.post('/upsert', [SettingsController, 'upsert']) // Create/update setting
+    router.delete('/:key', [SettingsController, 'destroy']) // Delete setting
+  }).prefix('/settings').use(middleware.auth())
 }).prefix('/api')
