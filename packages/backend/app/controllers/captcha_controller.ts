@@ -68,7 +68,7 @@ export default class CaptchaController {
 
       // Check if CAPTCHA has expired (5 minutes)
       const expiryTime = 5 * 60 * 1000 // 5 minutes in milliseconds
-      if (Date.now() - generatedAt > expiryTime) {
+      if (generatedAt && Date.now() - generatedAt > expiryTime) {
         session.forget('captcha_code')
         session.forget('captcha_generated_at')
         return response.badRequest({
