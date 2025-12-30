@@ -18,6 +18,8 @@ const validate = (req, res, next) => {
 /**
  * POST /auth/send-otp
  * Send OTP to phone number
+ * 
+ * TODO: Add rate limiting to prevent abuse (e.g., express-rate-limit)
  */
 router.post('/send-otp', [
   body('phone')
@@ -85,6 +87,8 @@ router.post('/send-otp', [
 /**
  * POST /auth/verify-otp
  * Verify OTP and authenticate user
+ * 
+ * TODO: Add rate limiting to prevent brute force attacks
  */
 router.post('/verify-otp', [
   body('phone')
@@ -178,6 +182,9 @@ router.post('/verify-otp', [
 /**
  * POST /auth/register
  * Register a new user
+ * 
+ * TODO: Add rate limiting to prevent abuse
+ * TODO: Add OTP verification check before allowing registration
  */
 router.post('/register', [
   body('phone')
