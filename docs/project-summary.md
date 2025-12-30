@@ -44,8 +44,8 @@ Font: Vazirmatn (Google Fonts)
 
 ### Documentation (4 files)
 12. `README.md` - Main documentation (English & Persian)
-13. `DEPLOYMENT.md` - Deployment guide (5 options)
-14. `ASSETS.md` - Asset creation guide
+13. `docs/deployment/deployment-guide.md` - Deployment guide (5 options)
+14. `docs/guides/assets.md` - Asset creation guide
 15. `minigames/placeholder/README.md` - Mini-game integration guide
 
 ### Build Output

@@ -141,7 +141,7 @@ npm run dev
 
 3. Open https://localhost:3000 (accept certificate warning)
 
-For trusted certificates, see [VITE_CONFIG_GUIDE.md](./VITE_CONFIG_GUIDE.md#creating-local-certificates-with-mkcert).
+For trusted certificates, see [../development/vite-config-guide.md](../development/vite-config-guide.md#creating-local-certificates-with-mkcert).
 
 #### Development Behind Reverse Proxy
 
@@ -158,7 +158,7 @@ server: {
 }
 ```
 
-See [VITE_CONFIG_GUIDE.md](./VITE_CONFIG_GUIDE.md#reverse-proxy-setup) for complete reverse proxy examples.
+See [../development/vite-config-guide.md](../development/vite-config-guide.md#reverse-proxy-setup) for complete reverse proxy examples.
 
 ### Production Preview
 
