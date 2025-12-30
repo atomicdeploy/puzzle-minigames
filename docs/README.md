@@ -18,12 +18,16 @@ Technical documentation for APIs and integrations:
 ### 💻 Development
 Developer guides for building and testing:
 - **[Testing Guide](development/testing.md)** - Integration testing and QA procedures
+- **[Verification Report](development/verification.md)** - Complete test results and proof of work
+- **[Proof of Work](development/proof-of-work.txt)** - Visual verification with database snapshots
 - **[Vite Configuration Guide](development/vite-config-guide.md)** - Comprehensive Vite server configuration
 - **[Vite Configuration Examples](development/vite-config-examples.md)** - Common configuration scenarios
 
 ### 🚀 Deployment
 Deployment and production guides:
 - **[Deployment Guide](deployment/deployment-guide.md)** - Multiple deployment options (Web, Android, Docker, Firebase)
+- **[Installation Guide](deployment/installation.md)** - Complete setup and installation instructions
+- **[Build Guide](deployment/build.md)** - Production build and packaging instructions
 
 ### 📋 Migration & History
 Project evolution and migration documentation:
@@ -38,6 +42,8 @@ This is a monorepo containing:
 - **Minigames** - Modular mini-game system
 
 ## 🚀 Quick Start
+
+- **[Quick Start Guide](quickstart.md)** - Fast-track setup and usage reference
 
 ### For Users
 1. Read the [Project Summary](project-summary.md) to understand what's been built

@@ -305,8 +305,8 @@ create_deployment_package() {
     cp "$ROOT_DIR/package.json" "$BUILD_DIR/"
     cp "$ROOT_DIR/.env.example" "$BUILD_DIR/"
     cp "$ROOT_DIR/README.md" "$BUILD_DIR/" 2>/dev/null || true
-    cp "$ROOT_DIR/INSTALLATION.md" "$BUILD_DIR/" 2>/dev/null || true
-    cp "$ROOT_DIR/QUICKSTART.md" "$BUILD_DIR/" 2>/dev/null || true
+    cp "$ROOT_DIR/docs/deployment/installation.md" "$BUILD_DIR/" 2>/dev/null || true
+    cp "$ROOT_DIR/docs/quickstart.md" "$BUILD_DIR/" 2>/dev/null || true
     
     # Copy install script
     cp "$ROOT_DIR/install.sh" "$BUILD_DIR/" 2>/dev/null || true
@@ -384,7 +384,7 @@ Make sure to configure these required variables in .env:
 - Keep dependencies updated
 - Regular security audits
 
-For more information, see INSTALLATION.md and README.md
+For more information, see installation.md and README.md
 EOF
     
     print_success "Deployment instructions created"

@@ -101,20 +101,20 @@ set_env "KEY_NAME" "value"
 
 ## Documentation
 
-- [Installation Guide](./INSTALLATION.md) - Detailed installation instructions
-- [Verification Report](./VERIFICATION.md) - Proof of working system
-- [Proof of Work](./PROOF_OF_WORK.txt) - Test results and credentials
+- [Installation Guide](./deployment/installation.md) - Detailed installation instructions
+- [Verification Report](./development/verification.md) - Proof of working system
+- [Proof of Work](./development/proof-of-work.txt) - Test results and credentials
 - [Main README](./README.md) - Full project documentation
 
 ## Testing
 
-All tests have passed with 100% success rate. See [VERIFICATION.md](./VERIFICATION.md) for details.
+All tests have passed with 100% success rate. See [verification report](./development/verification.md) for details.
 
 ## Support
 
 For issues or questions:
-1. Check the [INSTALLATION.md](./INSTALLATION.md) guide
-2. Review [VERIFICATION.md](./VERIFICATION.md) for examples
+1. Check the [installation guide](./deployment/installation.md)
+2. Review [verification report](./development/verification.md) for examples
 3. Ensure all dependencies are installed
 4. Verify database is running
 

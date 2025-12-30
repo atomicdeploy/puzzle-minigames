@@ -89,8 +89,8 @@ Tables: 12 (all created successfully)
 
 📁 FILES CREATED:
    ✓ install.sh - Main installation script
-   ✓ INSTALLATION.md - Complete guide
-   ✓ VERIFICATION.md - This proof document
+   ✓ installation.md - Complete guide
+   ✓ verification.md - This proof document
    ✓ migrate.mjs - Database migration runner
    ✓ test-users.mjs - User testing script
    ✓ create-demo-users.mjs - Demo user creation

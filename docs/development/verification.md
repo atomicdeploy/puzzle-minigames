@@ -51,7 +51,7 @@ This document provides comprehensive proof that the full installation script, se
 - ✅ Custom test runner for direct verification
 
 ### 5. Documentation
-- ✅ Comprehensive `INSTALLATION.md`
+- ✅ Comprehensive installation guide
 - ✅ This verification report
 - ✅ Inline code documentation
 
@@ -338,7 +338,7 @@ To create demo users:
 cd packages/backend && node scripts/create-demo-users.mjs
 ```
 
-For more information, see [INSTALLATION.md](./INSTALLATION.md)
+For more information, see [installation guide](../deployment/installation.md)
 
 ---
 

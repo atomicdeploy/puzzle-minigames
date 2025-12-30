@@ -364,7 +364,7 @@ tar -czf puzzle-minigames-custom.tar.gz \
     packages/backend/build \
     packages/mobile-app/.output \
     .env.example \
-    INSTALLATION.md
+    installation.md
 ```
 
 ### Custom Compression
@@ -443,8 +443,8 @@ pm2 start puzzle-backend
 ## Support
 
 For issues or questions:
-- Check [INSTALLATION.md](./INSTALLATION.md)
-- Review [QUICKSTART.md](./QUICKSTART.md)
+- Check [installation guide](./installation.md)
+- Review [quickstart guide](../quickstart.md)
 - See [README.md](./README.md)
 
 ---
