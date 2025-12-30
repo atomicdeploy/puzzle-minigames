@@ -1,5 +1,21 @@
 import { test } from '@japa/runner'
 
+/**
+ * Helper function to extract session cookie value from set-cookie header
+ */
+function extractSessionCookie(setCookieHeader: string | string[] | undefined): string {
+  if (!setCookieHeader) return ''
+  
+  const cookies = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
+  const sessionCookie = cookies.find((cookie) => cookie.startsWith('adonis-session='))
+  
+  if (!sessionCookie) return ''
+  
+  // Extract just the value part (between = and ;)
+  const match = sessionCookie.match(/adonis-session=([^;]+)/)
+  return match ? match[1] : ''
+}
+
 test.group('Settings API', () => {
   test('GET /api/settings should return public settings', async ({ client }) => {
     const response = await client.get('/api/settings')
@@ -21,7 +37,7 @@ test.group('Settings API', () => {
     const loginResponse = await client.post('/api/auth/login').json(userData)
 
     // Extract cookie for authentication
-    const cookie = loginResponse.headers()['set-cookie']
+    const cookie = extractSessionCookie(loginResponse.headers()['set-cookie'])
 
     // Create setting
     const settingData = {

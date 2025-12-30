@@ -2,6 +2,22 @@ import { test } from '@japa/runner'
 import User from '#models/user'
 import Database from '@adonisjs/lucid/services/db'
 
+/**
+ * Helper function to extract session cookie value from set-cookie header
+ */
+function extractSessionCookie(setCookieHeader: string | string[] | undefined): string {
+  if (!setCookieHeader) return ''
+  
+  const cookies = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]
+  const sessionCookie = cookies.find((cookie) => cookie.startsWith('adonis-session='))
+  
+  if (!sessionCookie) return ''
+  
+  // Extract just the value part (between = and ;)
+  const match = sessionCookie.match(/adonis-session=([^;]+)/)
+  return match ? match[1] : ''
+}
+
 test.group('Full Integration Tests', (group) => {
   // Test users data
   const testUsers = [
@@ -101,7 +117,7 @@ test.group('Full Integration Tests', (group) => {
       password: userData.password,
     })
 
-    const cookie = loginResponse.headers()['set-cookie']
+    const cookie = extractSessionCookie(loginResponse.headers()['set-cookie'])
 
     // Get profile
     const profileResponse = await client.get('/api/users/profile').cookie('adonis-session', cookie)
@@ -121,7 +137,7 @@ test.group('Full Integration Tests', (group) => {
       password: userData.password,
     })
 
-    const cookie = loginResponse.headers()['set-cookie']
+    const cookie = extractSessionCookie(loginResponse.headers()['set-cookie'])
 
     // Save progress
     const progressData = {
@@ -157,7 +173,7 @@ test.group('Full Integration Tests', (group) => {
         password: userData.password,
       })
 
-      const cookie = loginResponse.headers()['set-cookie']
+      const cookie = extractSessionCookie(loginResponse.headers()['set-cookie'])
 
       // Save progress with different scores
       const score = testUsers.indexOf(userData) * 100 + 50
